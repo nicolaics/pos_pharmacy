@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"context"
 	"fmt"
-	_ "log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
 )
 
 type contextKey string
@@ -118,47 +115,6 @@ func extractToken(r *http.Request) string {
 	return ""
 }
 
-// func WithJWTAuth(handlerFunc http.HandlerFunc, store types.CashierStore) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// get the token from the user request
-// 		tokenString := getTokenFromRequest(r)
-
-// 		// valdiate the JWT token
-// 		token, err := validateToken(tokenString)
-// 		if err != nil {
-// 			log.Printf("failed to validate token: %v", err)
-// 			permissionDenied(w)
-// 			return
-// 		}
-
-// 		if !token.Valid {
-// 			log.Println("invalid token")
-// 			permissionDenied(w)
-// 			return
-// 		}
-
-// 		// if it is correct, fetch the userID from the db
-// 		claims := token.Claims.(jwt.MapClaims)
-// 		str := claims["cashierID"].(string)
-
-// 		cashierID, _ := strconv.Atoi(str)
-// 		user, err := store.GetCashierByID(cashierID)
-
-// 		if err != nil {
-// 			log.Printf("failed to get user by id: %v", err)
-// 			permissionDenied(w)
-// 			return
-// 		}
-
-// 		// set the context "userID" to the userID
-// 		ctx := r.Context()
-// 		ctx = context.WithValue(ctx, CashierKey, user.ID)
-// 		r = r.WithContext(ctx)
-
-// 		handlerFunc(w, r)
-// 	}
-// }
-
 func validateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -194,34 +150,4 @@ func ExtractTokenFromRedis(r *http.Request) (*types.AccessDetails, error) {
 	}
 
 	return nil, err
-}
-
-// func verifyToken(tokenString string) error {
-// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-// 	   return secretKey, nil
-// 	})
-
-// 	if err != nil {
-// 	   return err
-// 	}
-
-// 	if !token.Valid {
-// 	   return fmt.Errorf("invalid token")
-// 	}
-
-// 	return nil
-//  }
-
-func permissionDenied(w http.ResponseWriter) {
-	utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
-}
-
-func GetUserIDFromContext(ctx context.Context) int {
-	userID, ok := ctx.Value(CashierKey).(int)
-
-	if !ok {
-		return -1
-	}
-
-	return userID
 }
