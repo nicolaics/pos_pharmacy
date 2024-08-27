@@ -4,29 +4,6 @@ import (
 	"time"
 )
 
-type RegisterCashierPayload struct {
-	AdminName     string `json:"adminName" validate:"required"`
-	AdminPassword string `json:"adminPassword" validate:"required"`
-	Name          string `json:"name" validate:"required"`
-	Password      string `json:"password" validate:"required,min=3,max=130"`
-}
-
-type RemoveCashierPayload struct {
-	// AdminName     string `json:"adminName" validate:"required"`
-	AdminPassword string `json:"adminPassword" validate:"required"`
-	Name          string `json:"name" validate:"required"`
-}
-
-type UpdateCashierAdminPayload RemoveCashierPayload
-
-type RegisterCustomerPayload struct {
-	Name string `json:"name" validate:"required"`
-}
-
-type RegisterSupplier struct {
-	Name string `json:"name" validate:"required"`
-}
-
 type NewInvoice struct {
 	Number            int       `json:"number" validate:"required"`
 	CashierName       string    `json:"cashierName" validate:"required"`
@@ -41,60 +18,9 @@ type NewInvoice struct {
 	InvoiceDate       time.Time `json:"invoiceDate" validate:"required"`
 }
 
-type LoginCashierPayload struct {
-	Name     string `json:"name" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
-
-type CashierStore interface {
-	GetCashierByName(string) (*Cashier, error)
-	GetCashierByID(int) (*Cashier, error)
-	CreateCashier(Cashier) error
-	DeleteCashier(*Cashier) error
-	GetAllCashiers() ([]Cashier, error)
-	UpdateLastLoggedIn(*Cashier) error
-	UpdateAdmin(*Cashier) error
-	SaveAuth(int, *TokenDetails) error
-	GetAuthentification(*AccessDetails) (int, error)
-	DeleteAuth(givenUuid string) (int, error)
-}
-
-type Cashier struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	Password     string    `json:"password"`
-	Admin        bool      `json:"admin"`
-	CreatedAt    time.Time `json:"createdAt"`
-	LastLoggedIn time.Time `json:"lastLoggedIn"`
-}
-
 type PaymentMethod struct {
 	ID        int       `json:"id"`
 	Method    string    `json:"method"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-type CustomerStore interface {
-	GetCustomerByName(name string) (*Customer, error)
-	GetCustomerByID(id int) (*Customer, error)
-	CreateCustomer(Customer) error
-}
-
-type Customer struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-type SupplierStore interface {
-	GetSupplierByName(name string) (*Supplier, error)
-	GetSupplierByID(id int) (*Supplier, error)
-	CreateSupplier(Supplier) error
-}
-
-type Supplier struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
