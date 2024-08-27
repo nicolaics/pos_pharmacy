@@ -9,17 +9,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/cashier"
+	"github.com/nicolaics/pos_pharmacy/service/customer"
+	"github.com/redis/go-redis/v9"
 )
 
 type APIServer struct {
 	addr string
 	db *sql.DB
+	redisClient *redis.Client
 }
 
-func NewAPIServer(addr string, db *sql.DB) *APIServer {
+func NewAPIServer(addr string, db *sql.DB, redisClient *redis.Client) *APIServer {
 	return &APIServer{
 		addr: addr,
 		db: db,
+		redisClient: redisClient,
 	}
 }
 
@@ -29,18 +33,14 @@ func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	cashierStore := cashier.NewStore(s.db)
+	cashierStore := cashier.NewStore(s.db, s.redisClient)
+	customerStore := customer.NewStore(s.db)
+
 	cashierHandler := cashier.NewHandler(cashierStore)
 	cashierHandler.RegisterRoutes(subrouter)
-	
-	// productStore := product.NewStore(s.db)
-	// productHandler := product.NewHandler(productStore)
-	// productHandler.RegisterRoutes(subrouter)
 
-	// orderStore := order.NewStore(s.db)
-
-	// cartHandler := cart.NewHandler(orderStore, productStore, userStore)
-	// cartHandler.RegisterRoutes(subrouter)
+	customerHandler := customer.NewHandler(customerStore, cashierStore)
+	customerHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on: ", s.addr)
 
