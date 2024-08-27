@@ -116,6 +116,26 @@ func (s *Store) FindCustomerID(customerName string) (int, error) {
 	return customer.ID, nil
 }
 
+func (s *Store) DeleteCustomer(customer *types.Customer) error {
+	_, err := s.db.Exec("DELETE FROM customer WHERE id = ?", customer.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Store) ModifyCustomer(customer *types.Customer, newName string) error {
+	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ",
+						newName, customer.ID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func scanRowIntoCustomer(rows *sql.Rows) (*types.Customer, error) {
 	customer := new(types.Customer)
 
