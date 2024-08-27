@@ -1,0 +1,6 @@
+*.env
+*.sql
+./migrate/migrations
+bin
+*.mod
+*.sum
