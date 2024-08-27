@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/service/auth"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/redis/go-redis/v9"
 )
@@ -150,7 +152,7 @@ func (s *Store) SaveAuth(cashierId int, tokenDetails *types.TokenDetails) error 
 	return nil
 }
 
-func (s *Store) GetAuthentification(authDetails *types.AccessDetails) (int, error) {
+func (s *Store) GetCashierIDFromRedis(authDetails *types.AccessDetails) (int, error) {
 	cashierIdStr, err := s.redisClient.Get(context.Background(), authDetails.AccessUUID).Result()
 	if err != nil {
 		return -1, err
@@ -188,6 +190,27 @@ func (s *Store) FindCashierID(db *sql.DB, cashierName string) (int, error) {
 	}
 
 	return cashier.ID, nil
+}
+
+func (s *Store) ValidateAdmin(w http.ResponseWriter, r *http.Request) (*types.Cashier, error) {
+	// validate token
+	accessDetails, err := auth.ExtractTokenFromRedis(r)
+	if err != nil {
+		return nil, err
+	}
+
+	adminID, err := s.GetCashierIDFromRedis(accessDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	// validate admin name
+	admin, err := s.GetCashierByID(adminID)
+	if err != nil || !admin.Admin {
+		return nil, err
+	}
+
+	return admin, nil
 }
 
 func scanRowIntoCashier(rows *sql.Rows) (*types.Cashier, error) {
