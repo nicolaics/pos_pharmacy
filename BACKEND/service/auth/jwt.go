@@ -74,9 +74,9 @@ func ValidateToken(r *http.Request) error {
 		return err
 	}
 
-	_, ok := token.Claims.(jwt.Claims)
+	err = token.Claims.Valid()
 
-	if !ok && !token.Valid {
+	if err != nil && !token.Valid {
 		return err
 	}
 
