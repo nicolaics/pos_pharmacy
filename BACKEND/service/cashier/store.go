@@ -192,25 +192,32 @@ func (s *Store) FindCashierID(db *sql.DB, cashierName string) (int, error) {
 	return cashier.ID, nil
 }
 
-func (s *Store) ValidateAdmin(w http.ResponseWriter, r *http.Request) (*types.Cashier, error) {
+func (s *Store) ValidateCashierToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.Cashier, error) {
 	// validate token
 	accessDetails, err := auth.ExtractTokenFromRedis(r)
 	if err != nil {
 		return nil, err
 	}
 
-	adminID, err := s.GetCashierIDFromRedis(accessDetails)
+	cashierID, err := s.GetCashierIDFromRedis(accessDetails)
 	if err != nil {
 		return nil, err
 	}
 
-	// validate admin name
-	admin, err := s.GetCashierByID(adminID)
-	if err != nil || !admin.Admin {
+	// check if cashier exist
+	cashier, err := s.GetCashierByID(cashierID)
+	if err != nil {
 		return nil, err
 	}
 
-	return admin, nil
+	// if the account must be admin
+	if needAdmin {
+		if !cashier.Admin {
+			return nil, err
+		}
+	}
+
+	return cashier, nil
 }
 
 func scanRowIntoCashier(rows *sql.Rows) (*types.Cashier, error) {

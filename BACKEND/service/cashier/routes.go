@@ -45,6 +45,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	// validate the payload
@@ -98,6 +99,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	// validate the payload
@@ -108,7 +110,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateAdmin(w, r)
+	admin, err := h.store.ValidateCashierToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
 		return
@@ -120,7 +122,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the cashier exists
+	// check if the newly created cashier exists
 	_, err = h.store.GetCashierByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
@@ -149,7 +151,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleGetAllCashiers(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.store.ValidateAdmin(w, r)
+	_, err := h.store.ValidateCashierToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
 		return
@@ -158,6 +160,7 @@ func (h *Handler) handleGetAllCashiers(w http.ResponseWriter, r *http.Request) {
 	cashiers, err := h.store.GetAllCashiers()
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, cashiers)
@@ -168,6 +171,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	// validate the payload
@@ -178,7 +182,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateAdmin(w, r)
+	admin, err := h.store.ValidateCashierToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
 		return
@@ -199,6 +203,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	err = h.store.DeleteCashier(cashier)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", payload.Name))
@@ -209,6 +214,7 @@ func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	// validate the payload
@@ -219,7 +225,7 @@ func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateAdmin(w, r)
+	admin, err := h.store.ValidateCashierToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
 		return
@@ -240,6 +246,7 @@ func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
 	err = h.store.UpdateAdmin(cashier)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin", payload.Name))
@@ -251,6 +258,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	accessDetails, err := auth.ExtractTokenFromRedis(r)
