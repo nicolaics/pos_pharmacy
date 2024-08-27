@@ -32,7 +32,7 @@ func main() {
 
 	initStorage(db, redisClient)
 
-	server := api.NewAPIServer(":" + config.Envs.Port, db)
+	server := api.NewAPIServer((":" + config.Envs.Port), db, redisClient)
 
 	// check the error, if error is not nill
 	if err := server.Run(); err != nil {
