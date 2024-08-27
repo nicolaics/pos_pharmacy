@@ -26,7 +26,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/cashier/register", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/cashier/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier", h.handleGetAllCashiers).Methods(http.MethodGet)
+	router.HandleFunc("/cashier", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/cashier", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/cashier/delete", h.handleDelete).Methods(http.MethodDelete)
@@ -149,7 +149,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("cashier %s successfully created", payload.Name))
 }
 
-func (h *Handler) handleGetAllCashiers(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.store.ValidateCashierToken(w, r, true)
 	if err != nil {
