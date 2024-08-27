@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
 )
 
 type Store struct {
@@ -40,7 +39,7 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	return customer, nil
 }
 
-func (s *Store) GetCashierByID(id int) (*types.Customer, error) {
+func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 	rows, err := s.db.Query("SELECT * FROM customer WHERE id = ?", id)
 
 	if err != nil {
@@ -64,7 +63,7 @@ func (s *Store) GetCashierByID(id int) (*types.Customer, error) {
 	return customer, nil
 }
 
-func (s *Store) CreateCashier(customer types.Customer) error {
+func (s *Store) CreateCustomer(customer types.Customer) error {
 	_, err := s.db.Exec("INSERT INTO customer (name) VALUES (?)",
 					customer.Name)
 
@@ -73,6 +72,28 @@ func (s *Store) CreateCashier(customer types.Customer) error {
 	}
 
 	return nil
+}
+
+func (s *Store) GetAllCustomers() ([]types.Customer, error) {
+	rows, err := s.db.Query("SELECT * FROM customer")
+
+	if err != nil {
+		return nil, err
+	}
+
+	customers := make([]types.Customer, 0)
+
+	for rows.Next() {
+		customer, err := scanRowIntoCustomer(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		customers = append(customers, *customer)
+	}
+
+	return customers, nil
 }
 
 func (s *Store) FindCustomerID(customerName string) (int, error) {
