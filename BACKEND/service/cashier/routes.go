@@ -195,7 +195,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cashier, err := h.store.GetCashierByName(payload.Name)
-	if cashier == nil {
+	if cashier == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
