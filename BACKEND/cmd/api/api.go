@@ -10,6 +10,7 @@ import (
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/cashier"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
+	"github.com/nicolaics/pos_pharmacy/service/supplier"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -35,12 +36,16 @@ func (s *APIServer) Run() error {
 
 	cashierStore := cashier.NewStore(s.db, s.redisClient)
 	customerStore := customer.NewStore(s.db)
+	supplierStore := supplier.NewStore(s.db)
 
 	cashierHandler := cashier.NewHandler(cashierStore)
 	cashierHandler.RegisterRoutes(subrouter)
 
 	customerHandler := customer.NewHandler(customerStore, cashierStore)
 	customerHandler.RegisterRoutes(subrouter)
+	
+	supplierHandler := supplier.NewHandler(supplierStore, cashierStore)
+	supplierHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on: ", s.addr)
 
