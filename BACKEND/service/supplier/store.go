@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
 )
 
 type Store struct {
@@ -26,7 +25,7 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 	supplier := new(types.Supplier)
 
 	for rows.Next() {
-		supplier, err = utils.ScanRowIntoSupplier(rows)
+		supplier, err = scanRowIntoSupplier(rows)
 
 		if err != nil {
 			return nil, err
@@ -50,7 +49,7 @@ func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
 	supplier := new(types.Supplier)
 
 	for rows.Next() {
-		supplier, err = utils.ScanRowIntoSupplier(rows)
+		supplier, err = scanRowIntoSupplier(rows)
 
 		if err != nil {
 			return nil, err
@@ -75,18 +74,18 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 	return nil
 }
 
-// func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
-// 	supplier := new(types.Supplier)
+func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
+	supplier := new(types.Supplier)
 
-// 	err := rows.Scan(
-// 		&supplier.ID,
-// 		&supplier.Name,
-// 		&supplier.CreatedAt,
-// 	)
+	err := rows.Scan(
+		&supplier.ID,
+		&supplier.Name,
+		&supplier.CreatedAt,
+	)
 
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	if err != nil {
+		return nil, err
+	}
 
-// 	return supplier, nil
-// }
+	return supplier, nil
+}

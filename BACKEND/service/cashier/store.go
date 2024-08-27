@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -31,7 +30,7 @@ func (s *Store) GetCashierByName(name string) (*types.Cashier, error) {
 	cashier := new(types.Cashier)
 
 	for rows.Next() {
-		cashier, err = utils.ScanRowIntoCashier(rows)
+		cashier, err = scanRowIntoCashier(rows)
 
 		if err != nil {
 			return nil, err
@@ -55,7 +54,7 @@ func (s *Store) GetCashierByID(id int) (*types.Cashier, error) {
 	cashier := new(types.Cashier)
 
 	for rows.Next() {
-		cashier, err = utils.ScanRowIntoCashier(rows)
+		cashier, err = scanRowIntoCashier(rows)
 
 		if err != nil {
 			return nil, err
@@ -99,7 +98,7 @@ func (s *Store) GetAllCashiers() ([]types.Cashier, error) {
 	cashiers := make([]types.Cashier, 0)
 
 	for rows.Next() {
-		cashier, err := utils.ScanRowIntoCashier(rows)
+		cashier, err := scanRowIntoCashier(rows)
 
 		if err != nil {
 			return nil, err
@@ -169,4 +168,43 @@ func (s *Store) DeleteAuth(givenUuid string) (int, error) {
 	}
 	
 	return int(deleted), nil
+}
+
+func (s *Store) FindCashierID(db *sql.DB, cashierName string) (int, error) {
+	rows, err := db.Query("SELECT * FROM cashier WHERE name = ? ", cashierName)
+
+	if err != nil {
+		return -1, err
+	}
+
+	cashier := new(types.Cashier)
+
+	for rows.Next() {
+		cashier, err = scanRowIntoCashier(rows)
+
+		if err != nil {
+			return -1, err
+		}
+	}
+
+	return cashier.ID, nil
+}
+
+func scanRowIntoCashier(rows *sql.Rows) (*types.Cashier, error) {
+	cashier := new(types.Cashier)
+
+	err := rows.Scan(
+		&cashier.ID,
+		&cashier.Name,
+		&cashier.Password,
+		&cashier.Admin,
+		&cashier.CreatedAt,
+		&cashier.LastLoggedIn,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return cashier, nil
 }

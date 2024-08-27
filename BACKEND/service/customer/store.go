@@ -26,7 +26,7 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	customer := new(types.Customer)
 
 	for rows.Next() {
-		customer, err = utils.ScanRowIntoCustomer(rows)
+		customer, err = scanRowIntoCustomer(rows)
 
 		if err != nil {
 			return nil, err
@@ -50,7 +50,7 @@ func (s *Store) GetCashierByID(id int) (*types.Customer, error) {
 	customer := new(types.Customer)
 
 	for rows.Next() {
-		customer, err = utils.ScanRowIntoCustomer(rows)
+		customer, err = scanRowIntoCustomer(rows)
 
 		if err != nil {
 			return nil, err
@@ -73,4 +73,40 @@ func (s *Store) CreateCashier(customer types.Customer) error {
 	}
 
 	return nil
+}
+
+func (s *Store) FindCustomerID(customerName string) (int, error) {
+	rows, err := s.db.Query("SELECT * FROM customer WHERE name = ? ", customerName)
+
+	if err != nil {
+		return -1, err
+	}
+
+	customer := new(types.Customer)
+
+	for rows.Next() {
+		customer, err = scanRowIntoCustomer(rows)
+
+		if err != nil {
+			return -1, err
+		}
+	}
+
+	return customer.ID, nil
+}
+
+func scanRowIntoCustomer(rows *sql.Rows) (*types.Customer, error) {
+	customer := new(types.Customer)
+
+	err := rows.Scan(
+		&customer.ID,
+		&customer.Name,
+		&customer.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return customer, nil
 }

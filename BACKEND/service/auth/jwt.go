@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log"
+	_ "log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -118,46 +118,46 @@ func extractToken(r *http.Request) string {
 	return ""
 }
 
-func WithJWTAuth(handlerFunc http.HandlerFunc, store types.CashierStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// get the token from the user request
-		tokenString := getTokenFromRequest(r)
+// func WithJWTAuth(handlerFunc http.HandlerFunc, store types.CashierStore) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// get the token from the user request
+// 		tokenString := getTokenFromRequest(r)
 
-		// valdiate the JWT token
-		token, err := validateToken(tokenString)
-		if err != nil {
-			log.Printf("failed to validate token: %v", err)
-			permissionDenied(w)
-			return
-		}
+// 		// valdiate the JWT token
+// 		token, err := validateToken(tokenString)
+// 		if err != nil {
+// 			log.Printf("failed to validate token: %v", err)
+// 			permissionDenied(w)
+// 			return
+// 		}
 
-		if !token.Valid {
-			log.Println("invalid token")
-			permissionDenied(w)
-			return
-		}
+// 		if !token.Valid {
+// 			log.Println("invalid token")
+// 			permissionDenied(w)
+// 			return
+// 		}
 
-		// if it is correct, fetch the userID from the db
-		claims := token.Claims.(jwt.MapClaims)
-		str := claims["cashierID"].(string)
+// 		// if it is correct, fetch the userID from the db
+// 		claims := token.Claims.(jwt.MapClaims)
+// 		str := claims["cashierID"].(string)
 
-		cashierID, _ := strconv.Atoi(str)
-		user, err := store.GetCashierByID(cashierID)
+// 		cashierID, _ := strconv.Atoi(str)
+// 		user, err := store.GetCashierByID(cashierID)
 
-		if err != nil {
-			log.Printf("failed to get user by id: %v", err)
-			permissionDenied(w)
-			return
-		}
+// 		if err != nil {
+// 			log.Printf("failed to get user by id: %v", err)
+// 			permissionDenied(w)
+// 			return
+// 		}
 
-		// set the context "userID" to the userID
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, CashierKey, user.ID)
-		r = r.WithContext(ctx)
+// 		// set the context "userID" to the userID
+// 		ctx := r.Context()
+// 		ctx = context.WithValue(ctx, CashierKey, user.ID)
+// 		r = r.WithContext(ctx)
 
-		handlerFunc(w, r)
-	}
-}
+// 		handlerFunc(w, r)
+// 	}
+// }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
