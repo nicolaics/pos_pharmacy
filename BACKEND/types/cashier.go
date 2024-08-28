@@ -5,10 +5,16 @@ import (
 	"time"
 )
 
+type InitAdminPayload struct {
+	Name     string `json:"name" validate:"required"`
+	Password string `json:"password" validate:"required,min=3,max=130"`
+}
+
 type RegisterCashierPayload struct {
 	AdminPassword string `json:"adminPassword" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 	Password      string `json:"password" validate:"required,min=3,max=130"`
+	PhoneNumber   string `json:"phoneNumber" validate:"required"`
 	MakeAdmin     bool   `json:"makeAdmin"`
 }
 
@@ -18,7 +24,6 @@ type RemoveCashierPayload struct {
 }
 
 type UpdateCashierAdminPayload RemoveCashierPayload
-
 
 type LoginCashierPayload struct {
 	Name     string `json:"name" validate:"required"`
@@ -31,7 +36,7 @@ type CashierStore interface {
 	CreateCashier(Cashier) error
 	DeleteCashier(*Cashier) error
 	GetAllCashiers() ([]Cashier, error)
-	UpdateLastLoggedIn(*Cashier) error
+	UpdateLastLoggedIn(int) error
 	UpdateAdmin(*Cashier) error
 	SaveAuth(int, *TokenDetails) error
 	GetCashierIDFromRedis(*AccessDetails) (int, error)
@@ -44,6 +49,7 @@ type Cashier struct {
 	Name         string    `json:"name"`
 	Password     string    `json:"password"`
 	Admin        bool      `json:"admin"`
-	CreatedAt    time.Time `json:"createdAt"`
+	PhoneNumber  string    `json:"phoneNumber"`
 	LastLoggedIn time.Time `json:"lastLoggedIn"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
