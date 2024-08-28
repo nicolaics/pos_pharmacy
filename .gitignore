@@ -4,3 +4,6 @@
 bin
 *.mod
 *.sum
+
+# FRONTEND
+frontend/node_modules
