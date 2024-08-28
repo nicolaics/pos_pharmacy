@@ -6,8 +6,8 @@ import (
 )
 
 type InitAdminPayload struct {
-	Name          string `json:"name" validate:"required"`
-	Password      string `json:"password" validate:"required,min=3,max=130"`
+	Name     string `json:"name" validate:"required"`
+	Password string `json:"password" validate:"required,min=3,max=130"`
 }
 
 type RegisterCashierPayload struct {
@@ -38,9 +38,9 @@ type CashierStore interface {
 	GetAllCashiers() ([]Cashier, error)
 	UpdateLastLoggedIn(int) error
 	UpdateAdmin(*Cashier) error
-	SaveAuth(int, *TokenDetails) error
+	SaveToken(int, *TokenDetails) error
 	GetCashierIDFromRedis(*AccessDetails) (int, error)
-	DeleteAuth(string) (int, error)
+	DeleteToken(string) (int, error)
 	ValidateCashierToken(http.ResponseWriter, *http.Request, bool) (*Cashier, error)
 }
 
