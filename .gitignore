@@ -7,3 +7,6 @@ bin
 *.sh
 *.bat
 test_token.json
+
+# FRONTEND
+frontend/node_modules
