@@ -6,8 +6,8 @@ import (
 )
 
 type InitAdminPayload struct {
-	Name     string `json:"name" validate:"required"`
-	Password string `json:"password" validate:"required,min=3,max=130"`
+	Name          string `json:"name" validate:"required"`
+	Password      string `json:"password" validate:"required,min=3,max=130"`
 }
 
 type RegisterCashierPayload struct {
