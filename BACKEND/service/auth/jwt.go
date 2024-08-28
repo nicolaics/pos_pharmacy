@@ -84,7 +84,11 @@ func ValidateToken(r *http.Request) error {
 }
 
 func verifyToken(r *http.Request) (*jwt.Token, error) {
-	tokenString := extractToken(r)
+	tokenString, err := extractToken(r)
+	if err != nil {
+		return nil, fmt.Errorf("unable to verify token")
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		//Make sure that the token method conform to "SigningMethodHMAC"
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -101,18 +105,17 @@ func verifyToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-func extractToken(r *http.Request) string {
-	bearerToken := r.Header.Get("Authorization")
+func extractToken(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
 
-	//normally Authorization the_token_xxx
-
-	strArr := strings.Split(bearerToken, " ")
+	//normally: Authorization the_token_xxx
+	strArr := strings.Split(token, " ")
 
 	if len(strArr) == 2 {
-		return strArr[1]
+		return strArr[1], nil
 	}
 
-	return ""
+	return "", fmt.Errorf("invalid token")
 }
 
 func ExtractTokenFromRedis(r *http.Request) (*types.AccessDetails, error) {
