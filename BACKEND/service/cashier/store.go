@@ -134,7 +134,7 @@ func (s *Store) UpdateAdmin(cashier *types.Cashier) error {
 	return nil
 }
 
-func (s *Store) SaveAuth(cashierId int, tokenDetails *types.TokenDetails) error {
+func (s *Store) SaveToken(cashierId int, tokenDetails *types.TokenDetails) error {
 	accessTokenExp := time.Unix(tokenDetails.AccessTokenExp, 0) //converting Unix to UTC(to Time object)
 	refreshTokenExp := time.Unix(tokenDetails.RefreshTokenExp, 0)
 	now := time.Now()
@@ -163,12 +163,12 @@ func (s *Store) GetCashierIDFromRedis(authDetails *types.AccessDetails) (int, er
 	return cashierId, nil
 }
 
-func (s *Store) DeleteAuth(givenUuid string) (int, error) {
+func (s *Store) DeleteToken(givenUuid string) (int, error) {
 	deleted, err := s.redisClient.Del(context.Background(), givenUuid).Result()
 	if err != nil {
 		return -1, err
 	}
-	
+
 	return int(deleted), nil
 }
 

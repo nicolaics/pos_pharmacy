@@ -40,6 +40,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/cashier/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
 	router.HandleFunc("/cashier/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/cashier/refresh-token", h.handleRefreshToken).Methods(http.MethodPost)
+	router.HandleFunc("/cashier/refresh-token", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +79,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.SaveAuth(cashier.ID, tokenDetails)
+	err = h.store.SaveToken(cashier.ID, tokenDetails)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -141,10 +144,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.store.CreateCashier(types.Cashier{
-		Name:     payload.Name,
-		Password: hashedPassword,
+		Name:        payload.Name,
+		Password:    hashedPassword,
 		PhoneNumber: payload.PhoneNumber,
-		Admin:    payload.MakeAdmin,
+		Admin:       payload.MakeAdmin,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -263,7 +266,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.store.DeleteAuth(accessDetails.AccessUUID)
+	_, err = h.store.DeleteToken(accessDetails.AccessUUID)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 		return
@@ -308,14 +311,46 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.store.CreateCashier(types.Cashier{
-		Name:     payload.Name,
-		Password: hashedPassword,
+		Name:        payload.Name,
+		Password:    hashedPassword,
 		PhoneNumber: "000",
-		Admin:    true,
+		Admin:       true,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("cashier %s successfully created", payload.Name))
+}
+
+func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
+	refreshUUID, cashierId, err := auth.ValidateRefreshToken(r)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, err)
+	}
+
+	_, err = h.store.DeleteToken(refreshUUID)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	tokenDetails, err := auth.CreateJWT(cashierId)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = h.store.SaveToken(cashierId, tokenDetails)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	tokens := map[string]string{
+		"access_token":  tokenDetails.AccessToken,
+		"refresh_token": tokenDetails.RefreshToken,
+	}
+
+	utils.WriteJSON(w, http.StatusOK, tokens)
 }
