@@ -37,6 +37,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/cashier/logout", h.handleLogout).Methods(http.MethodPost)
 	router.HandleFunc("/cashier/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/cashier/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
+	router.HandleFunc("/cashier/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -57,13 +60,13 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	cashier, err := h.store.GetCashierByName(payload.Name)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name or password"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name\n%v", err))
 		return
 	}
 
 	// check password match
 	if !(auth.ComparePassword(cashier.Password, []byte(payload.Password))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid name or password"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid password"))
 		return
 	}
 
@@ -79,7 +82,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.UpdateLastLoggedIn(cashier)
+	err = h.store.UpdateLastLoggedIn(cashier.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -140,6 +143,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	err = h.store.CreateCashier(types.Cashier{
 		Name:     payload.Name,
 		Password: hashedPassword,
+		PhoneNumber: payload.PhoneNumber,
 		Admin:    payload.MakeAdmin,
 	})
 	if err != nil {
@@ -253,23 +257,33 @@ func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
-	// get JSON Payload
-	var payload types.LoginCashierPayload
-
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
 	accessDetails, err := auth.ExtractTokenFromRedis(r)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"))
 		return
 	}
 
 	_, err = h.store.DeleteAuth(accessDetails.AccessUUID)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	err = h.store.UpdateLastLoggedIn(accessDetails.CashierID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, nil)
+}
+
+func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.InitAdminPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -280,40 +294,28 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByName(payload.Name)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name or password"))
+	cashiers, err := h.store.GetAllCashiers()
+	if err != nil || len(cashiers) != 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("initial admin has exist!\nerr: %v", err))
 		return
 	}
 
-	// check password match
-	if !(auth.ComparePassword(cashier.Password, []byte(payload.Password))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid name or password"))
-		return
-	}
-
-	tokenDetails, err := auth.CreateJWT(cashier.ID)
+	// create new admin
+	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.SaveAuth(cashier.ID, tokenDetails)
+	err = h.store.CreateCashier(types.Cashier{
+		Name:     payload.Name,
+		Password: hashedPassword,
+		PhoneNumber: "000",
+		Admin:    true,
+	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
 	}
 
-	err = h.store.UpdateLastLoggedIn(cashier)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	tokens := map[string]string{
-		"access_token":  tokenDetails.AccessToken,
-		"refresh_token": tokenDetails.RefreshToken,
-	}
-
-	utils.WriteJSON(w, http.StatusOK, tokens)
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("cashier %s successfully created", payload.Name))
 }

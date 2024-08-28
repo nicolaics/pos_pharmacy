@@ -71,8 +71,8 @@ func (s *Store) GetCashierByID(id int) (*types.Cashier, error) {
 }
 
 func (s *Store) CreateCashier(cashier types.Cashier) error {
-	_, err := s.db.Exec("INSERT INTO cashier (name, password, admin) VALUES (?, ?, ?)",
-		cashier.Name, cashier.Password, cashier.Admin)
+	_, err := s.db.Exec("INSERT INTO cashier (name, password, admin, phone_number) VALUES (?, ?, ?, ?)",
+		cashier.Name, cashier.Password, cashier.Admin, cashier.PhoneNumber)
 
 	if err != nil {
 		return err
@@ -112,9 +112,9 @@ func (s *Store) GetAllCashiers() ([]types.Cashier, error) {
 	return cashiers, nil
 }
 
-func (s *Store) UpdateLastLoggedIn(cashier *types.Cashier) error {
+func (s *Store) UpdateLastLoggedIn(id int) error {
 	_, err := s.db.Exec("UPDATE cashier SET last_logged_in = ? WHERE id = ? ",
-		time.Now(), cashier.ID)
+		time.Now(), id)
 
 	if err != nil {
 		return err
@@ -228,13 +228,17 @@ func scanRowIntoCashier(rows *sql.Rows) (*types.Cashier, error) {
 		&cashier.Name,
 		&cashier.Password,
 		&cashier.Admin,
-		&cashier.CreatedAt,
+		&cashier.PhoneNumber,
 		&cashier.LastLoggedIn,
+		&cashier.CreatedAt,
 	)
 
 	if err != nil {
 		return nil, err
 	}
+
+	cashier.LastLoggedIn = cashier.LastLoggedIn.Local()
+	cashier.CreatedAt = cashier.CreatedAt.Local()
 
 	return cashier, nil
 }
