@@ -250,7 +250,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.ModifyCashier(payload.ID, types.Cashier{
+	err = h.store.ModifyCashier(cashier.ID, types.Cashier{
 		Name: payload.NewName,
 		Password: payload.NewPassword,
 		Admin: payload.NewAdmin,
