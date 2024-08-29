@@ -32,8 +32,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/cashier/delete", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/cashier/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/make-admin", h.handleMakeAdmin).Methods(http.MethodPatch)
-	router.HandleFunc("/cashier/make-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/cashier/modify", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/cashier/modify", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/cashier/logout", h.handleLogout).Methods(http.MethodPost)
 	router.HandleFunc("/cashier/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -147,7 +147,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Name:        payload.Name,
 		Password:    hashedPassword,
 		PhoneNumber: payload.PhoneNumber,
-		Admin:       payload.MakeAdmin,
+		Admin:       payload.Admin,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -201,7 +201,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByName(payload.Name)
+	cashier, err := h.store.GetCashierByID(payload.ID)
 	if cashier == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
@@ -216,8 +216,8 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", payload.Name))
 }
 
-func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
-	var payload types.UpdateCashierAdminPayload
+func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
+	var payload types.ModifyCashierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -244,19 +244,24 @@ func (h *Handler) handleMakeAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByName(payload.Name)
+	cashier, err := h.store.GetCashierByID(payload.ID)
 	if cashier == nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err = h.store.UpdateAdmin(cashier)
+	err = h.store.ModifyCashier(payload.ID, types.Cashier{
+		Name: payload.NewName,
+		Password: payload.NewPassword,
+		Admin: payload.NewAdmin,
+		PhoneNumber: payload.NewPhoneNumber,
+	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin", payload.Name))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewName))
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {

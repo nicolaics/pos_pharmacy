@@ -15,15 +15,23 @@ type RegisterCashierPayload struct {
 	Name          string `json:"name" validate:"required"`
 	Password      string `json:"password" validate:"required,min=3,max=130"`
 	PhoneNumber   string `json:"phoneNumber" validate:"required"`
-	MakeAdmin     bool   `json:"makeAdmin"`
+	Admin         bool   `json:"makeAdmin"`
 }
 
 type RemoveCashierPayload struct {
 	AdminPassword string `json:"adminPassword" validate:"required"`
+	ID            int    `json:"id" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 }
 
-type UpdateCashierAdminPayload RemoveCashierPayload
+type ModifyCashierPayload struct {
+	AdminPassword  string `json:"adminPassword" validate:"required"`
+	ID             int    `json:"id" validate:"required"`
+	NewName        string `json:"newName" validate:"required"`
+	NewPassword    string `json:"newPassword" validate:"required,min=3,max=130"`
+	NewAdmin       bool   `json:"newAdmin" validate:"required"`
+	NewPhoneNumber string `json:"newPhoneNumber" validate:"required"`
+}
 
 type LoginCashierPayload struct {
 	Name     string `json:"name" validate:"required"`
@@ -37,7 +45,7 @@ type CashierStore interface {
 	DeleteCashier(*Cashier) error
 	GetAllCashiers() ([]Cashier, error)
 	UpdateLastLoggedIn(int) error
-	UpdateAdmin(*Cashier) error
+	ModifyCashier(int, Cashier) error
 	SaveToken(int, *TokenDetails) error
 	GetCashierIDFromRedis(*AccessDetails) (int, error)
 	DeleteToken(string) (int, error)

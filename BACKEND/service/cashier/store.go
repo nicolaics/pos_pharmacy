@@ -123,9 +123,11 @@ func (s *Store) UpdateLastLoggedIn(id int) error {
 	return nil
 }
 
-func (s *Store) UpdateAdmin(cashier *types.Cashier) error {
-	_, err := s.db.Exec("UPDATE cashier SET admin = ? WHERE id = ? ",
-		true, cashier.ID)
+func (s *Store) ModifyCashier(id int, cashier types.Cashier) error {
+	columns := "name = ?, password = ?, admin = ?, phone_number = ?"
+
+	_, err := s.db.Exec(fmt.Sprintf("UPDATE cashier SET %s WHERE id = ? ", columns),
+					cashier.Name, cashier.Password, cashier.Admin, cashier.PhoneNumber, id)
 
 	if err != nil {
 		return err
