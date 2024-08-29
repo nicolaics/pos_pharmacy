@@ -20,6 +20,7 @@ type Config struct {
 	JWTAccessSecret               string
 	JWTRefreshSecret              string
 	RedisDSN                      string
+	RedisPassword                 string
 }
 
 var Envs = initConfig()
@@ -39,7 +40,8 @@ func initConfig() Config {
 		JWTRefreshExpirationInSeconds: getEnvAsInt("JWT_REFRESH_EXP", (3600 * 24)), // for seven days
 		JWTAccessSecret:               getEnv("JWT_ACCESS_SECRET", "nsjuwpiiaAjM"),
 		JWTRefreshSecret:              getEnv("JWT_REFRESH_SECRET", "euNwhiwpmql"),
-		RedisDSN:                      getEnv("REDIS_DSN", "localhost:6379"),
+		RedisDSN:                      getEnv("REDIS_DSN", "localhost:19231"),
+		RedisPassword:                 getEnv("REDIS_PASSWORD", "root1234!"),
 	}
 }
 

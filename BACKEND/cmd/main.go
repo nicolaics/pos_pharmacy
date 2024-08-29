@@ -28,6 +28,8 @@ func main() {
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: config.Envs.RedisDSN,
+		Password: config.Envs.RedisPassword,
+		DB: 0, // use default DB
 	})
 
 	initStorage(db, redisClient)
