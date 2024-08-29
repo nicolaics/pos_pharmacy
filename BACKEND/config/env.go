@@ -32,16 +32,16 @@ func initConfig() Config {
 		PublicHost: getEnv("PUBLIC_HOST", "http://localhost"),
 		Port:       getEnv("PORT", "19230"),
 		DBUser:     getEnv("DB_USER", "root"),
-		DBPassword: getEnv("DB_PASSWORD", "root1234!"),
+		DBPassword: getEnv("DB_PASSWORD", ""),
 		DBAddress: fmt.Sprintf("%s:%s", getEnv("DB_HOST", "127.0.0.1"),
 			getEnv("DB_PORT", "3306")),
 		DBName:                        getEnv("DB_NAME", "pos_pharmacy"),
 		JWTAccessExpirationInSeconds:  getEnvAsInt("JWT_ACCESS_EXP", (3600 * 12)),  // for seven days
 		JWTRefreshExpirationInSeconds: getEnvAsInt("JWT_REFRESH_EXP", (3600 * 24)), // for seven days
-		JWTAccessSecret:               getEnv("JWT_ACCESS_SECRET", "nsjuwpiiaAjM"),
-		JWTRefreshSecret:              getEnv("JWT_REFRESH_SECRET", "euNwhiwpmql"),
-		RedisDSN:                      getEnv("REDIS_DSN", "localhost:19231"),
-		RedisPassword:                 getEnv("REDIS_PASSWORD", "root1234!"),
+		JWTAccessSecret:               getEnv("JWT_ACCESS_SECRET", "access-secret"),
+		JWTRefreshSecret:              getEnv("JWT_REFRESH_SECRET", "refresh-secret"),
+		RedisDSN:                      getEnv("REDIS_DSN", "localhost:6379"),
+		RedisPassword:                 getEnv("REDIS_PASSWORD", ""),
 	}
 }
 
