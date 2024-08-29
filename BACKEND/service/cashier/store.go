@@ -213,7 +213,7 @@ func (s *Store) ValidateCashierToken(w http.ResponseWriter, r *http.Request, nee
 	// if the account must be admin
 	if needAdmin {
 		if !cashier.Admin {
-			return nil, err
+			return nil, fmt.Errorf("unauthorized! not admin")
 		}
 	}
 

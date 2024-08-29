@@ -63,7 +63,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	cashier, err := h.store.GetCashierByName(payload.Name)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name\n%v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name: %v", err))
 		return
 	}
 
@@ -278,7 +278,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, nil)
+	utils.WriteJSON(w, http.StatusOK, "successfully logged out")
 }
 
 func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
@@ -299,7 +299,7 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 
 	cashiers, err := h.store.GetAllCashiers()
 	if err != nil || len(cashiers) != 0 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("initial admin has exist!\nerr: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("initial admin has exist: %v", err))
 		return
 	}
 
