@@ -2,7 +2,7 @@ package paymentmethod
 
 import (
 	"database/sql"
-	_ "fmt"
+	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -16,7 +16,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.PaymentMethod, error) {
-	rows, err := s.db.Query("SELECT * FROM payment_method WHERE method = ? ", paymentMethodName)
+	rows, err := s.db.Query("SELECT * FROM payment_method WHERE method = ? ", strings.ToUpper(paymentMethodName))
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.Payment
 }
 
 func (s *Store) CreatePaymentMethod(paymentMethodName string) error {
-	_, err := s.db.Exec("INSERT INTO payment_method (method) VALUES (?)", paymentMethodName)
+	_, err := s.db.Exec("INSERT INTO payment_method (method) VALUES (?)", strings.ToUpper(paymentMethodName))
 
 	if err != nil {
 		return err
@@ -56,6 +56,8 @@ func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	paymentMethod.CreatedAt = paymentMethod.CreatedAt.Local()
 
 	return paymentMethod, nil
 }
