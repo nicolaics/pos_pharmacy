@@ -14,9 +14,19 @@ type RegisterSupplierPayload struct {
 	VendorIsTaxable     bool   `json:"vendorIsTaxable" validate:"required"`
 }
 
-type ModifySupplierPayload RegisterSupplierPayload
+type ModifySupplierPayload struct {
+	ID                     int    `json:"id" validate:"required"`
+	NewName                string `json:"newName" validate:"required"`
+	NewAddress             string `json:"newAddress" validate:"required"`
+	NewCompanyPhoneNumber  string `json:"newCompanyPhoneNumber" validate:"required"`
+	NewContactPersonName   string `json:"newContactPersonName"`
+	NewContactPersonNumber string `json:"newContactPersonNumber"`
+	NewTerms               string `json:"newTerms" validate:"required"`
+	NewVendorIsTaxable     bool   `json:"newVendorIsTaxable" validate:"required"`
+}
 
 type DeleteSupplierPayload struct {
+	ID   int    `json:"id" validate:"required"`
 	Name string `json:"name" validate:"required"`
 }
 

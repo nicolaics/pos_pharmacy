@@ -119,7 +119,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the supplier exists
-	supplier, err := h.supplierStore.GetSupplierByName(payload.Name)
+	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("supplier with name %s doesn't exists", payload.Name))
@@ -159,26 +159,35 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the supplier exists
-	supplier, err := h.supplierStore.GetSupplierByName(payload.Name)
+	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s doesn't exists", payload.Name))
+			fmt.Errorf("supplier with id %d doesn't exists", payload.ID))
 		return
 	}
 
+	if supplier.Name != payload.NewName {
+		_, err = h.supplierStore.GetSupplierByName(payload.NewName)
+		if err == nil {
+			utils.WriteError(w, http.StatusBadRequest,
+				fmt.Errorf("supplier with name %s already exists", payload.NewName))
+			return
+		}
+	}
+
 	err = h.supplierStore.ModifySupplier(supplier.ID, types.Supplier{
-		Name:                payload.Name,
-		Address:             payload.Address,
-		CompanyPhoneNumber:  payload.CompanyPhoneNumber,
-		ContactPersonName:   payload.ContactPersonName,
-		ContactPersonNumber: payload.ContactPersonNumber,
-		Terms:               payload.Terms,
-		VendorIsTaxable:     payload.VendorIsTaxable,
+		Name:                payload.NewName,
+		Address:             payload.NewAddress,
+		CompanyPhoneNumber:  payload.NewCompanyPhoneNumber,
+		ContactPersonName:   payload.NewContactPersonName,
+		ContactPersonNumber: payload.NewContactPersonNumber,
+		Terms:               payload.NewTerms,
+		VendorIsTaxable:     payload.NewVendorIsTaxable,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.Name, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewName, cashier.Name))
 }

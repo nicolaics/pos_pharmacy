@@ -250,10 +250,17 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if cashier.Name != payload.NewName {
+		_, err = h.store.GetCashierByName(payload.NewName)
+		if err == nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier with name %s already exists", payload.NewName))
+		}
+	}
+
 	err = h.store.ModifyCashier(cashier.ID, types.Cashier{
-		Name: payload.NewName,
-		Password: payload.NewPassword,
-		Admin: payload.NewAdmin,
+		Name:        payload.NewName,
+		Password:    payload.NewPassword,
+		Admin:       payload.NewAdmin,
 		PhoneNumber: payload.NewPhoneNumber,
 	})
 	if err != nil {
