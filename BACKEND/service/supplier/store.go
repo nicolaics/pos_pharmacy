@@ -129,12 +129,20 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 	err := rows.Scan(
 		&supplier.ID,
 		&supplier.Name,
+		&supplier.Address,
+		&supplier.CompanyPhoneNumber,
+		&supplier.ContactPersonName,
+		&supplier.ContactPersonNumber,
+		&supplier.Terms,
+		&supplier.VendorIsTaxable,
 		&supplier.CreatedAt,
 	)
 
 	if err != nil {
 		return nil, err
 	}
+
+	supplier.CreatedAt = supplier.CreatedAt.Local()
 
 	return supplier, nil
 }
