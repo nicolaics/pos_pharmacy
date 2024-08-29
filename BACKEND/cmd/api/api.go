@@ -11,7 +11,9 @@ import (
 	"github.com/nicolaics/pos_pharmacy/service/auth"
 	"github.com/nicolaics/pos_pharmacy/service/cashier"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
+	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
+	"github.com/nicolaics/pos_pharmacy/service/unit"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -40,6 +42,9 @@ func (s *APIServer) Run() error {
 	cashierStore := cashier.NewStore(s.db, s.redisClient)
 	customerStore := customer.NewStore(s.db)
 	supplierStore := supplier.NewStore(s.db)
+
+	paymentMethodStore := paymentmethod.NewStore(s.db)
+	unitStore := unit.NewStore(s.db)
 
 	cashierHandler := cashier.NewHandler(cashierStore)
 	cashierHandler.RegisterRoutes(subrouter)
