@@ -68,9 +68,9 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 	values := "?, ?, ?, ?, ?, ?, ?"
 
 	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO supplier (%s) VALUES (%s)", fields, values),
-						supplier.Name, supplier.Address, supplier.CompanyPhoneNumber,
-						supplier.ContactPersonName, supplier.ContactPersonNumber,
-						supplier.Terms, supplier.VendorIsTaxable)
+		supplier.Name, supplier.Address, supplier.CompanyPhoneNumber,
+		supplier.ContactPersonName, supplier.ContactPersonNumber,
+		supplier.Terms, supplier.VendorIsTaxable)
 	if err != nil {
 		return err
 	}
@@ -113,9 +113,9 @@ func (s *Store) ModifySupplier(id int, newSupplierData types.Supplier) error {
 	columns := "name = ?, address = ?, company_phone_number = ?, contact_person_name = ?, contact_person_number = ?, terms = ?, vendor_is_taxable = ?"
 
 	_, err := s.db.Exec(fmt.Sprintf("UPDATE supplier SET %s WHERE id = ?", columns),
-						newSupplierData.Name, newSupplierData.Address, newSupplierData.CompanyPhoneNumber,
-						newSupplierData.ContactPersonName, newSupplierData.ContactPersonNumber,
-						newSupplierData.Terms, newSupplierData.VendorIsTaxable, id)
+		newSupplierData.Name, newSupplierData.Address, newSupplierData.CompanyPhoneNumber,
+		newSupplierData.ContactPersonName, newSupplierData.ContactPersonNumber,
+		newSupplierData.Terms, newSupplierData.VendorIsTaxable, id)
 	if err != nil {
 		return err
 	}

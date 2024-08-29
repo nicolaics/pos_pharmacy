@@ -65,7 +65,7 @@ func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 
 func (s *Store) CreateCustomer(customer types.Customer) error {
 	_, err := s.db.Exec("INSERT INTO customer (name) VALUES (?)",
-					customer.Name)
+		customer.Name)
 
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (s *Store) DeleteCustomer(customer *types.Customer) error {
 
 func (s *Store) ModifyCustomer(customer *types.Customer, newName string) error {
 	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ",
-						newName, customer.ID)
+		newName, customer.ID)
 
 	if err != nil {
 		return err

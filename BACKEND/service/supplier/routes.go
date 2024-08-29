@@ -12,7 +12,7 @@ import (
 
 type Handler struct {
 	supplierStore types.SupplierStore
-	cashierStore types.CashierStore
+	cashierStore  types.CashierStore
 }
 
 func NewHandler(supplierStore types.SupplierStore, cashierStore types.CashierStore) *Handler {
@@ -60,13 +60,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.supplierStore.CreateSupplier(types.Supplier{
-		Name: payload.Name,
-		Address: payload.Address,
-		CompanyPhoneNumber: payload.CompanyPhoneNumber,
-		ContactPersonName: payload.ContactPersonName,
+		Name:                payload.Name,
+		Address:             payload.Address,
+		CompanyPhoneNumber:  payload.CompanyPhoneNumber,
+		ContactPersonName:   payload.ContactPersonName,
 		ContactPersonNumber: payload.ContactPersonNumber,
-		Terms: payload.Terms,
-		VendorIsTaxable: payload.VendorIsTaxable,
+		Terms:               payload.Terms,
+		VendorIsTaxable:     payload.VendorIsTaxable,
 	})
 
 	if err != nil {
@@ -167,13 +167,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.supplierStore.ModifySupplier(supplier.ID, types.Supplier{
-														Name: payload.Name,
-														Address: payload.Address,
-														CompanyPhoneNumber: payload.CompanyPhoneNumber,
-														ContactPersonName: payload.ContactPersonName,
-														ContactPersonNumber: payload.ContactPersonNumber,
-														Terms: payload.Terms,
-														VendorIsTaxable: payload.VendorIsTaxable,
+		Name:                payload.Name,
+		Address:             payload.Address,
+		CompanyPhoneNumber:  payload.CompanyPhoneNumber,
+		ContactPersonName:   payload.ContactPersonName,
+		ContactPersonNumber: payload.ContactPersonNumber,
+		Terms:               payload.Terms,
+		VendorIsTaxable:     payload.VendorIsTaxable,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

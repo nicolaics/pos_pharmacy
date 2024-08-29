@@ -172,5 +172,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("customer %s modified into %s by %s",
-														payload.OldName, payload.NewName, cashier.Name))
+		payload.OldName, payload.NewName, cashier.Name))
 }
