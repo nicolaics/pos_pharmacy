@@ -15,7 +15,7 @@ type RegisterCashierPayload struct {
 	Name          string `json:"name" validate:"required"`
 	Password      string `json:"password" validate:"required,min=3,max=130"`
 	PhoneNumber   string `json:"phoneNumber" validate:"required"`
-	Admin         bool   `json:"makeAdmin"`
+	Admin         bool   `json:"admin"`
 }
 
 type RemoveCashierPayload struct {
