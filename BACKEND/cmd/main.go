@@ -14,13 +14,13 @@ import (
 
 func main() {
 	db, err := db.NewMySQLStorage(mysql.Config{
-		User: config.Envs.DBUser,
-		Passwd: config.Envs.DBPassword,
-		Addr: config.Envs.DBAddress,
-		DBName: config.Envs.DBName,
-		Net: "tcp",
+		User:                 config.Envs.DBUser,
+		Passwd:               config.Envs.DBPassword,
+		Addr:                 config.Envs.DBAddress,
+		DBName:               config.Envs.DBName,
+		Net:                  "tcp",
 		AllowNativePasswords: true,
-		ParseTime: true,
+		ParseTime:            true,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -47,9 +47,9 @@ func initStorage(db *sql.DB, client *redis.Client) {
 	}
 
 	_, err = client.Ping(context.Background()).Result()
-	 if err != nil {
+	if err != nil {
 		log.Fatal(err)
-	 }
+	}
 
 	log.Println("DB: Successfully connected!")
 }
