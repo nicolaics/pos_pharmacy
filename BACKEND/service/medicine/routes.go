@@ -13,10 +13,11 @@ import (
 type Handler struct {
 	medStore     types.MedicineStore
 	cashierStore types.CashierStore
+	unitStore types.UnitStore
 }
 
-func NewHandler(medStore types.MedicineStore, cashierStore types.CashierStore) *Handler {
-	return &Handler{medStore: medStore, cashierStore: cashierStore}
+func NewHandler(medStore types.MedicineStore, cashierStore types.CashierStore, unitStore types.UnitStore) *Handler {
+	return &Handler{medStore: medStore, cashierStore: cashierStore, unitStore: unitStore}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
@@ -59,19 +60,64 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	firstUnit, err := h.unitStore.GetUnitByName(payload.FirstUnit)
+	if firstUnit == nil {
+		err = h.unitStore.CreateUnit(payload.FirstUnit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		firstUnit, err = h.unitStore.GetUnitByName(payload.FirstUnit)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	secondUnit, err := h.unitStore.GetUnitByName(payload.SecondUnit)
+	if secondUnit == nil {
+		err = h.unitStore.CreateUnit(payload.SecondUnit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		secondUnit, err = h.unitStore.GetUnitByName(payload.SecondUnit)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	thirdUnit, err := h.unitStore.GetUnitByName(payload.ThirdUnit)
+	if thirdUnit == nil {
+		err = h.unitStore.CreateUnit(payload.ThirdUnit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		thirdUnit, err = h.unitStore.GetUnitByName(payload.ThirdUnit)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	err = h.medStore.CreateMedicine(types.Medicine{
 		Barcode:        payload.Barcode,
 		Name:           payload.Name,
 		Qty:            payload.Qty,
-		FirstUnitID:    payload.FirstUnitID,
+		FirstUnitID:    firstUnit.ID,
 		FirstSubtotal:  payload.FirstSubtotal,
 		FirstDiscount:  payload.FirstDiscount,
 		FirstPrice:     payload.FirstPrice,
-		SecondUnitID:   payload.SecondUnitID,
+		SecondUnitID:   secondUnit.ID,
 		SecondSubtotal: payload.SecondSubtotal,
 		SecondDiscount: payload.SecondDiscount,
 		SecondPrice:    payload.SecondPrice,
-		ThirdUnitID:    payload.ThirdUnitID,
+		ThirdUnitID:    thirdUnit.ID,
 		ThirdSubtotal:  payload.ThirdSubtotal,
 		ThirdDiscount:  payload.ThirdDiscount,
 		ThirdPrice:     payload.ThirdPrice,
