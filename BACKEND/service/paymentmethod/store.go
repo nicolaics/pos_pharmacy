@@ -15,11 +15,10 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) FindPaymentMethodID(db *sql.DB, paymentMethodName string) (int, error) {
-	rows, err := db.Query("SELECT * FROM payment_method WHERE method = ? ", paymentMethodName)
-
+func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.PaymentMethod, error) {
+	rows, err := s.db.Query("SELECT * FROM payment_method WHERE method = ? ", paymentMethodName)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
 	paymentMethod := new(types.PaymentMethod)
@@ -28,11 +27,21 @@ func (s *Store) FindPaymentMethodID(db *sql.DB, paymentMethodName string) (int, 
 		paymentMethod, err = scanRowIntoPaymentMethod(rows)
 
 		if err != nil {
-			return -1, err
+			return nil, err
 		}
 	}
 
-	return paymentMethod.ID, nil
+	return paymentMethod, nil
+}
+
+func (s *Store) CreatePaymentMethod(paymentMethodName string) error {
+	_, err := s.db.Exec("INSERT INTO payment_method (method) VALUES (?)", paymentMethodName)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
