@@ -30,7 +30,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.CustomerPayload
+	var payload types.RegisterCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -89,7 +89,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.CustomerPayload
+	var payload types.DeleteCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -111,10 +111,10 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the customer exists
-	customer, err := h.custStore.GetCustomerByName(payload.Name)
+	customer, err := h.custStore.GetCustomerByID(payload.ID)
 	if customer == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s doesn't exist", payload.Name))
+			fmt.Errorf("customer %s doesn't exist", payload.Name))
 		return
 	}
 
@@ -151,6 +151,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the customer exists
+	customer, err := h.custStore.GetCustomerByID(payload.ID)
+	if err != nil || customer == nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("customer with id %d doesn't exists", payload.ID))
+		return
+	}
+
 	_, err = h.custStore.GetCustomerByName(payload.NewName)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
@@ -158,19 +165,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customer, err := h.custStore.GetCustomerByName(payload.OldName)
-	if customer == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s doesn't exist", payload.OldName))
-		return
-	}
-
-	err = h.custStore.ModifyCustomer(customer, payload.NewName)
+	err = h.custStore.ModifyCustomer(customer.ID, payload.NewName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("customer %s modified into %s by %s",
-		payload.OldName, payload.NewName, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("customer modified into %s by %s",
+														payload.NewName, cashier.Name))
 }

@@ -125,9 +125,8 @@ func (s *Store) DeleteCustomer(customer *types.Customer) error {
 	return nil
 }
 
-func (s *Store) ModifyCustomer(customer *types.Customer, newName string) error {
-	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ",
-		newName, customer.ID)
+func (s *Store) ModifyCustomer(id int, newName string) error {
+	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", newName, id)
 
 	if err != nil {
 		return err
