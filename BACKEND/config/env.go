@@ -37,8 +37,8 @@ func initConfig() Config {
 		DBName:                        getEnv("DB_NAME", "pos_pharmacy"),
 		JWTAccessExpirationInSeconds:  getEnvAsInt("JWT_ACCESS_EXP", (3600 * 12)),  // for seven days
 		JWTRefreshExpirationInSeconds: getEnvAsInt("JWT_REFRESH_EXP", (3600 * 24)), // for seven days
-		JWTAccessSecret:                     getEnv("JWT_ACCESS_SECRET", "nsjuwpiiaAjM"),
-		JWTRefreshSecret:                     getEnv("JWT_REFRESH_SECRET", "euNwhiwpmql"),
+		JWTAccessSecret:               getEnv("JWT_ACCESS_SECRET", "nsjuwpiiaAjM"),
+		JWTRefreshSecret:              getEnv("JWT_REFRESH_SECRET", "euNwhiwpmql"),
 		RedisDSN:                      getEnv("REDIS_DSN", "localhost:6379"),
 	}
 }
