@@ -26,4 +26,3 @@ type Customer struct {
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 }
-
