@@ -96,26 +96,6 @@ func (s *Store) GetAllCustomers() ([]types.Customer, error) {
 	return customers, nil
 }
 
-func (s *Store) FindCustomerID(customerName string) (int, error) {
-	rows, err := s.db.Query("SELECT * FROM customer WHERE name = ? ", customerName)
-
-	if err != nil {
-		return -1, err
-	}
-
-	customer := new(types.Customer)
-
-	for rows.Next() {
-		customer, err = scanRowIntoCustomer(rows)
-
-		if err != nil {
-			return -1, err
-		}
-	}
-
-	return customer.ID, nil
-}
-
 func (s *Store) DeleteCustomer(customer *types.Customer) error {
 	_, err := s.db.Exec("DELETE FROM customer WHERE id = ?", customer.ID)
 	if err != nil {
