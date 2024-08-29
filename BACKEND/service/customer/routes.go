@@ -79,7 +79,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	customers, err := h.custStore.GetAllCustomers()
-	if err == nil {
+	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
