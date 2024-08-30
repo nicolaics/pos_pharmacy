@@ -24,23 +24,14 @@ type PaymentMethod struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type UnitStore interface {
+	GetUnitByName(string) (*Unit, error)
+	CreateUnit(string) error
+}
 type Unit struct {
 	ID        int       `json:"id"`
 	Unit      string    `json:"unit"`
 	CreatedAt time.Time `json:"createdAt"`
-}
-
-type PurchaseInvoice struct {
-	ID            int       `json:"id"`
-	Number        int       `json:"number"`
-	SupplierID    string    `json:"supplierId"`
-	Subtotal      float64   `json:"subtotal"`
-	Discount      float64   `json:"discount"`
-	TotalPrice    float64   `json:"totalPrice"`
-	PaymentMethod string    `json:"paymentMethod"`
-	PurchaseDate  time.Time `json:"purchaseDate"`
-	PaidDate      time.Time `json:"paidDate"`
-	CreatedAt     time.Time `json:"createdAt"`
 }
 
 type InvoiceStore interface {
@@ -62,28 +53,6 @@ type Invoice struct {
 	PaymentMethodName string    `json:"paymentMethodName"`
 	Description       string    `json:"description"`
 	InvoiceDate       time.Time `json:"invoiceDate"`
-	CreatedAt         time.Time `json:"createdAt"`
-}
-
-type Medicine struct {
-	Barcode           string    `json:"barcode"`
-	Name              string    `json:"name"`
-	UnitID            string    `json:"unitId"`
-	Stock             float64   `json:"stock"`
-	PurchaseInvoiceID int       `json:"purchaseInvoiceId"`
-	Price             float64   `json:"price"`
-	CreatedAt         time.Time `json:"createdAt"`
-}
-
-type PurchaseMedicineItems struct {
-	ID                int       `json:"id"`
-	PurchaseInvoiceID int       `json:"purchaseInvoiceId"`
-	MedicineBarcode   string    `json:"medicineBarcode"`
-	Qty               float64   `json:"qty"`
-	UnitID            string    `json:"unitId"`
-	PurchasePrice     float64   `json:"purchasePrice"`
-	PurchaseDiscount  float64   `json:"purchaseDiscount"`
-	Subtotal          float64   `json:"subtotal"`
 	CreatedAt         time.Time `json:"createdAt"`
 }
 
