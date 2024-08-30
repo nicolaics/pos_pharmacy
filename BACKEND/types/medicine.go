@@ -8,15 +8,15 @@ type RegisterMedicinePayload struct {
 	Barcode        string  `json:"barcode" validate:"required"`
 	Name           string  `json:"name" validate:"required"`
 	Qty            float64 `json:"qty" validate:"required"`
-	FirstUnitID    int     `json:"firstUnitId" validate:"required"`
+	FirstUnit      string  `json:"firstUnit" validate:"required"`
 	FirstSubtotal  float64 `json:"firstSubtotal" validate:"required"`
 	FirstDiscount  float64 `json:"firstDiscount"`
 	FirstPrice     float64 `json:"firstPrice" validate:"required"`
-	SecondUnitID   int     `json:"secondUnitId"`
+	SecondUnit     string  `json:"secondUnit" validate:"required"` // if empty, type: "None"
 	SecondSubtotal float64 `json:"secondSubtotal"`
 	SecondDiscount float64 `json:"secondDiscount"`
 	SecondPrice    float64 `json:"secondPrice"`
-	ThirdUnitID    int     `json:"thirdUnitId"`
+	ThirdUnit      string  `json:"thirdUnit" validate:"required"` // if empty, type: "None"
 	ThirdSubtotal  float64 `json:"thirdSubtotal"`
 	ThirdDiscount  float64 `json:"thirdDiscount"`
 	ThirdPrice     float64 `json:"thirdPrice"`
@@ -29,7 +29,7 @@ type DeleteMedicinePayload struct {
 }
 
 type ModifyMedicinePayload struct {
-	ID             int     `json:"id" validate:"required"`
+	ID                int     `json:"id" validate:"required"`
 	NewBarcode        string  `json:"newBarcode" validate:"required"`
 	NewName           string  `json:"newName" validate:"required"`
 	NewQty            float64 `json:"newQty" validate:"required"`
