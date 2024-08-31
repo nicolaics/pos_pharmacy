@@ -162,12 +162,7 @@ func (s *Store) GetPurhcaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 }
 
 func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice) error {
-	_, err := s.db.Exec("DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ? ", purchaseInvoice.ID)
-	if err != nil {
-		return err
-	}
-	
-	_, err = s.db.Exec("DELETE FROM purchase_invoice WHERE id = ?", purchaseInvoice.ID)
+	_, err := s.db.Exec("DELETE FROM purchase_invoice WHERE id = ?", purchaseInvoice.ID)
 	if err != nil {
 		return err
 	}
@@ -175,17 +170,32 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice) er
 	return nil
 }
 
-/*
-func (s *Store) ModifyCustomer(id int, newName string) error {
-	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", newName, id)
-
+func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
+	_, err := s.db.Exec("DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ? ", purchaseInvoiceId)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-*/
+
+func (s *Store) ModifyPurchaseInvoice(id int, purchaseInvoice types.PurchaseInvoice) error {
+	fields := "number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, "
+	fields += "tax = ?, total_price = ?, description = ?, cashier_id = ?, invoice_date = ?"
+
+	query := fmt.Sprintf("UPDATE purchase_invoice SET %s WHERE id = ?", fields)
+
+	_, err := s.db.Exec(query,
+						purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
+						purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
+						purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.CashierID,
+						purchaseInvoice.InvoiceDate, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) {
 	purchaseInvoice := new(types.PurchaseInvoice)
