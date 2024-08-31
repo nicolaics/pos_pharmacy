@@ -105,7 +105,7 @@ func (s *Store) CreatePurchaseMedicineItems(purchaseMedItem types.PurchaseMedici
 	return nil
 }
 
-func (s *Store) GetPurhcaseInvoices(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
+func (s *Store) GetPurchaseInvoices(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
 	query := fmt.Sprintf("SELECT * FROM purchase_invoice WHERE invoice_date BETWEEN DATE('%s') AND DATE('%s') ORDER BY invoice_date DESC",
 				startDate, endDate)
 
@@ -129,11 +129,11 @@ func (s *Store) GetPurhcaseInvoices(startDate time.Time, endDate time.Time) ([]t
 	return purchaseInvoices, nil
 }
 
-func (s *Store) GetPurhcaseMedicineItems(purchaseInvoiceId int) ([]types.PurchaseMedicineItemsReturn, error) {
+func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.PurchaseMedicineItemsReturn, error) {
 	query := "SELECT "
 
-	query += "pmi.id, medicine.name, pmi.qty, unit.unit, pmi.purchase_price, pmi.purchase_discount, "
-	query += "pmi.purchase_tax, pmi.subtotal, pmi.batch_numbebr, pmi.expired_date "
+	query += "pmi.id, medicine.barcode, medicine.name, pmi.qty, unit.unit, pmi.purchase_price, pmi.purchase_discount, "
+	query += "pmi.purchase_tax, pmi.subtotal, pmi.batch_number, pmi.expired_date "
 
 	query += "FROM purchase_medicine_items as pmi "
 	query += "JOIN purchase_invoice as pi ON pmi.purchase_invoice_id = pi.id "
@@ -141,7 +141,7 @@ func (s *Store) GetPurhcaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 	query += "JOIN unit ON pmi.unit_id = unit.id "
 	query += "WHERE pi.id = ? "
 
-	rows, err := s.db.Query(query)
+	rows, err := s.db.Query(query, purchaseInvoiceId)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +230,7 @@ func scanRowIntoPurchaseMedicineItems(rows *sql.Rows) (*types.PurchaseMedicineIt
 
 	err := rows.Scan(
 		&purchaseMedicineItem.ID,
+		&purchaseMedicineItem.MedicineBarcode,
 		&purchaseMedicineItem.MedicineName,
 		&purchaseMedicineItem.Qty,
 		&purchaseMedicineItem.Unit,

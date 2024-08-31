@@ -150,7 +150,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.PurchaseInvoiceSummaryPayload
+	var payload types.ViewPurchaseInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -171,7 +171,7 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	purchaseInvoices, err := h.purchaseInvoiceStore.GetPurhcaseInvoices(payload.StartDate, payload.EndDate)
+	purchaseInvoices, err := h.purchaseInvoiceStore.GetPurchaseInvoices(payload.StartDate, payload.EndDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -183,7 +183,7 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.PurchaseMedicineItemsPayload
+	var payload types.ViewPurchaseMedicineItemsPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -212,7 +212,7 @@ func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.
 	}
 
 	// get medicine items of the purchase invoice
-	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurhcaseMedicineItems(purchaseInvoice.ID)
+	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
