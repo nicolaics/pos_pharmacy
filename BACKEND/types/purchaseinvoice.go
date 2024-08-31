@@ -19,26 +19,26 @@ type PurchaseInvoicePayload struct {
 }
 
 type PurchaseMedicineListPayload struct {
-	MedicineBarcode string    `json:"medicineBarcode"`
-	MedicineName    string    `json:"medicineName"`
-	Qty             float64   `json:"qty"`
-	Unit            string    `json:"unit"`
-	Price           float64   `json:"price"`
+	MedicineBarcode string    `json:"medicineBarcode" validate:"required"`
+	MedicineName    string    `json:"medicineName" validate:"required"`
+	Qty             float64   `json:"qty" validate:"required"`
+	Unit            string    `json:"unit" validate:"required"`
+	Price           float64   `json:"price" validate:"required"`
 	Discount        float64   `json:"discount"`
 	Tax             float64   `json:"tax"`
-	Subtotal        float64   `json:"subtotal"`
-	BatchNumber     string    `json:"batchNumber"`
-	ExpDate         time.Time `json:"expDate"`
+	Subtotal        float64   `json:"subtotal" validate:"required"`
+	BatchNumber     string    `json:"batchNumber" validate:"required"`
+	ExpDate         time.Time `json:"expDate" validate:"required"`
 }
 
 // only view the purchase invoice list
-type PurchaseInvoiceSummaryPayload struct {
+type ViewPurchaseInvoicePayload struct {
 	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
 	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 // view the detail of the purchase invoice
-type PurchaseMedicineItemsPayload struct {
+type ViewPurchaseMedicineItemsPayload struct {
 	PurchaseInvoiceID int `json:"purchaseInvoiceId" validate:"required"`
 }
 
@@ -57,16 +57,17 @@ type ModifyPurchaseInvoicePayload struct {
 }
 
 type PurchaseMedicineItemsReturn struct {
-	ID           int       `json:"id"`
-	MedicineName string    `json:"medicineName"`
-	Qty          float64   `json:"qty"`
-	Unit         string    `json:"unit"`
-	Price        float64   `json:"price"`
-	Discount     float64   `json:"discount"`
-	Tax          float64   `json:"tax"`
-	Subtotal     float64   `json:"subtotal"`
-	BatchNumber  string    `json:"batchNumber"`
-	ExpDate      time.Time `json:"expDate"`
+	ID              int       `json:"id"`
+	MedicineBarcode string    `json:"medicineBarcode"`
+	MedicineName    string    `json:"medicineName"`
+	Qty             float64   `json:"qty"`
+	Unit            string    `json:"unit"`
+	Price           float64   `json:"price"`
+	Discount        float64   `json:"discount"`
+	Tax             float64   `json:"tax"`
+	Subtotal        float64   `json:"subtotal"`
+	BatchNumber     string    `json:"batchNumber"`
+	ExpDate         time.Time `json:"expDate"`
 }
 
 type PurchaseInvoiceReturnJSONPayload struct {
@@ -110,8 +111,8 @@ type PurchaseInvoiceStore interface {
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	CreatePurchaseInvoice(PurchaseInvoice) error
 	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
-	GetPurhcaseInvoices(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
-	GetPurhcaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
+	GetPurchaseInvoices(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
+	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
 	DeletePurchaseInvoice(*PurchaseInvoice) error
 	DeletePurchaseMedicineItems(int) error
 	ModifyPurchaseInvoice(int, PurchaseInvoice) error
