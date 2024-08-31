@@ -41,7 +41,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/cashier/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
 	router.HandleFunc("/cashier/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/refresh-token", h.handleRefreshToken).Methods(http.MethodPost)
+	router.HandleFunc("/cashier/refresh-token", h.handleRefreshToken).Methods(http.MethodGet)
 	router.HandleFunc("/cashier/refresh-token", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -116,9 +116,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierToken(w, r, true)
+	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
 	}
 
@@ -158,9 +158,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.store.ValidateCashierToken(w, r, true)
+	_, err := h.store.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
 	}
 
@@ -189,9 +189,9 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierToken(w, r, true)
+	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
 	}
 
@@ -232,9 +232,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierToken(w, r, true)
+	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
 	}
 
@@ -272,7 +272,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
-	accessDetails, err := auth.ExtractTokenFromRedis(r)
+	accessDetails, err := auth.ExtractAccessTokenFromClient(r)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"))
 		return
@@ -336,24 +336,20 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-	refreshUUID, cashierId, err := auth.ValidateRefreshToken(r)
+	// validate refresh token
+	cashier, err := h.store.ValidateCashierRefreshToken(w, r)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, err)
-	}
-
-	_, err = h.store.DeleteToken(refreshUUID)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("sign in again: %v", err))
 		return
 	}
 
-	tokenDetails, err := auth.CreateJWT(cashierId)
+	tokenDetails, err := auth.CreateJWT(cashier.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.SaveToken(cashierId, tokenDetails)
+	err = h.store.SaveToken(cashier.ID, tokenDetails)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

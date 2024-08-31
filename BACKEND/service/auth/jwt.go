@@ -68,69 +68,53 @@ func CreateJWT(cashierId int) (*types.TokenDetails, error) {
 	return tokenDetails, nil
 }
 
-func ValidateAccessToken(r *http.Request) error {
-	token, err := verifyToken(r)
+func ExtractRefreshTokenFromClient(r *http.Request) (*types.RefreshDetails, error) {
+	token, err := verifyRefreshToken(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = token.Claims.Valid()
 
 	if err != nil && !token.Valid {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateRefreshToken(r *http.Request) (string, int, error) {
-	token, err := verifyToken(r)
-	if err != nil {
-		return "", -1, err
-	}
-
-	err = token.Claims.Valid()
-
-	if err != nil && !token.Valid {
-		return "", -1, err
+		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
 
 	if ok && token.Valid {
-		refreshUuid, ok := claims["refresh_uuid"].(string) //convert the interface to string
+		refreshUuid, ok := claims["refreshUuid"].(string) //convert the interface to string
 		if !ok {
-			return "", -1, err
+			return nil, err
 		}
 
 		cashierId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["cashierId"]))
 		if err != nil {
-			return "", -1, err
+			return nil, err
 		}
 
-		return refreshUuid, cashierId, nil
-	} else {
-		return "", -1, fmt.Errorf("refresh expired")
+		return &types.RefreshDetails{
+			RefreshUUID: refreshUuid,
+			CashierID:   cashierId,
+		}, nil
 	}
+
+	return nil, fmt.Errorf("refresh expired")
 }
 
-func verifyToken(r *http.Request) (*jwt.Token, error) {
-	tokenStringArr, err := extractToken(r)
+func verifyRefreshToken(r *http.Request) (*jwt.Token, error) {
+	tokenStr, err := extractToken(r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify token")
 	}
 
-	token, err := jwt.Parse(tokenStringArr[1], func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		//Make sure that the token method conform to "SigningMethodHMAC"
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		if tokenStringArr[0] == "Access" {
-			return []byte(config.Envs.JWTAccessSecret), nil
-		} else {
-			return []byte(config.Envs.JWTRefreshSecret), nil
-		}
+		return []byte(config.Envs.JWTRefreshSecret), nil
 	})
 
 	if err != nil {
@@ -140,26 +124,14 @@ func verifyToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-func extractToken(r *http.Request) ([]string, error) {
-	token := r.Header.Get("Authorization")
-
-	//normally: Authorization the_token_xxx
-	strArr := strings.Split(token, " ")
-
-	if len(strArr) == 2 {
-		return strArr, nil
-	}
-
-	return nil, fmt.Errorf("invalid token")
-}
-
-func ExtractTokenFromRedis(r *http.Request) (*types.AccessDetails, error) {
-	token, err := verifyToken(r)
+func ExtractAccessTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
+	token, err := verifyAccessToken(r)
 	if err != nil {
 		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
+
 	if ok && token.Valid {
 		accessUuid, ok := claims["accessUuid"].(string)
 		if !ok {
@@ -178,4 +150,39 @@ func ExtractTokenFromRedis(r *http.Request) (*types.AccessDetails, error) {
 	}
 
 	return nil, err
+}
+
+func verifyAccessToken(r *http.Request) (*jwt.Token, error) {
+	tokenStr, err := extractToken(r)
+	if err != nil {
+		return nil, fmt.Errorf("unable to verify token")
+	}
+
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(config.Envs.JWTAccessSecret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func extractToken(r *http.Request) (string, error) {
+	token := r.Header.Get("Authorization")
+
+	//normally: Authorization the_token_xxx
+	strArr := strings.Split(token, " ")
+
+	if len(strArr) == 2 {
+		return strArr[1], nil
+	}
+
+	return "", fmt.Errorf("invalid token")
 }

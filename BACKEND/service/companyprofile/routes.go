@@ -45,7 +45,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -77,7 +77,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate cashier token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -110,7 +110,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -150,7 +150,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return

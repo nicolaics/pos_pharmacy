@@ -47,9 +47,10 @@ type CashierStore interface {
 	UpdateLastLoggedIn(int) error
 	ModifyCashier(int, Cashier) error
 	SaveToken(int, *TokenDetails) error
-	GetCashierIDFromRedis(*AccessDetails) (int, error)
+	GetCashierIDFromRedis(*AccessDetails, *RefreshDetails) (int, error)
 	DeleteToken(string) (int, error)
-	ValidateCashierToken(http.ResponseWriter, *http.Request, bool) (*Cashier, error)
+	ValidateCashierAccessToken(http.ResponseWriter, *http.Request, bool) (*Cashier, error)
+	ValidateCashierRefreshToken(http.ResponseWriter, *http.Request) (*Cashier, error)
 }
 
 type Cashier struct {

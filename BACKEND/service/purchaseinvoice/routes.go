@@ -60,9 +60,9 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -165,9 +165,9 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -198,12 +198,12 @@ func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
-	
+
 	// get purchase invoice data
 	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.PurchaseInvoiceID)
 	if err != nil {
@@ -240,32 +240,32 @@ func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.
 	}
 
 	returnPayload := types.PurchaseInvoiceReturnJSONPayload{
-		PurchaseInvoiceID: purchaseInvoice.ID,
-		PurchaseInvoiceNumber: purchaseInvoice.Number,
-		PurchaseInvoiceSubtotal: purchaseInvoice.Subtotal,
-		PurchaseInvoiceDiscount: purchaseInvoice.Discount,
-		PurchaseInvoiceTax: purchaseInvoice.Tax,
-		PurchaseInvoiceTotalPrice: purchaseInvoice.TotalPrice,
+		PurchaseInvoiceID:          purchaseInvoice.ID,
+		PurchaseInvoiceNumber:      purchaseInvoice.Number,
+		PurchaseInvoiceSubtotal:    purchaseInvoice.Subtotal,
+		PurchaseInvoiceDiscount:    purchaseInvoice.Discount,
+		PurchaseInvoiceTax:         purchaseInvoice.Tax,
+		PurchaseInvoiceTotalPrice:  purchaseInvoice.TotalPrice,
 		PurchaseInvoiceDescription: purchaseInvoice.Description,
 		PurchaseInvoiceInvoiceDate: purchaseInvoice.InvoiceDate,
 
-		CompanyID: company.ID,
-		CompanyName: company.Name,
-		CompanyAddress: company.Address,
-		CompanyBusinessNumber: company.BusinessNumber,
-		Pharmacist: company.Pharmacist,
+		CompanyID:               company.ID,
+		CompanyName:             company.Name,
+		CompanyAddress:          company.Address,
+		CompanyBusinessNumber:   company.BusinessNumber,
+		Pharmacist:              company.Pharmacist,
 		PharmacistLicenseNumber: company.PharmacistLicenseNumber,
 
-		SupplierID: supplier.ID,
-		SupplierName: supplier.Name,
-		SupplierAddress: supplier.Address,
-		SupplierPhoneNumber: supplier.CompanyPhoneNumber,
-		SupplierContactPersonName: supplier.ContactPersonName,
+		SupplierID:                  supplier.ID,
+		SupplierName:                supplier.Name,
+		SupplierAddress:             supplier.Address,
+		SupplierPhoneNumber:         supplier.CompanyPhoneNumber,
+		SupplierContactPersonName:   supplier.ContactPersonName,
 		SupplierContactPersonNumber: supplier.ContactPersonNumber,
-		SupplierTerms: supplier.Terms,
-		SupplierVendorIsTaxable: supplier.VendorIsTaxable,
+		SupplierTerms:               supplier.Terms,
+		SupplierVendorIsTaxable:     supplier.VendorIsTaxable,
 
-		CashierID: inputter.ID,
+		CashierID:   inputter.ID,
 		CashierName: inputter.Name,
 
 		MedicineLists: purchaseMedicineItems,
@@ -291,7 +291,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid or not admin: %v", err))
 		return
@@ -337,9 +337,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 

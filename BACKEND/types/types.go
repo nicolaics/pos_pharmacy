@@ -81,3 +81,8 @@ type AccessDetails struct {
 	AccessUUID string
 	CashierID  int
 }
+
+type RefreshDetails struct {
+	RefreshUUID string
+	CashierID   int
+}

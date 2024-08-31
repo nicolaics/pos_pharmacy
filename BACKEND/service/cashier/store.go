@@ -127,7 +127,7 @@ func (s *Store) ModifyCashier(id int, cashier types.Cashier) error {
 	columns := "name = ?, password = ?, admin = ?, phone_number = ?"
 
 	_, err := s.db.Exec(fmt.Sprintf("UPDATE cashier SET %s WHERE id = ? ", columns),
-					cashier.Name, cashier.Password, cashier.Admin, cashier.PhoneNumber, id)
+		cashier.Name, cashier.Password, cashier.Admin, cashier.PhoneNumber, id)
 
 	if err != nil {
 		return err
@@ -154,8 +154,15 @@ func (s *Store) SaveToken(cashierId int, tokenDetails *types.TokenDetails) error
 	return nil
 }
 
-func (s *Store) GetCashierIDFromRedis(authDetails *types.AccessDetails) (int, error) {
-	cashierIdStr, err := s.redisClient.Get(context.Background(), authDetails.AccessUUID).Result()
+func (s *Store) GetCashierIDFromRedis(accessDetails *types.AccessDetails, refreshDetails *types.RefreshDetails) (int, error) {
+	var cashierIdStr string
+	var err error
+
+	if refreshDetails == nil {
+		cashierIdStr, err = s.redisClient.Get(context.Background(), accessDetails.AccessUUID).Result()
+	} else {
+		cashierIdStr, err = s.redisClient.Get(context.Background(), refreshDetails.RefreshUUID).Result()
+	}
 	if err != nil {
 		return -1, err
 	}
@@ -194,16 +201,15 @@ func (s *Store) FindCashierID(db *sql.DB, cashierName string) (int, error) {
 	return cashier.ID, nil
 }
 
-func (s *Store) ValidateCashierToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.Cashier, error) {
-	// validate token
-	accessDetails, err := auth.ExtractTokenFromRedis(r)
+func (s *Store) ValidateCashierAccessToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.Cashier, error) {
+	accessDetails, err := auth.ExtractAccessTokenFromClient(r)
 	if err != nil {
 		return nil, err
 	}
 
-	cashierID, err := s.GetCashierIDFromRedis(accessDetails)
+	cashierID, err := s.GetCashierIDFromRedis(accessDetails, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("renew your token")
 	}
 
 	// check if cashier exist
@@ -217,6 +223,26 @@ func (s *Store) ValidateCashierToken(w http.ResponseWriter, r *http.Request, nee
 		if !cashier.Admin {
 			return nil, fmt.Errorf("unauthorized! not admin")
 		}
+	}
+
+	return cashier, nil
+}
+
+func (s *Store) ValidateCashierRefreshToken(w http.ResponseWriter, r *http.Request) (*types.Cashier, error) {
+	refreshDetails, err := auth.ExtractRefreshTokenFromClient(r)
+	if err != nil {
+		return nil, err
+	}
+
+	cashierID, err := s.GetCashierIDFromRedis(nil, refreshDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if cashier exist
+	cashier, err := s.GetCashierByID(cashierID)
+	if err != nil {
+		return nil, err
 	}
 
 	return cashier, nil

@@ -60,9 +60,9 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -158,9 +158,9 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -191,9 +191,9 @@ func (h *Handler) handleGetPurchaseOrderItems(w http.ResponseWriter, r *http.Req
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -233,10 +233,10 @@ func (h *Handler) handleGetPurchaseOrderItems(w http.ResponseWriter, r *http.Req
 	}
 
 	returnPayload := types.PurchaseOrderInvoiceReturnJSONPayload{
-		PurchaseOrderInvoiceID:          purchaseOrderInvoice.ID,
-		PurchaseOrderInvoiceNumber:      purchaseOrderInvoice.Number,
-		PurchaseOrderInvoiceTotalItems:    purchaseOrderInvoice.TotalItems,
-		PurchaseOrderInvoiceInvoiceDate: purchaseOrderInvoice.InvoiceDate,
+		PurchaseOrderInvoiceID:           purchaseOrderInvoice.ID,
+		PurchaseOrderInvoiceNumber:       purchaseOrderInvoice.Number,
+		PurchaseOrderInvoiceTotalItems:   purchaseOrderInvoice.TotalItems,
+		PurchaseOrderInvoiceInvoiceDate:  purchaseOrderInvoice.InvoiceDate,
 		PurchaseOrderInvoiceLastModified: purchaseOrderInvoice.LastModified,
 
 		CompanyID:               company.ID,
@@ -281,7 +281,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, true)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid or not admin: %v", err))
 		return
@@ -327,9 +327,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -342,12 +342,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.PurchaseOrderInvoiceID, types.PurchaseOrderInvoice{
-		Number:      payload.NewNumber,
-		CompanyID:   payload.NewCompanyID,
-		SupplierID:  payload.NewSupplierID,
-		CashierID:   cashier.ID,
-		TotalItems: payload.NewTotalItems,
-		InvoiceDate: payload.NewInvoiceDate,
+		Number:       payload.NewNumber,
+		CompanyID:    payload.NewCompanyID,
+		SupplierID:   payload.NewSupplierID,
+		CashierID:    cashier.ID,
+		TotalItems:   payload.NewTotalItems,
+		InvoiceDate:  payload.NewInvoiceDate,
 		LastModified: payload.NewLastModified,
 	})
 	if err != nil {

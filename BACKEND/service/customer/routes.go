@@ -45,9 +45,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -72,9 +72,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -104,9 +104,9 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -144,9 +144,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierToken(w, r, false)
+	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
 		return
 	}
 
@@ -172,5 +172,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("customer modified into %s by %s",
-														payload.NewName, cashier.Name))
+		payload.NewName, cashier.Name))
 }
