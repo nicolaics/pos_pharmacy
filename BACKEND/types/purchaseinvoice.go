@@ -6,7 +6,7 @@ import (
 
 type PurchaseInvoicePayload struct {
 	Number        int                           `json:"number" validate:"required"`
-	CompanyID     int                           `json:"companyId" validate:"required"`
+	CompanyID     int                           `json:"companyId" validate:"required"` // can get the ID from the text box
 	SupplierID    int                           `json:"supplierId" validate:"required"`
 	Subtotal      float64                       `json:"subtotal" validate:"required"`
 	Discount      float64                       `json:"discount"`
@@ -42,6 +42,20 @@ type PurchaseMedicineItemsPayload struct {
 	PurchaseInvoiceID int `json:"purchaseInvoiceId" validate:"required"`
 }
 
+type ModifyPurchaseInvoicePayload struct {
+	PurchaseInvoiceID int                           `json:"purchaseInvoiceId" validate:"required"`
+	NewNumber         int                           `json:"newNumber" validate:"required"`
+	NewCompanyID      int                           `json:"newCompanyId" validate:"required"`
+	NewSupplierID     int                           `json:"newSupplierId" validate:"required"`
+	NewSubtotal       float64                       `json:"newSubtotal" validate:"required"`
+	NewDiscount       float64                       `json:"newDiscount"`
+	NewTax            float64                       `json:"newTax" validate:"required"`
+	NewTotalPrice     float64                       `json:"newTotalPrice" validate:"required"`
+	NewDescription    string                        `json:"newDescription"`
+	NewInvoiceDate    time.Time                     `json:"newInvoiceDate" validate:"required"`
+	NewMedicineLists  []PurchaseMedicineListPayload `json:"newPurchaseMedicineList" validate:"required"`
+}
+
 type PurchaseMedicineItemsReturn struct {
 	ID           int       `json:"id"`
 	MedicineName string    `json:"medicineName"`
@@ -55,7 +69,7 @@ type PurchaseMedicineItemsReturn struct {
 	ExpDate      time.Time `json:"expDate"`
 }
 
-type PurchaseInvoiceReturnPayload struct {
+type PurchaseInvoiceReturnJSONPayload struct {
 	PurchaseInvoiceID          int       `json:"purchaseInvoiceId"`
 	PurchaseInvoiceNumber      int       `json:"purchaseInvoiceNumber"`
 	PurchaseInvoiceSubtotal    float64   `json:"purchaseInvoiceSubtotal"`
@@ -99,6 +113,8 @@ type PurchaseInvoiceStore interface {
 	GetPurhcaseInvoices(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
 	GetPurhcaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
 	DeletePurchaseInvoice(*PurchaseInvoice) error
+	DeletePurchaseMedicineItems(int) error
+	ModifyPurchaseInvoice(int, PurchaseInvoice) error
 }
 
 type PurchaseInvoice struct {
