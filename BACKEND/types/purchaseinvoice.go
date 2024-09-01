@@ -5,7 +5,7 @@ import (
 )
 
 type PurchaseInvoiceStore interface {
-	GetPurchaseInvoicesByNumber(int) ([]*PurchaseInvoice, error)
+	GetPurchaseInvoicesByNumber(int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, cashierId int, invoiceDate time.Time) (*PurchaseInvoice, error)
 	CreatePurchaseInvoice(PurchaseInvoice) error
