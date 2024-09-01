@@ -4,6 +4,19 @@ import (
 	"time"
 )
 
+type PurchaseInvoiceStore interface {
+	GetPurchaseInvoicesByNumber(int) ([]*PurchaseInvoice, error)
+	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
+	GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, cashierId int, invoiceDate time.Time) (*PurchaseInvoice, error)
+	CreatePurchaseInvoice(PurchaseInvoice) error
+	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
+	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
+	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
+	DeletePurchaseInvoice(*PurchaseInvoice) error
+	DeletePurchaseMedicineItems(int) error
+	ModifyPurchaseInvoice(int, PurchaseInvoice) error
+}
+
 type PurchaseInvoicePayload struct {
 	Number        int                           `json:"number" validate:"required"`
 	CompanyID     int                           `json:"companyId" validate:"required"` // can get the ID from the text box
@@ -104,18 +117,6 @@ type PurchaseInvoiceReturnJSONPayload struct {
 
 type DeletePurchaseInvoice struct {
 	ID int `json:"id" validate:"required"`
-}
-
-type PurchaseInvoiceStore interface {
-	GetPurchaseInvoiceByNumber(int) (*PurchaseInvoice, error)
-	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
-	CreatePurchaseInvoice(PurchaseInvoice) error
-	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
-	GetPurchaseInvoices(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
-	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
-	DeletePurchaseInvoice(*PurchaseInvoice) error
-	DeletePurchaseMedicineItems(int) error
-	ModifyPurchaseInvoice(int, PurchaseInvoice) error
 }
 
 type PurchaseInvoice struct {

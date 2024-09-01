@@ -16,8 +16,29 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPurchaseOrderInvoiceByNumber(number int) (*types.PurchaseOrderInvoice, error) {
+func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) ([]types.PurchaseOrderInvoice, error) {
 	rows, err := s.db.Query("SELECT * FROM purchase_order_invoice WHERE number = ?", number)
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseOrderInvoices := make([]types.PurchaseOrderInvoice, 0)
+
+	for rows.Next() {
+		purchaseOrderInvoice, err := scanRowIntoPurchaseOrderInvoice(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseOrderInvoices = append(purchaseOrderInvoices, *purchaseOrderInvoice)
+	}
+
+	return purchaseOrderInvoices, nil
+}
+
+func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice, error) {
+	rows, err := s.db.Query("SELECT * FROM purchase_order_invoice WHERE id = ?", id)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +60,11 @@ func (s *Store) GetPurchaseOrderInvoiceByNumber(number int) (*types.PurchaseOrde
 	return purchaseOrderInvoice, nil
 }
 
-func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice, error) {
-	rows, err := s.db.Query("SELECT * FROM purchase_order_invoice WHERE id = ?", id)
+func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, cashierId int, totalItems int, invoiceDate time.Time) (*types.PurchaseOrderInvoice, error) {
+	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND company_id ? AND "
+	query += "supplier_id = ? AND cashierId = ? AND total_items = ? AND invoice_date ?"
+
+	rows, err := s.db.Query(query, number, companyId, supplierId, cashierId, totalItems, invoiceDate)
 	if err != nil {
 		return nil, err
 	}

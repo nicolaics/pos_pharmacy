@@ -4,6 +4,19 @@ import (
 	"time"
 )
 
+type PurchaseOrderInvoiceStore interface {
+	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, cashierId int, totalItems int, invoiceDate time.Time) (*PurchaseOrderInvoice, error)
+	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
+	CreatePurchaseOrderItems(PurchaseOrderItem) error
+	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
+	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice) error
+	DeletePurchaseOrderItems(int) error
+	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice) error
+}
+
 type NewPurchaseOrderInvoicePayload struct {
 	Number       int       `json:"number" validate:"required"`
 	CompanyID    int       `json:"companyId" validate:"required"`
@@ -89,18 +102,6 @@ type PurchaseOrderInvoiceReturnJSONPayload struct {
 
 type DeletePurchaseOrderInvoice struct {
 	ID int `json:"id" validate:"required"`
-}
-
-type PurchaseOrderInvoiceStore interface {
-	GetPurchaseOrderInvoiceByNumber(int) (*PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
-	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
-	CreatePurchaseOrderItems(PurchaseOrderItem) error
-	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
-	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
-	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice) error
-	DeletePurchaseOrderItems(int) error
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice) error
 }
 
 type PurchaseOrderInvoice struct {

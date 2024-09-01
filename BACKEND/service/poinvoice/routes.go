@@ -94,7 +94,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoice number
-	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByNumber(payload.Number)
+	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByAll(payload.Number, payload.CompanyID, payload.SupplierID, cashier.ID, payload.TotalItems, payload.InvoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists", payload.Number))
 		return

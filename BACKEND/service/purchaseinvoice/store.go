@@ -16,8 +16,29 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPurchaseInvoiceByNumber(number int) (*types.PurchaseInvoice, error) {
+func (s *Store) GetPurchaseInvoicesByNumber(number int) ([]types.PurchaseInvoice, error) {
 	rows, err := s.db.Query("SELECT * FROM purchase_invoice WHERE number = ?", number)
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseInvoices := make([]types.PurchaseInvoice, 0)
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoice(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
+func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
+	rows, err := s.db.Query("SELECT * FROM purchase_invoice WHERE id = ?", id)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +60,11 @@ func (s *Store) GetPurchaseInvoiceByNumber(number int) (*types.PurchaseInvoice, 
 	return purchaseInvoice, nil
 }
 
-func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
-	rows, err := s.db.Query("SELECT * FROM purchase_invoice WHERE id = ?", id)
+func (s *Store) GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, cashierId int, invoiceDate time.Time) (*types.PurchaseInvoice, error) {
+	query := "SELECT * FROM purchase_invoice WHERE number = ? AND company_id = ? AND supplier_id = ? AND "
+	query += "subtotal = ? AND total_price = ? AND cashier_id = ? AND invoice_date = ?"
+
+	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, cashierId, invoiceDate)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +129,7 @@ func (s *Store) CreatePurchaseMedicineItems(purchaseMedItem types.PurchaseMedici
 	return nil
 }
 
-func (s *Store) GetPurchaseInvoices(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
+func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
 	query := fmt.Sprintf("SELECT * FROM purchase_invoice WHERE invoice_date BETWEEN DATE('%s') AND DATE('%s') ORDER BY invoice_date DESC",
 				startDate, endDate)
 
