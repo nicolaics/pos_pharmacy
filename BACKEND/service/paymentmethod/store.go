@@ -34,6 +34,25 @@ func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.Payment
 	return paymentMethod, nil
 }
 
+func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
+	rows, err := s.db.Query("SELECT * FROM payment_method WHERE id = ? ", id)
+	if err != nil {
+		return nil, err
+	}
+
+	paymentMethod := new(types.PaymentMethod)
+
+	for rows.Next() {
+		paymentMethod, err = scanRowIntoPaymentMethod(rows)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return paymentMethod, nil
+}
+
 func (s *Store) CreatePaymentMethod(paymentMethodName string) error {
 	_, err := s.db.Exec("INSERT INTO payment_method (method) VALUES (?)", strings.ToUpper(paymentMethodName))
 

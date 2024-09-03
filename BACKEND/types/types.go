@@ -6,6 +6,7 @@ import (
 
 type PaymentMethodStore interface {
 	GetPaymentMethodByName(paymentMethodName string) (*PaymentMethod, error)
+	GetPaymentMethodByID(int) (*PaymentMethod, error)
 	CreatePaymentMethod(paymentMethodName string) error
 }
 
