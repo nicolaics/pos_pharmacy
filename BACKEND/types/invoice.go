@@ -8,7 +8,7 @@ type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
 	GetInvoiceByAll(number int, cashierId int, customerId int, totalPrice float64, invoiceDate time.Time) (*Invoice, error)
 	GetInvoicesByNumber(int) ([]Invoice, error)
-	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]*Invoice, error)
+	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
 	CreateInvoice(Invoice) error
 	CreateMedicineItems(MedicineItems) error
 	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)
