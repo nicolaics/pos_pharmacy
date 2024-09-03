@@ -35,12 +35,12 @@ func NewHandler(poInvoiceStore types.PurchaseOrderInvoiceStore, cashierStore typ
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/purchase-order", h.handleNew).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order", h.handleGetPurchaseOrderInvoices).Methods(http.MethodGet)
-	router.HandleFunc("/invoice/purchase-order/items", h.handleGetPurchaseOrderItems).Methods(http.MethodGet)
+	router.HandleFunc("/invoice/purchase-order/detail", h.handleGetOnePurchaseOrderInvoiceDetail).Methods(http.MethodGet)
 	router.HandleFunc("/invoice/purchase-order", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice/purchase-order", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/invoice/purchase-order", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/invoice/purchase-order/medicine-items", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/purchase-order/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +143,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPurchaseOrderInvoicePayload
+	var payload types.ViewOnePurchaseOrderInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -174,7 +174,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 }
 
 // only view the purchase invoice list
-func (h *Handler) handleGetPurchaseOrderItems(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetOnePurchaseOrderInvoiceDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
 	var payload types.ViewPurchaseOrderItemsPayload
 
@@ -232,7 +232,7 @@ func (h *Handler) handleGetPurchaseOrderItems(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	returnPayload := types.PurchaseOrderInvoiceReturnJSONPayload{
+	returnPayload := types.PurchaseOrderInvoiceDetailPayload{
 		PurchaseOrderInvoiceID:           purchaseOrderInvoice.ID,
 		PurchaseOrderInvoiceNumber:       purchaseOrderInvoice.Number,
 		PurchaseOrderInvoiceTotalItems:   purchaseOrderInvoice.TotalItems,
