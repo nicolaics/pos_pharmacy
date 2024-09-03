@@ -11,11 +11,12 @@ import (
 	"github.com/nicolaics/pos_pharmacy/service/cashier"
 	"github.com/nicolaics/pos_pharmacy/service/companyprofile"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
+	"github.com/nicolaics/pos_pharmacy/service/invoice"
 	"github.com/nicolaics/pos_pharmacy/service/medicine"
 	"github.com/nicolaics/pos_pharmacy/service/poinvoice"
 	"github.com/nicolaics/pos_pharmacy/service/purchaseinvoice"
 
-	// "github.com/nicolaics/pos_pharmacy/service/paymentmethod"
+	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
 	"github.com/nicolaics/pos_pharmacy/service/unit"
 	"github.com/redis/go-redis/v9"
@@ -49,11 +50,12 @@ func (s *APIServer) Run() error {
 	medicineStore := medicine.NewStore(s.db)
 	companyProfileStore := companyprofile.NewStore(s.db)
 
-	// paymentMethodStore := paymentmethod.NewStore(s.db)
+	paymentMethodStore := paymentmethod.NewStore(s.db)
 	unitStore := unit.NewStore(s.db)
 
 	purchaseInvoiceStore := purchaseinvoice.NewStore(s.db)
 	poInvoiceStore := poinvoice.NewStore(s.db)
+	invoiceStore := invoice.NewStore(s.db)
 
 	cashierHandler := cashier.NewHandler(cashierStore)
 	cashierHandler.RegisterRoutes(subrouter)
@@ -77,6 +79,10 @@ func (s *APIServer) Run() error {
 	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, cashierStore, supplierStore, companyProfileStore,
 											medicineStore, unitStore)
 	poInvoiceHandler.RegisterRoutes(subrouter)
+
+	invoiceHandler := invoice.NewHandler(invoiceStore, cashierStore, customerStore,
+										paymentMethodStore, medicineStore, unitStore)
+	invoiceHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on: ", s.addr)
 
