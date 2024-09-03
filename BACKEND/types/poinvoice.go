@@ -39,7 +39,7 @@ type PurchaseOrderMedicineListPayload struct {
 }
 
 // only view the purchase invoice list
-type ViewPurchaseOrderInvoicePayload struct {
+type ViewOnePurchaseOrderInvoicePayload struct {
 	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
 	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
@@ -71,7 +71,7 @@ type PurchaseOrderItemsReturn struct {
 	Remarks         string  `json:"remarks"`
 }
 
-type PurchaseOrderInvoiceReturnJSONPayload struct {
+type PurchaseOrderInvoiceDetailPayload struct {
 	PurchaseOrderInvoiceID           int       `json:"purchaseOrderInvoiceId"`
 	PurchaseOrderInvoiceNumber       int       `json:"purchaseOrderInvoiceNumber"`
 	PurchaseOrderInvoiceTotalItems   int       `json:"purchaseOrderInvoiceTotalItems"`
