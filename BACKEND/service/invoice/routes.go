@@ -35,12 +35,12 @@ func NewHandler(invoiceStore types.InvoiceStore, cashierStore types.CashierStore
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice", h.handleNew).Methods(http.MethodPost)
 	router.HandleFunc("/invoice", h.handleGetInvoices).Methods(http.MethodGet)
-	// router.HandleFunc("/invoice/medicine-items", h.handleGetMedicineItems).Methods(http.MethodGet)
-	// router.HandleFunc("/invoice/purchase", h.handleDelete).Methods(http.MethodDelete)
-	// router.HandleFunc("/invoice/purchase", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/invoice/detail", h.handleGetInvoiceDetail).Methods(http.MethodGet)
+	router.HandleFunc("/invoice", h.handleDelete).Methods(http.MethodDelete)
+	router.HandleFunc("/invoice", h.handleModify).Methods(http.MethodPatch)
 
-	// router.HandleFunc("/invoice/purchase", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	// router.HandleFunc("/invoice/purchase/medicine-items", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
@@ -179,10 +179,9 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, invoices)
 }
 
-/*
-func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPurchaseMedicineItemsPayload
+	var payload types.ViewInvoiceDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -203,80 +202,71 @@ func (h *Handler) handleGetPurchaseMedicineItems(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// get purchase invoice data
-	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.PurchaseInvoiceID)
+	// get invoice data
+	invoice, err := h.invoiceStore.GetInvoiceByID(payload.InvoiceID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice id %d doesn't exists", payload.PurchaseInvoiceID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d doesn't exists", payload.InvoiceID))
 		return
 	}
 
-	// get medicine items of the purchase invoice
-	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	// get customer data
+	customer, err := h.custStore.GetCustomerByID(invoice.CustomerID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d doesn't exists", invoice.CustomerID))
+		return
+	}
+
+	// get payment method data
+	paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByID(invoice.PaymentMethodID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method id %d doesn't exists", invoice.PaymentMethodID))
+		return
+	}
+
+	// get medicine items of the invoice
+	medicineItems, err := h.invoiceStore.GetMedicineItems(invoice.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	// get company profile
-	company, err := h.companyProfileStore.GetCompanyProfileByID(purchaseInvoice.CompanyID)
+	// get cashier data, the one who inputs the invoice
+	inputter, err := h.cashierStore.GetCashierByID(invoice.CashierID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d doesn't exists", purchaseInvoice.CompanyID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier id %d doesn't exists", invoice.CashierID))
 		return
 	}
 
-	// get supplier data
-	supplier, err := h.supplierStore.GetSupplierByID(purchaseInvoice.SupplierID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d doesn't exists", purchaseInvoice.SupplierID))
-		return
-	}
-
-	// get cashier data, the one who inputs the purchase invoice
-	inputter, err := h.cashierStore.GetCashierByID(purchaseInvoice.CashierID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier id %d doesn't exists", purchaseInvoice.CashierID))
-		return
-	}
-
-	returnPayload := types.PurchaseInvoiceReturnJSONPayload{
-		PurchaseInvoiceID:          purchaseInvoice.ID,
-		PurchaseInvoiceNumber:      purchaseInvoice.Number,
-		PurchaseInvoiceSubtotal:    purchaseInvoice.Subtotal,
-		PurchaseInvoiceDiscount:    purchaseInvoice.Discount,
-		PurchaseInvoiceTax:         purchaseInvoice.Tax,
-		PurchaseInvoiceTotalPrice:  purchaseInvoice.TotalPrice,
-		PurchaseInvoiceDescription: purchaseInvoice.Description,
-		PurchaseInvoiceInvoiceDate: purchaseInvoice.InvoiceDate,
-
-		CompanyID:               company.ID,
-		CompanyName:             company.Name,
-		CompanyAddress:          company.Address,
-		CompanyBusinessNumber:   company.BusinessNumber,
-		Pharmacist:              company.Pharmacist,
-		PharmacistLicenseNumber: company.PharmacistLicenseNumber,
-
-		SupplierID:                  supplier.ID,
-		SupplierName:                supplier.Name,
-		SupplierAddress:             supplier.Address,
-		SupplierPhoneNumber:         supplier.CompanyPhoneNumber,
-		SupplierContactPersonName:   supplier.ContactPersonName,
-		SupplierContactPersonNumber: supplier.ContactPersonNumber,
-		SupplierTerms:               supplier.Terms,
-		SupplierVendorIsTaxable:     supplier.VendorIsTaxable,
+	returnPayload := types.InvoiceDetailPayload{
+		InvoiceID:          invoice.ID,
+		InvoiceNumber:      invoice.Number,
+		InvoiceSubtotal:    invoice.Subtotal,
+		InvoiceDiscount:    invoice.Discount,
+		InvoiceTax:         invoice.Tax,
+		InvoiceTotalPrice:  invoice.TotalPrice,
+		PaidAmount:         invoice.PaidAmount,
+		ChangeAmount:       invoice.ChangeAmount,
+		InvoiceDescription: invoice.Description,
+		InvoiceDate:        invoice.InvoiceDate,
 
 		CashierID:   inputter.ID,
 		CashierName: inputter.Name,
 
-		MedicineLists: purchaseMedicineItems,
+		CustomerID:   customer.ID,
+		CustomerName: customer.Name,
+
+		PaymentMethodID:   paymentMethod.ID,
+		PaymentMethodName: paymentMethod.Method,
+
+		MedicineLists: medicineItems,
 	}
 
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
 }
 
-/*
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.DeletePurchaseInvoice
+	var payload types.DeleteInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -298,31 +288,31 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the purchase invoice exists
-	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
-	if purchaseInvoice == nil || err != nil {
+	invoice, err := h.invoiceStore.GetInvoiceByID(payload.InvoiceID)
+	if invoice == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase invoice id %d doesn't exist", payload.ID))
+			fmt.Errorf("invoice id %d doesn't exist", payload.InvoiceID))
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice.ID)
+	err = h.invoiceStore.DeleteMedicineItems(invoice.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseInvoice(purchaseInvoice)
+	err = h.invoiceStore.DeleteInvoice(invoice)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("purchase invoice number %d deleted by %s", purchaseInvoice.Number, cashier.Name))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("invoice number %d deleted by %s", invoice.Number, cashier.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ModifyPurchaseInvoicePayload
+	var payload types.ModifyInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -343,32 +333,41 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the purchase invoice exists
-	_, err = h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.PurchaseInvoiceID)
+	// get payment method
+	paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(payload.NewPaymentMethodName)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase invoice with id %d doesn't exists", payload.PurchaseInvoiceID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s not found", payload.NewPaymentMethodName))
 		return
 	}
 
-	err = h.purchaseInvoiceStore.ModifyPurchaseInvoice(payload.PurchaseInvoiceID, types.PurchaseInvoice{
-		Number:      payload.NewNumber,
-		CompanyID:   payload.NewCompanyID,
-		SupplierID:  payload.NewSupplierID,
-		Subtotal:    payload.NewSubtotal,
-		Discount:    payload.NewDiscount,
-		Tax:         payload.NewTax,
-		TotalPrice:  payload.NewTotalPrice,
-		Description: payload.NewDescription,
-		CashierID:   cashier.ID,
-		InvoiceDate: payload.NewInvoiceDate,
+	// check if the invoice exists
+	_, err = h.invoiceStore.GetInvoiceByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("invoice with id %d doesn't exists", payload.ID))
+		return
+	}
+
+	err = h.invoiceStore.ModifyInvoice(payload.ID, types.Invoice{
+		Number:          payload.NewNumber,
+		CashierID:       cashier.ID,
+		CustomerID:      payload.NewCustomerID,
+		Subtotal:        payload.NewSubtotal,
+		Discount:        payload.NewDiscount,
+		Tax:             payload.NewTax,
+		TotalPrice:      payload.NewTotalPrice,
+		PaidAmount:      payload.NewPaidAmount,
+		ChangeAmount:    payload.NewChangeAmount,
+		PaymentMethodID: paymentMethod.ID,
+		Description:     payload.NewDescription,
+		InvoiceDate:     payload.NewInvoiceDate,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(payload.PurchaseInvoiceID)
+	err = h.invoiceStore.DeleteMedicineItems(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -396,25 +395,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItems(types.PurchaseMedicineItem{
-			PurchaseInvoiceID: payload.PurchaseInvoiceID,
-			MedicineID:        medData.ID,
-			Qty:               medicine.Qty,
-			UnitID:            unit.ID,
-			PurchasePrice:     medicine.Price,
-			PurchaseDiscount:  medicine.Discount,
-			PurchaseTax:       medicine.Tax,
-			Subtotal:          medicine.Subtotal,
-			BatchNumber:       medicine.BatchNumber,
-			ExpDate:           medicine.ExpDate,
+		err = h.invoiceStore.CreateMedicineItems(types.MedicineItems{
+			InvoiceID:  payload.ID,
+			MedicineID: medData.ID,
+			Qty:        medicine.Qty,
+			UnitID:     unit.ID,
+			Price:      medicine.Price,
+			Discount:   medicine.Discount,
+			Subtotal:   medicine.Subtotal,
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("purchase invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
+				fmt.Errorf("invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
 			return
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice modified by %s", cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice modified by %s", cashier.Name))
 }
-*/

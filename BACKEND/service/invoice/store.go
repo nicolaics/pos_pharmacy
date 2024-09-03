@@ -152,41 +152,40 @@ func (s *Store) CreateMedicineItems(medicineItem types.MedicineItems) error {
 	return nil
 }
 
-/*
-func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.PurchaseMedicineItemsReturn, error) {
+func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPayload, error) {
 	query := "SELECT "
 
-	query += "pmi.id, medicine.barcode, medicine.name, pmi.qty, unit.unit, pmi.purchase_price, pmi.purchase_discount, "
-	query += "pmi.purchase_tax, pmi.subtotal, pmi.batch_number, pmi.expired_date "
+	query += "mi.id, medicine.barcode, medicine.name, mi.qty, unit.unit, mi.price, mi.discount, "
+	query += "mi.subtotal "
 
-	query += "FROM purchase_medicine_items as pmi "
-	query += "JOIN purchase_invoice as pi ON pmi.purchase_invoice_id = pi.id "
-	query += "JOIN medicine ON pmi.medicine_id = medicine.id "
-	query += "JOIN unit ON pmi.unit_id = unit.id "
-	query += "WHERE pi.id = ? "
+	query += "FROM medicine_items as mi "
+	query += "JOIN invoice ON mi.invoice_id = invoice.id "
+	query += "JOIN medicine ON mi.medicine_id = medicine.id "
+	query += "JOIN unit ON mi.unit_id = unit.id "
+	query += "WHERE invoice.id = ? "
 
-	rows, err := s.db.Query(query, purchaseInvoiceId)
+	rows, err := s.db.Query(query, invoiceId)
 	if err != nil {
 		return nil, err
 	}
 
-	purchaseMedicineItems := make([]types.PurchaseMedicineItemsReturn, 0)
+	medicineItems := make([]types.MedicineItemReturnPayload, 0)
 
 	for rows.Next() {
-		purchaseMedicineItem, err := scanRowIntoPurchaseMedicineItems(rows)
+		medicineItem, err := scanRowIntoMedicineItems(rows)
 
 		if err != nil {
 			return nil, err
 		}
 
-		purchaseMedicineItems = append(purchaseMedicineItems, *purchaseMedicineItem)
+		medicineItems = append(medicineItems, *medicineItem)
 	}
 
-	return purchaseMedicineItems, nil
+	return medicineItems, nil
 }
 
-func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice) error {
-	_, err := s.db.Exec("DELETE FROM purchase_invoice WHERE id = ?", purchaseInvoice.ID)
+func (s *Store) DeleteInvoice(invoice *types.Invoice) error {
+	_, err := s.db.Exec("DELETE FROM invoice WHERE id = ?", invoice.ID)
 	if err != nil {
 		return err
 	}
@@ -194,8 +193,8 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice) er
 	return nil
 }
 
-func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
-	_, err := s.db.Exec("DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ? ", purchaseInvoiceId)
+func (s *Store) DeleteMedicineItems(invoiceId int) error {
+	_, err := s.db.Exec("DELETE FROM medicine_items WHERE invoice_id = ? ", invoiceId)
 	if err != nil {
 		return err
 	}
@@ -203,24 +202,25 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPurchaseInvoice(id int, purchaseInvoice types.PurchaseInvoice) error {
-	fields := "number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, "
-	fields += "tax = ?, total_price = ?, description = ?, cashier_id = ?, invoice_date = ?"
+func (s *Store) ModifyInvoice(id int, invoice types.Invoice) error {
+	fields := "number = ?, cashier_id = ?, customer_id = ?, subtotal = ?, discount = ?, "
+	fields += "tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, "
+	fields += "payment_method_id = ?, description = ?, invoice_date = ?"
 
-	query := fmt.Sprintf("UPDATE purchase_invoice SET %s WHERE id = ?", fields)
+	query := fmt.Sprintf("UPDATE invoice SET %s WHERE id = ?", fields)
 
 	_, err := s.db.Exec(query,
-						purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
-						purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-						purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.CashierID,
-						purchaseInvoice.InvoiceDate, id)
+						invoice.Number, invoice.CashierID, invoice.CustomerID,
+						invoice.Subtotal, invoice.Discount, invoice.Tax,
+						invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
+						invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
+						id)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-*/
 
 func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 	invoice := new(types.Invoice)
@@ -252,30 +252,23 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 	return invoice, nil
 }
 
-/*
-func scanRowIntoPurchaseMedicineItems(rows *sql.Rows) (*types.PurchaseMedicineItemsReturn, error) {
-	purchaseMedicineItem := new(types.PurchaseMedicineItemsReturn)
+func scanRowIntoMedicineItems(rows *sql.Rows) (*types.MedicineItemReturnPayload, error) {
+	medicineItem := new(types.MedicineItemReturnPayload)
 
 	err := rows.Scan(
-		&purchaseMedicineItem.ID,
-		&purchaseMedicineItem.MedicineBarcode,
-		&purchaseMedicineItem.MedicineName,
-		&purchaseMedicineItem.Qty,
-		&purchaseMedicineItem.Unit,
-		&purchaseMedicineItem.Price,
-		&purchaseMedicineItem.Discount,
-		&purchaseMedicineItem.Tax,
-		&purchaseMedicineItem.Subtotal,
-		&purchaseMedicineItem.BatchNumber,
-		&purchaseMedicineItem.ExpDate,
+		&medicineItem.ID,
+		&medicineItem.MedicineBarcode,
+		&medicineItem.MedicineName,
+		&medicineItem.Qty,
+		&medicineItem.Unit,
+		&medicineItem.Price,
+		&medicineItem.Discount,
+		&medicineItem.Subtotal,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	purchaseMedicineItem.ExpDate = purchaseMedicineItem.ExpDate.Local()
-
-	return purchaseMedicineItem, nil
+	return medicineItem, nil
 }
-*/
