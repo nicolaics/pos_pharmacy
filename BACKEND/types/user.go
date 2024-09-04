@@ -5,12 +5,14 @@ import (
 	"time"
 )
 
+// initialize the very first admin account
 type InitAdminPayload struct {
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password" validate:"required,min=3,max=130"`
 }
 
-type RegisterCashierPayload struct {
+// register new user
+type RegisterUserPayload struct {
 	AdminPassword string `json:"adminPassword" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 	Password      string `json:"password" validate:"required,min=3,max=130"`
@@ -18,13 +20,15 @@ type RegisterCashierPayload struct {
 	Admin         bool   `json:"admin"`
 }
 
-type RemoveCashierPayload struct {
+// delete user account
+type RemoveUserPayload struct {
 	AdminPassword string `json:"adminPassword" validate:"required"`
 	ID            int    `json:"id" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 }
 
-type ModifyCashierPayload struct {
+// modify the data of the user, requires admin password and admin to do it
+type ModifyUserPayload struct {
 	AdminPassword  string `json:"adminPassword" validate:"required"`
 	ID             int    `json:"id" validate:"required"`
 	NewName        string `json:"newName" validate:"required"`
@@ -33,27 +37,30 @@ type ModifyCashierPayload struct {
 	NewPhoneNumber string `json:"newPhoneNumber" validate:"required"`
 }
 
-type LoginCashierPayload struct {
+// normal log-in
+type LoginUserPayload struct {
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
-type CashierStore interface {
-	GetCashierByName(string) (*Cashier, error)
-	GetCashierByID(int) (*Cashier, error)
-	CreateCashier(Cashier) error
-	DeleteCashier(*Cashier) error
-	GetAllCashiers() ([]Cashier, error)
+type UserStore interface {
+	GetUserByName(string) (*User, error)
+	GetUserByID(int) (*User, error)
+	CreateUser(User) error
+	DeleteUser(*User) error
+	GetAllUsers() ([]User, error)
 	UpdateLastLoggedIn(int) error
-	ModifyCashier(int, Cashier) error
+	ModifyUser(int, User) error
 	SaveToken(int, *TokenDetails) error
-	GetCashierIDFromRedis(*AccessDetails, *RefreshDetails) (int, error)
+	GetUserIDFromRedis(*AccessDetails, *RefreshDetails) (int, error)
 	DeleteToken(string) (int, error)
-	ValidateCashierAccessToken(http.ResponseWriter, *http.Request, bool) (*Cashier, error)
-	ValidateCashierRefreshToken(http.ResponseWriter, *http.Request) (*Cashier, error)
+	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
+	ValidateUserRefreshToken(http.ResponseWriter, *http.Request) (*User, error)
 }
 
-type Cashier struct {
+// basic user data info
+// TODO: made some changes with the DB, check the store.go as well
+type User struct {
 	ID           int       `json:"id"`
 	Name         string    `json:"name"`
 	Password     string    `json:"password"`

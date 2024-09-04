@@ -12,11 +12,11 @@ import (
 
 type Handler struct {
 	companyProfileStore types.CompanyProfileStore
-	cashierStore        types.CashierStore
+	userStore           types.UserStore
 }
 
-func NewHandler(companyProfileStore types.CompanyProfileStore, cashierStore types.CashierStore) *Handler {
-	return &Handler{companyProfileStore: companyProfileStore, cashierStore: cashierStore}
+func NewHandler(companyProfileStore types.CompanyProfileStore, userStore types.UserStore) *Handler {
+	return &Handler{companyProfileStore: companyProfileStore, userStore: userStore}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
@@ -44,8 +44,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
+	// validate user token
+	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -72,12 +72,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile '%s' created by %s", payload.Name, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile '%s' created by %s", payload.Name, user.Name))
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
-	// validate cashier token
-	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
+	// validate user token
+	_, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -109,8 +109,8 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
+	// validate user token
+	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -130,7 +130,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %s deleted by %s", payload.Name, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %s deleted by %s", payload.Name, user.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -149,8 +149,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate cashier token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
+	// validate user token
+	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
 		return
@@ -176,5 +176,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %d modified by %s", payload.ID, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %d modified by %s", payload.ID, user.Name))
 }

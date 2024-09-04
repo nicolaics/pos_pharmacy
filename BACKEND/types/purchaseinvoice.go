@@ -7,7 +7,7 @@ import (
 type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByNumber(int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
-	GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, cashierId int, invoiceDate time.Time) (*PurchaseInvoice, error)
+	GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (*PurchaseInvoice, error)
 	CreatePurchaseInvoice(PurchaseInvoice) error
 	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
 	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
@@ -93,24 +93,46 @@ type PurchaseInvoiceDetailPayload struct {
 	PurchaseInvoiceDescription string    `json:"purchaseInvoiceDescription"`
 	PurchaseInvoiceInvoiceDate time.Time `json:"purchaseInvoiceInvoiceDate"`
 
-	CompanyID               int    `json:"companyId"`
-	CompanyName             string `json:"companyName"`
-	CompanyAddress          string `json:"companyAddress"`
-	CompanyBusinessNumber   string `json:"companyBusinessNumber"`
-	Pharmacist              string `json:"pharmacist"`
-	PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
+	CompanyProfile struct {
+		ID                      int    `json:"id"`
+		Name                    string `json:"name"`
+		Address                 string `json:"address"`
+		BusinessNumber          string `json:"businessNumber"`
+		Pharmacist              string `json:"pharmacist"`
+		PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
+	} `json:"companyProfile"`
+	// CompanyID               int    `json:"companyId"`
+	// CompanyName             string `json:"companyName"`
+	// CompanyAddress          string `json:"companyAddress"`
+	// CompanyBusinessNumber   string `json:"companyBusinessNumber"`
+	// Pharmacist              string `json:"pharmacist"`
+	// PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
 
-	SupplierID                  int    `json:"supplierId"`
-	SupplierName                string `json:"supplierName"`
-	SupplierAddress             string `json:"supplierAddress"`
-	SupplierPhoneNumber         string `json:"supplierPhoneNumber"`
-	SupplierContactPersonName   string `json:"supplierContactPersonName"`
-	SupplierContactPersonNumber string `json:"supplierContactPersonNumber"`
-	SupplierTerms               string `json:"supplierTerms"`
-	SupplierVendorIsTaxable     bool   `json:"supplierVendorIsTaxable"`
+	Supplier struct {
+		ID                  int    `json:"id"`
+		Name                string `json:"name"`
+		Address             string `json:"address"`
+		CompanyPhoneNumber  string `json:"companyPhoneNumber"`
+		ContactPersonName   string `json:"contactPersonName"`
+		ContactPersonNumber string `json:"contactPersonNumber"`
+		Terms               string `json:"terms"`
+		VendorIsTaxable     bool   `json:"vendorIsTaxable"`
+	} `json:"supplier"`
+	// SupplierID                  int    `json:"supplierId"`
+	// SupplierName                string `json:"supplierName"`
+	// SupplierAddress             string `json:"supplierAddress"`
+	// SupplierPhoneNumber         string `json:"supplierPhoneNumber"`
+	// SupplierContactPersonName   string `json:"supplierContactPersonName"`
+	// SupplierContactPersonNumber string `json:"supplierContactPersonNumber"`
+	// SupplierTerms               string `json:"supplierTerms"`
+	// SupplierVendorIsTaxable     bool   `json:"supplierVendorIsTaxable"`
 
-	CashierID   int    `json:"cashierId"`
-	CashierName string `json:"cashierName"`
+	User struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"user"`
+	// UserID   int    `json:"userId"`
+	// UserName string `json:"userName"`
 
 	MedicineLists []PurchaseMedicineItemsReturn `json:"medicineLists"`
 }
@@ -129,11 +151,12 @@ type PurchaseInvoice struct {
 	Tax         float64   `json:"tax"`
 	TotalPrice  float64   `json:"totalPrice"`
 	Description string    `json:"description"`
-	CashierID   int       `json:"cashierId"`
+	UserID      int       `json:"userId"`
 	InvoiceDate time.Time `json:"invoiceDate"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
+// TODO: made some changes with the DB, check the store.go as well
 type PurchaseMedicineItem struct {
 	ID                int       `json:"id"`
 	PurchaseInvoiceID int       `json:"purchaseInvoiceId"`

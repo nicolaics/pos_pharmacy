@@ -26,6 +26,7 @@ type CustomerStore interface {
 	ModifyCustomer(int, string) error
 }
 
+// TODO: made some changes with the DB, check the store.go as well
 type Customer struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`

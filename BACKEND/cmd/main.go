@@ -42,6 +42,7 @@ func main() {
 	}
 }
 
+// TODO: modify not using redis
 func initStorage(db *sql.DB, client *redis.Client) {
 	err := db.Ping()
 	if err != nil {

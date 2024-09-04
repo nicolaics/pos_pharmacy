@@ -39,6 +39,7 @@ type SupplierStore interface {
 	ModifySupplier(id int, newSupplierData Supplier) error
 }
 
+// TODO: made some changes with the DB, check the store.go as well
 type Supplier struct {
 	ID                  int       `json:"id"`
 	Name                string    `json:"name"`

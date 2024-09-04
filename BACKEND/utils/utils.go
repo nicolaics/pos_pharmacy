@@ -3,8 +3,9 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -19,34 +20,17 @@ func ParseJSON(r *http.Request, payload any) error {
 	return json.NewDecoder(r.Body).Decode(payload)
 }
 
-func WriteJSON(w http.ResponseWriter, status int, v any) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, PATCH, GET, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Authorization")
-	w.Header().Set("Access-Control-Expose-Headers", "Content-Length,Content-Range")
-	w.WriteHeader(status)
+// GenerateRandomCode 는 랜덤한 6자리의 이메일 인증코드를 생성합니다.
+func GenerateRandomCode(length int) string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	log.Println("JSON")
-	log.Println(w.Header())
+	const charset = "0123456789"
 
-	return json.NewEncoder(w).Encode(v)
-}
+	result := make([]byte, length)
 
-func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, PATCH, GET, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Authorization")
-	w.Header().Set("Access-Control-Max-Age", "1728000")
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(status)
-
-	log.Println("JSON Options")
-	log.Println(w)
-
-	return json.NewEncoder(w).Encode(v)
-}
-
-func WriteError(w http.ResponseWriter, status int, err error) {
-	WriteJSON(w, status, map[string]string{"error": err.Error()})
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	
+	return string(result)
 }

@@ -58,6 +58,7 @@ type MedicineStore interface {
 	ModifyMedicine(int, Medicine) error
 }
 
+// TODO: made some changes with the DB, check the store.go as well
 type Medicine struct {
 	ID             int       `json:"id"`
 	Barcode        string    `json:"barcode"`

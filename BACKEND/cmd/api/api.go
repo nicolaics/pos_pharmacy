@@ -8,13 +8,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/service/cashier"
 	"github.com/nicolaics/pos_pharmacy/service/companyprofile"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
 	"github.com/nicolaics/pos_pharmacy/service/invoice"
 	"github.com/nicolaics/pos_pharmacy/service/medicine"
 	"github.com/nicolaics/pos_pharmacy/service/poinvoice"
 	"github.com/nicolaics/pos_pharmacy/service/purchaseinvoice"
+	"github.com/nicolaics/pos_pharmacy/service/user"
 
 	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
@@ -42,9 +42,7 @@ func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	// router.HandleFunc("/verify", auth.AuthenticationMiddleware(auth.AuthHandler))
-
-	cashierStore := cashier.NewStore(s.db, s.redisClient)
+	userStore := user.NewStore(s.db, s.redisClient)
 	customerStore := customer.NewStore(s.db)
 	supplierStore := supplier.NewStore(s.db)
 	medicineStore := medicine.NewStore(s.db)
@@ -57,31 +55,31 @@ func (s *APIServer) Run() error {
 	poInvoiceStore := poinvoice.NewStore(s.db)
 	invoiceStore := invoice.NewStore(s.db)
 
-	cashierHandler := cashier.NewHandler(cashierStore)
-	cashierHandler.RegisterRoutes(subrouter)
+	userHandler := user.NewHandler(userStore)
+	userHandler.RegisterRoutes(subrouter)
 
-	customerHandler := customer.NewHandler(customerStore, cashierStore)
+	customerHandler := customer.NewHandler(customerStore, userStore)
 	customerHandler.RegisterRoutes(subrouter)
 
-	supplierHandler := supplier.NewHandler(supplierStore, cashierStore)
+	supplierHandler := supplier.NewHandler(supplierStore, userStore)
 	supplierHandler.RegisterRoutes(subrouter)
 
-	medicineHandler := medicine.NewHandler(medicineStore, cashierStore, unitStore)
+	medicineHandler := medicine.NewHandler(medicineStore, userStore, unitStore)
 	medicineHandler.RegisterRoutes(subrouter)
 
-	companyProfileHandler := companyprofile.NewHandler(companyProfileStore, cashierStore)
+	companyProfileHandler := companyprofile.NewHandler(companyProfileStore, userStore)
 	companyProfileHandler.RegisterRoutes(subrouter)
 
-	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, cashierStore, supplierStore, 
-														companyProfileStore, medicineStore, unitStore)
+	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore,
+		companyProfileStore, medicineStore, unitStore)
 	purchaseInvoiceHandler.RegisterRoutes(subrouter)
 
-	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, cashierStore, supplierStore, companyProfileStore,
-											medicineStore, unitStore)
+	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, userStore, supplierStore, companyProfileStore,
+		medicineStore, unitStore)
 	poInvoiceHandler.RegisterRoutes(subrouter)
 
-	invoiceHandler := invoice.NewHandler(invoiceStore, cashierStore, customerStore,
-										paymentMethodStore, medicineStore, unitStore)
+	invoiceHandler := invoice.NewHandler(invoiceStore, userStore, customerStore,
+		paymentMethodStore, medicineStore, unitStore)
 	invoiceHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on: ", s.addr)

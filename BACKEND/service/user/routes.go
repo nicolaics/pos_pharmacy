@@ -1,4 +1,4 @@
-package cashier
+package user
 
 import (
 	"fmt"
@@ -12,42 +12,42 @@ import (
 )
 
 type Handler struct {
-	store types.CashierStore
+	store types.UserStore
 }
 
-func NewHandler(store types.CashierStore) *Handler {
+func NewHandler(store types.UserStore) *Handler {
 	return &Handler{store: store}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/cashier/login", h.handleLogin).Methods(http.MethodPost)
-	router.HandleFunc("/cashier/login", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/login", h.handleLogin).Methods(http.MethodPost)
+	router.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/register", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/cashier/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/register", h.handleRegister).Methods(http.MethodPost)
+	router.HandleFunc("/user/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/cashier", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/delete", h.handleDelete).Methods(http.MethodDelete)
-	router.HandleFunc("/cashier/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/delete", h.handleDelete).Methods(http.MethodDelete)
+	router.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/modify", h.handleModify).Methods(http.MethodPatch)
-	router.HandleFunc("/cashier/modify", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/modify", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/user/modify", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/logout", h.handleLogout).Methods(http.MethodPost)
-	router.HandleFunc("/cashier/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/logout", h.handleLogout).Methods(http.MethodPost)
+	router.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
-	router.HandleFunc("/cashier/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
+	router.HandleFunc("/user/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/cashier/refresh-token", h.handleRefreshToken).Methods(http.MethodGet)
-	router.HandleFunc("/cashier/refresh-token", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/refresh-token", h.handleRefreshToken).Methods(http.MethodGet)
+	router.HandleFunc("/user/refresh-token", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.LoginCashierPayload
+	var payload types.LoginUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -61,38 +61,38 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByName(payload.Name)
+	user, err := h.store.GetUserByName(payload.Name)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name: %v", err))
 		return
 	}
 
 	// check password match
-	if !(auth.ComparePassword(cashier.Password, []byte(payload.Password))) {
+	if !(auth.ComparePassword(user.Password, []byte(payload.Password))) {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid password"))
 		return
 	}
 
-	tokenDetails, err := auth.CreateJWT(cashier.ID)
+	tokenDetails, err := auth.CreateJWT(user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.SaveToken(cashier.ID, tokenDetails)
+	err = h.store.SaveToken(user.ID, tokenDetails)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.UpdateLastLoggedIn(cashier.ID)
+	err = h.store.UpdateLastLoggedIn(user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	tokens := map[string]string{
-		"access_token":  tokenDetails.AccessToken,
+		"access_token":  tokenDetails.Token,
 		"refresh_token": tokenDetails.RefreshToken,
 	}
 
@@ -101,7 +101,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.RegisterCashierPayload
+	var payload types.RegisterUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -116,7 +116,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
+	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
@@ -128,22 +128,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the newly created cashier exists
-	_, err = h.store.GetCashierByName(payload.Name)
+	// check if the newly created user exists
+	_, err = h.store.GetUserByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("cashier with name %s already exists", payload.Name))
+			fmt.Errorf("user with name %s already exists", payload.Name))
 		return
 	}
 
-	// if it doesn't, we create new cashier
+	// if it doesn't, we create new user
 	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.CreateCashier(types.Cashier{
+	err = h.store.CreateUser(types.User{
 		Name:        payload.Name,
 		Password:    hashedPassword,
 		PhoneNumber: payload.PhoneNumber,
@@ -153,28 +153,28 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("cashier %s successfully created", payload.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name))
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.store.ValidateCashierAccessToken(w, r, true)
+	_, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
 	}
 
-	cashiers, err := h.store.GetAllCashiers()
+	users, err := h.store.GetAllUsers()
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, cashiers)
+	utils.WriteJSON(w, http.StatusOK, users)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
-	var payload types.RemoveCashierPayload
+	var payload types.RemoveUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -189,7 +189,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
+	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
@@ -201,13 +201,13 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByID(payload.ID)
-	if cashier == nil || err != nil {
+	user, err := h.store.GetUserByID(payload.ID)
+	if user == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err = h.store.DeleteCashier(cashier)
+	err = h.store.DeleteUser(user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -217,7 +217,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
-	var payload types.ModifyCashierPayload
+	var payload types.ModifyUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -232,7 +232,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	admin, err := h.store.ValidateCashierAccessToken(w, r, true)
+	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
 		return
@@ -244,20 +244,20 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashier, err := h.store.GetCashierByID(payload.ID)
-	if cashier == nil {
+	user, err := h.store.GetUserByID(payload.ID)
+	if user == nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if cashier.Name != payload.NewName {
-		_, err = h.store.GetCashierByName(payload.NewName)
+	if user.Name != payload.NewName {
+		_, err = h.store.GetUserByName(payload.NewName)
 		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier with name %s already exists", payload.NewName))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewName))
 		}
 	}
 
-	err = h.store.ModifyCashier(cashier.ID, types.Cashier{
+	err = h.store.ModifyUser(user.ID, types.User{
 		Name:        payload.NewName,
 		Password:    payload.NewPassword,
 		Admin:       payload.NewAdmin,
@@ -272,7 +272,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
-	accessDetails, err := auth.ExtractAccessTokenFromClient(r)
+	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"))
 		return
@@ -284,7 +284,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.UpdateLastLoggedIn(accessDetails.CashierID)
+	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -309,8 +309,8 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cashiers, err := h.store.GetAllCashiers()
-	if err != nil || len(cashiers) != 0 {
+	users, err := h.store.GetAllUsers()
+	if err != nil || len(users) != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("initial admin has exist: %v", err))
 		return
 	}
@@ -322,7 +322,7 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.CreateCashier(types.Cashier{
+	err = h.store.CreateUser(types.User{
 		Name:        payload.Name,
 		Password:    hashedPassword,
 		PhoneNumber: "000",
@@ -332,31 +332,31 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("cashier %s successfully created", payload.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name))
 }
 
 func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	// validate refresh token
-	cashier, err := h.store.ValidateCashierRefreshToken(w, r)
+	user, err := h.store.ValidateUserRefreshToken(w, r)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("sign in again: %v", err))
 		return
 	}
 
-	tokenDetails, err := auth.CreateJWT(cashier.ID)
+	tokenDetails, err := auth.CreateJWT(user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.SaveToken(cashier.ID, tokenDetails)
+	err = h.store.SaveToken(user.ID, tokenDetails)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	tokens := map[string]string{
-		"access_token":  tokenDetails.AccessToken,
+		"access_token":  tokenDetails.Token,
 		"refresh_token": tokenDetails.RefreshToken,
 	}
 

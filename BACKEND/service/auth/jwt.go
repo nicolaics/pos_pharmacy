@@ -15,14 +15,15 @@ import (
 
 type contextKey string
 
-const CashierKey contextKey = "cashierID"
+const UserKey contextKey = "userID"
 
-func CreateJWT(cashierId int) (*types.TokenDetails, error) {
+// TODO: remove refresh token
+func CreateJWT(userId int) (*types.TokenDetails, error) {
 	tokenDetails := new(types.TokenDetails)
 
 	accessExp := time.Second * time.Duration(config.Envs.JWTAccessExpirationInSeconds)
 
-	tokenDetails.AccessTokenExp = time.Now().Add(accessExp).Unix()
+	tokenDetails.TokenExp = time.Now().Add(accessExp).Unix()
 
 	tempUUID, err := uuid.NewV7()
 	if err != nil {
@@ -43,11 +44,11 @@ func CreateJWT(cashierId int) (*types.TokenDetails, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"authorized": true,
 		"accessUuid": tokenDetails.AccessUUID,
-		"cashierId":  cashierId,
+		"userId":     userId,
 		// expired of the token
-		"expiredAt": tokenDetails.AccessTokenExp,
+		"expiredAt": tokenDetails.TokenExp,
 	})
-	tokenDetails.AccessToken, err = accessToken.SignedString(accessSecret)
+	tokenDetails.Token, err = accessToken.SignedString(accessSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func CreateJWT(cashierId int) (*types.TokenDetails, error) {
 	refreshSecret := []byte(config.Envs.JWTRefreshSecret)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"refreshUuid": tokenDetails.RefreshUUID,
-		"cashierId":   cashierId,
+		"userId":      userId,
 		// expired of the token
 		"expiredAt": tokenDetails.RefreshTokenExp,
 	})
@@ -88,14 +89,14 @@ func ExtractRefreshTokenFromClient(r *http.Request) (*types.RefreshDetails, erro
 			return nil, err
 		}
 
-		cashierId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["cashierId"]))
+		userId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["userId"]))
 		if err != nil {
 			return nil, err
 		}
 
 		return &types.RefreshDetails{
 			RefreshUUID: refreshUuid,
-			CashierID:   cashierId,
+			UserID:      userId,
 		}, nil
 	}
 
@@ -124,8 +125,8 @@ func verifyRefreshToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ExtractAccessTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
-	token, err := verifyAccessToken(r)
+func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
+	token, err := verifyToken(r)
 	if err != nil {
 		return nil, err
 	}
@@ -138,21 +139,21 @@ func ExtractAccessTokenFromClient(r *http.Request) (*types.AccessDetails, error)
 			return nil, err
 		}
 
-		cashierId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["cashierId"]))
+		userId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["userId"]))
 		if err != nil {
 			return nil, err
 		}
 
 		return &types.AccessDetails{
 			AccessUUID: accessUuid,
-			CashierID:  cashierId,
+			UserID:     userId,
 		}, nil
 	}
 
 	return nil, err
 }
 
-func verifyAccessToken(r *http.Request) (*jwt.Token, error) {
+func verifyToken(r *http.Request) (*jwt.Token, error) {
 	tokenStr, err := extractToken(r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify token")
@@ -175,13 +176,13 @@ func verifyAccessToken(r *http.Request) (*jwt.Token, error) {
 }
 
 func extractToken(r *http.Request) (string, error) {
-	token := r.Header.Get("Authorization")
+	tokenString := r.Header.Get("Authorization")
 
 	//normally: Authorization the_token_xxx
-	strArr := strings.Split(token, " ")
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
-	if len(strArr) == 2 {
-		return strArr[1], nil
+	if tokenString != "" {
+		return tokenString, nil
 	}
 
 	return "", fmt.Errorf("invalid token")

@@ -60,11 +60,11 @@ func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
 	return purchaseInvoice, nil
 }
 
-func (s *Store) GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, cashierId int, invoiceDate time.Time) (*types.PurchaseInvoice, error) {
+func (s *Store) GetPurchaseInvoiceByAll(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (*types.PurchaseInvoice, error) {
 	query := "SELECT * FROM purchase_invoice WHERE number = ? AND company_id = ? AND supplier_id = ? AND "
-	query += "subtotal = ? AND total_price = ? AND cashier_id = ? AND invoice_date = ?"
+	query += "subtotal = ? AND total_price = ? AND user_id = ? AND invoice_date = ?"
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, cashierId, invoiceDate)
+	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, userId, invoiceDate)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (s *Store) GetPurchaseInvoiceByAll(number int, companyId int, supplierId in
 
 func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) error {
 	fields := "number, company_id, supplier_id, subtotal, discount, tax, total_price, description, "
-	fields += "cashier_id, invoice_date"
+	fields += "user_id, invoice_date"
 	values := "?"
 
 	for i := 0; i < 9; i++ {
@@ -96,10 +96,10 @@ func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) err
 	}
 
 	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO purchase_invoice (%s) VALUES (%s)", fields, values),
-						purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
-						purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-						purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.CashierID,
-						purchaseInvoice.InvoiceDate)
+		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
+		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
+		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.UserID,
+		purchaseInvoice.InvoiceDate)
 	if err != nil {
 		return err
 	}
@@ -118,10 +118,10 @@ func (s *Store) CreatePurchaseMedicineItems(purchaseMedItem types.PurchaseMedici
 	}
 
 	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO purchase_medicine_items (%s) VALUES (%s)", fields, values),
-						purchaseMedItem.PurchaseInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.Qty,
-						purchaseMedItem.UnitID, purchaseMedItem.PurchasePrice, purchaseMedItem.PurchaseDiscount,
-						purchaseMedItem.PurchaseTax, purchaseMedItem.Subtotal, purchaseMedItem.BatchNumber,
-						purchaseMedItem.ExpDate)
+		purchaseMedItem.PurchaseInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.Qty,
+		purchaseMedItem.UnitID, purchaseMedItem.PurchasePrice, purchaseMedItem.PurchaseDiscount,
+		purchaseMedItem.PurchaseTax, purchaseMedItem.Subtotal, purchaseMedItem.BatchNumber,
+		purchaseMedItem.ExpDate)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (s *Store) CreatePurchaseMedicineItems(purchaseMedItem types.PurchaseMedici
 
 func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
 	query := fmt.Sprintf("SELECT * FROM purchase_invoice WHERE invoice_date BETWEEN DATE('%s') AND DATE('%s') ORDER BY invoice_date DESC",
-				startDate, endDate)
+		startDate, endDate)
 
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -205,15 +205,15 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
 
 func (s *Store) ModifyPurchaseInvoice(id int, purchaseInvoice types.PurchaseInvoice) error {
 	fields := "number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, "
-	fields += "tax = ?, total_price = ?, description = ?, cashier_id = ?, invoice_date = ?"
+	fields += "tax = ?, total_price = ?, description = ?, user_id = ?, invoice_date = ?"
 
 	query := fmt.Sprintf("UPDATE purchase_invoice SET %s WHERE id = ?", fields)
 
 	_, err := s.db.Exec(query,
-						purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
-						purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-						purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.CashierID,
-						purchaseInvoice.InvoiceDate, id)
+		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
+		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
+		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.UserID,
+		purchaseInvoice.InvoiceDate, id)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.Tax,
 		&purchaseInvoice.TotalPrice,
 		&purchaseInvoice.Description,
-		&purchaseInvoice.CashierID,
+		&purchaseInvoice.UserID,
 		&purchaseInvoice.InvoiceDate,
 		&purchaseInvoice.CreatedAt,
 	)

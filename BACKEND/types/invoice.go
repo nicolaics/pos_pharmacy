@@ -6,7 +6,7 @@ import (
 
 type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
-	GetInvoiceByAll(number int, cashierId int, customerId int, totalPrice float64, invoiceDate time.Time) (*Invoice, error)
+	GetInvoiceByAll(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (*Invoice, error)
 	GetInvoicesByNumber(int) ([]Invoice, error)
 	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
 	CreateInvoice(Invoice) error
@@ -92,14 +92,29 @@ type InvoiceDetailPayload struct {
 	InvoiceDescription string    `json:"invoiceDescription"`
 	InvoiceDate        time.Time `json:"invoiceDate"`
 
-	CashierID   int    `json:"cashierId"`
-	CashierName string `json:"cashierName"`
+	User struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"user"`
 
-	CustomerID   int    `json:"customerId"`
-	CustomerName string `json:"customerName"`
+	// UserID   int    `json:"userId"`
+	// UserName string `json:"userName"`
 
-	PaymentMethodID   int    `json:"paymentMethodId"`
-	PaymentMethodName string `json:"paymentMethodName"`
+	Customer struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"customer"`
+
+	// CustomerID   int    `json:"customerId"`
+	// CustomerName string `json:"customerName"`
+
+	PaymentMethod struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"paymentMethod"`
+
+	// PaymentMethodID   int    `json:"paymentMethodId"`
+	// PaymentMethodName string `json:"paymentMethodName"`
 
 	MedicineLists []MedicineItemReturnPayload `json:"medicineLists"`
 }
@@ -118,10 +133,11 @@ type MedicineItems struct {
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
+// TODO: made some changes with the DB, check the store.go as well
 type Invoice struct {
 	ID              int       `json:"id"`
 	Number          int       `json:"number"`
-	CashierID       int       `json:"cashierId"`
+	UserID          int       `json:"userId"`
 	CustomerID      int       `json:"customerId"`
 	Subtotal        float64   `json:"subtotal"`
 	Discount        float64   `json:"discount"`

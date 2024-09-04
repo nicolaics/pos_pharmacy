@@ -60,11 +60,11 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 	return purchaseOrderInvoice, nil
 }
 
-func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, cashierId int, totalItems int, invoiceDate time.Time) (*types.PurchaseOrderInvoice, error) {
+func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (*types.PurchaseOrderInvoice, error) {
 	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND company_id ? AND "
-	query += "supplier_id = ? AND cashierId = ? AND total_items = ? AND invoice_date ?"
+	query += "supplier_id = ? AND userId = ? AND total_items = ? AND invoice_date ?"
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, cashierId, totalItems, invoiceDate)
+	rows, err := s.db.Query(query, number, companyId, supplierId, userId, totalItems, invoiceDate)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplier
 }
 
 func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice) error {
-	fields := "number, company_id, supplier_id, cashier_id, total_items, "
+	fields := "number, company_id, supplier_id, user_id, total_items, "
 	fields += "invoice_date, last_modified"
 	values := "?"
 
@@ -96,9 +96,9 @@ func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice)
 	}
 
 	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO purchase_order_invoice (%s) VALUES (%s)", fields, values),
-						poInvoice.Number, poInvoice.CompanyID, poInvoice.SupplierID,
-						poInvoice.CashierID, poInvoice.TotalItems, poInvoice.InvoiceDate,
-						poInvoice.LastModified)
+		poInvoice.Number, poInvoice.CompanyID, poInvoice.SupplierID,
+		poInvoice.UserID, poInvoice.TotalItems, poInvoice.InvoiceDate,
+		poInvoice.LastModified)
 	if err != nil {
 		return err
 	}
@@ -115,8 +115,8 @@ func (s *Store) CreatePurchaseOrderItems(purchaseMedItem types.PurchaseOrderItem
 	}
 
 	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO purchase_order_items (%s) VALUES (%s)", fields, values),
-						purchaseMedItem.PurchaseOrderInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.OrderQty,
-						purchaseMedItem.ReceivedQty, purchaseMedItem.UnitID, purchaseMedItem.Remarks)
+		purchaseMedItem.PurchaseOrderInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.OrderQty,
+		purchaseMedItem.ReceivedQty, purchaseMedItem.UnitID, purchaseMedItem.Remarks)
 	if err != nil {
 		return err
 	}
@@ -124,10 +124,9 @@ func (s *Store) CreatePurchaseOrderItems(purchaseMedItem types.PurchaseOrderItem
 	return nil
 }
 
-
 func (s *Store) GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]types.PurchaseOrderInvoice, error) {
 	query := fmt.Sprintf("SELECT * FROM purchase_order_invoice WHERE invoice_date BETWEEN DATE('%s') AND DATE('%s') ORDER BY invoice_date DESC",
-				startDate, endDate)
+		startDate, endDate)
 
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -148,7 +147,6 @@ func (s *Store) GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time)
 
 	return purchaseOrderInvoices, nil
 }
-
 
 func (s *Store) GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]types.PurchaseOrderItemsReturn, error) {
 	query := "SELECT "
@@ -201,15 +199,15 @@ func (s *Store) DeletePurchaseOrderItems(purchaseOrderInvoiceId int) error {
 }
 
 func (s *Store) ModifyPurchaseOrderInvoice(id int, purchaseOrderInvoice types.PurchaseOrderInvoice) error {
-	fields := "number = ?, company_id = ?, supplier_id = ?, cashier_id = ?, total_items = ?, "
+	fields := "number = ?, company_id = ?, supplier_id = ?, user_id = ?, total_items = ?, "
 	fields += "invoice_date = ?, last_modified = ?"
 
 	query := fmt.Sprintf("UPDATE purchase_order_invoice SET %s WHERE id = ?", fields)
 
 	_, err := s.db.Exec(query,
-						purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
-						purchaseOrderInvoice.CashierID, purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
-						purchaseOrderInvoice.LastModified, id)
+		purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
+		purchaseOrderInvoice.UserID, purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
+		purchaseOrderInvoice.LastModified, id)
 	if err != nil {
 		return err
 	}
@@ -225,7 +223,7 @@ func scanRowIntoPurchaseOrderInvoice(rows *sql.Rows) (*types.PurchaseOrderInvoic
 		&purchaseOrderInvoice.Number,
 		&purchaseOrderInvoice.CompanyID,
 		&purchaseOrderInvoice.SupplierID,
-		&purchaseOrderInvoice.CashierID,
+		&purchaseOrderInvoice.UserID,
 		&purchaseOrderInvoice.TotalItems,
 		&purchaseOrderInvoice.InvoiceDate,
 		&purchaseOrderInvoice.LastModified,

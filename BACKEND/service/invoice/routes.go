@@ -13,19 +13,19 @@ import (
 
 type Handler struct {
 	invoiceStore       types.InvoiceStore
-	cashierStore       types.CashierStore
+	userStore          types.UserStore
 	custStore          types.CustomerStore
 	paymentMethodStore types.PaymentMethodStore
 	medStore           types.MedicineStore
 	unitStore          types.UnitStore
 }
 
-func NewHandler(invoiceStore types.InvoiceStore, cashierStore types.CashierStore,
+func NewHandler(invoiceStore types.InvoiceStore, userStore types.UserStore,
 	custStore types.CustomerStore, paymentMethodStore types.PaymentMethodStore,
 	medStore types.MedicineStore, unitStore types.UnitStore) *Handler {
 	return &Handler{
 		invoiceStore:       invoiceStore,
-		cashierStore:       cashierStore,
+		userStore:          userStore,
 		custStore:          custStore,
 		paymentMethodStore: paymentMethodStore,
 		medStore:           medStore,
@@ -60,9 +60,9 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 
 	err = h.invoiceStore.CreateInvoice(types.Invoice{
 		Number:          payload.Number,
-		CashierID:       cashier.ID,
+		UserID:          user.ID,
 		CustomerID:      payload.CustomerID,
 		Subtotal:        payload.Subtotal,
 		Discount:        payload.Discount,
@@ -99,7 +99,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get invoice id
-	invoice, err := h.invoiceStore.GetInvoiceByAll(payload.Number, cashier.ID, payload.CustomerID, payload.TotalPrice, payload.InvoiceDate)
+	invoice, err := h.invoiceStore.GetInvoiceByAll(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, payload.InvoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d doesn't exists", payload.Number))
 		return
@@ -143,7 +143,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice %d successfully created by %s", payload.Number, cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice %d successfully created by %s", payload.Number, user.Name))
 }
 
 // only view the purchase invoice list
@@ -164,9 +164,9 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
+	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
 
@@ -196,9 +196,9 @@ func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	// validate token
-	_, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
+	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
 
@@ -230,10 +230,10 @@ func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// get cashier data, the one who inputs the invoice
-	inputter, err := h.cashierStore.GetCashierByID(invoice.CashierID)
+	// get user data, the one who inputs the invoice
+	inputter, err := h.userStore.GetUserByID(invoice.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier id %d doesn't exists", invoice.CashierID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", invoice.UserID))
 		return
 	}
 
@@ -249,8 +249,8 @@ func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request)
 		InvoiceDescription: invoice.Description,
 		InvoiceDate:        invoice.InvoiceDate,
 
-		CashierID:   inputter.ID,
-		CashierName: inputter.Name,
+		UserID:   inputter.ID,
+		UserName: inputter.Name,
 
 		CustomerID:   customer.ID,
 		CustomerName: customer.Name,
@@ -281,9 +281,9 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, true)
+	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid or not admin: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid or not admin: %v", err))
 		return
 	}
 
@@ -307,7 +307,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("invoice number %d deleted by %s", invoice.Number, cashier.Name))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("invoice number %d deleted by %s", invoice.Number, user.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -327,9 +327,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate token
-	cashier, err := h.cashierStore.ValidateCashierAccessToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cashier token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
 
@@ -350,7 +350,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	err = h.invoiceStore.ModifyInvoice(payload.ID, types.Invoice{
 		Number:          payload.NewNumber,
-		CashierID:       cashier.ID,
+		UserID:          user.ID,
 		CustomerID:      payload.NewCustomerID,
 		Subtotal:        payload.NewSubtotal,
 		Discount:        payload.NewDiscount,
@@ -411,5 +411,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice modified by %s", cashier.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice modified by %s", user.Name))
 }
