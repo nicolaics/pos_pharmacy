@@ -3,6 +3,7 @@ package companyprofile
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -16,7 +17,9 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetCompanyProfileByName(name string) (*types.CompanyProfile, error) {
-	rows, err := s.db.Query("SELECT * FROM self_company_profile WHERE name = ? ", name)
+	query := "SELECT * FROM self_company_profile WHERE name = ? AND deleted_at IS NULL"
+
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +42,9 @@ func (s *Store) GetCompanyProfileByName(name string) (*types.CompanyProfile, err
 }
 
 func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier WHERE id = ?", id)
-
+	query := "SELECT * FROM self_company_profile WHERE id = ? AND deleted_at IS NULL"
+	
+	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +67,15 @@ func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
 }
 
 func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error {
-	fields := "name, address, business_number, pharmacist, pharmacist_license_number"
-	values := "?, ?, ?, ?, ?"
+	query := `INSERT INTO self_company_profile 
+				(name, address, business_number, pharmacist, 
+				pharmacist_license_number, last_modified, modified_by_id) 
+				VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO supplier (%s) VALUES (%s)", fields, values),
+	_, err := s.db.Exec(query,
 		companyProfile.Name, companyProfile.Address, companyProfile.BusinessNumber,
-		companyProfile.Pharmacist, companyProfile.PharmacistLicenseNumber)
+		companyProfile.Pharmacist, companyProfile.PharmacistLicenseNumber,
+		time.Now(), companyProfile.ModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -77,7 +84,7 @@ func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error 
 }
 
 func (s *Store) GetAllCompanyProfiles() ([]types.CompanyProfile, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier")
+	rows, err := s.db.Query("SELECT * FROM self_company_profile WHERE deleted_at IS NULL")
 
 	if err != nil {
 		return nil, err
@@ -98,8 +105,9 @@ func (s *Store) GetAllCompanyProfiles() ([]types.CompanyProfile, error) {
 	return companyProfiles, nil
 }
 
-func (s *Store) DeleteCompanyProfile(companyProfile *types.CompanyProfile) error {
-	_, err := s.db.Exec("DELETE FROM self_company_profile WHERE id = ? ", companyProfile.ID)
+func (s *Store) DeleteCompanyProfile(cpid int, userId int) error {
+	query := "UPDATE self_company_profile SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+	_, err := s.db.Exec(query, time.Now(), userId, cpid)
 	if err != nil {
 		return err
 	}
@@ -107,12 +115,16 @@ func (s *Store) DeleteCompanyProfile(companyProfile *types.CompanyProfile) error
 	return nil
 }
 
-func (s *Store) ModifyCompanyProfile(id int, newCompanyProfile types.CompanyProfile) error {
-	columns := "name = ?, address = ?, business_number = ?, pharmacist = ?, pharmacist_license_number = ?"
+func (s *Store) ModifyCompanyProfile(id int, userId int, newCompanyProfile types.CompanyProfile) error {
+	query := `UPDATE self_company_profile SET 
+			name = ?, address = ?, business_number = ?, 
+			pharmacist = ?, pharmacist_license_number = ?, 
+			last_modified = ?, modified_by_user_id = ? WHERE id = ?`
 
-	_, err := s.db.Exec(fmt.Sprintf("UPDATE supplier SET %s WHERE id = ?", columns),
+	_, err := s.db.Exec(query,
 		newCompanyProfile.Name, newCompanyProfile.Address, newCompanyProfile.BusinessNumber,
-		newCompanyProfile.Pharmacist, newCompanyProfile.PharmacistLicenseNumber, id)
+		newCompanyProfile.Pharmacist, newCompanyProfile.PharmacistLicenseNumber, time.Now(),
+		userId, id)
 	if err != nil {
 		return err
 	}
@@ -130,7 +142,11 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 		&companyProfile.BusinessNumber,
 		&companyProfile.Pharmacist,
 		&companyProfile.PharmacistLicenseNumber,
+		&companyProfile.CreatedAt,
 		&companyProfile.LastModified,
+		&companyProfile.ModifiedByUserID,
+		&companyProfile.DeletedAt,
+		&companyProfile.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -138,6 +154,7 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 	}
 
 	companyProfile.LastModified = companyProfile.LastModified.Local()
+	companyProfile.CreatedAt = companyProfile.CreatedAt.Local()
 
 	return companyProfile, nil
 }

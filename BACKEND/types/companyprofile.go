@@ -31,8 +31,8 @@ type CompanyProfileStore interface {
 	GetCompanyProfileByID(int) (*CompanyProfile, error)
 	CreateCompanyProfile(CompanyProfile) error
 	GetAllCompanyProfiles() ([]CompanyProfile, error)
-	DeleteCompanyProfile(*CompanyProfile) error
-	ModifyCompanyProfile(int, CompanyProfile) error
+	DeleteCompanyProfile(int, int) error
+	ModifyCompanyProfile(int, int, CompanyProfile) error
 }
 
 // TODO: made some changes with the DB, check the store.go as well
@@ -43,5 +43,9 @@ type CompanyProfile struct {
 	BusinessNumber          string    `json:"businessNumber"`
 	Pharmacist              string    `json:"pharmacist"`
 	PharmacistLicenseNumber string    `json:"pharmacistLicenseNumber"`
+	CreatedAt               time.Time `json:"createdAt"`
 	LastModified            time.Time `json:"lastModified"`
+	ModifiedByUserID        int       `json:"modifiedByUserId"`
+	DeletedAt               time.Time `json:"deletedAt"`
+	DeletedByUserID         int       `json:"deletedByUserId"`
 }

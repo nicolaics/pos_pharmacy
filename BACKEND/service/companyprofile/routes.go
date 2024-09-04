@@ -51,7 +51,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the supplier exists
+	// check if the company profile exists
 	_, err = h.companyProfileStore.GetCompanyProfileByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
@@ -65,6 +65,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		BusinessNumber:          payload.BusinessNumber,
 		Pharmacist:              payload.Pharmacist,
 		PharmacistLicenseNumber: payload.PharmacistLicenseNumber,
+		ModifiedByUserID:        user.ID,
 	})
 
 	if err != nil {
@@ -83,7 +84,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the supplier exists
+	// check if the company profile exists
 	companyProfiles, err := h.companyProfileStore.GetAllCompanyProfiles()
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -116,7 +117,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the supplier exists
+	// check if the company profile exists
 	companyProfile, err := h.companyProfileStore.GetCompanyProfileByID(payload.ID)
 	if err != nil || companyProfile == nil {
 		utils.WriteError(w, http.StatusBadRequest,
@@ -124,7 +125,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.companyProfileStore.DeleteCompanyProfile(companyProfile)
+	err = h.companyProfileStore.DeleteCompanyProfile(companyProfile.ID, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -164,12 +165,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.companyProfileStore.ModifyCompanyProfile(companyProfile.ID, types.CompanyProfile{
+	err = h.companyProfileStore.ModifyCompanyProfile(companyProfile.ID, user.ID, types.CompanyProfile{
 		Name:                    payload.NewName,
 		Address:                 payload.NewAddress,
 		BusinessNumber:          payload.NewAddress,
 		Pharmacist:              payload.NewPharmacist,
 		PharmacistLicenseNumber: payload.NewPharmacistLicenseNumber,
+		ModifiedByUserID:        user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
