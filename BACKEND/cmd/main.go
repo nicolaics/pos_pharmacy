@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"log"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/nicolaics/pos_pharmacy/cmd/api"
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/db"
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -26,15 +24,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: config.Envs.RedisDSN,
-		Password: config.Envs.RedisPassword,
-		DB: 0, // use default DB
-	})
+	initStorage(db)
 
-	initStorage(db, redisClient)
-
-	server := api.NewAPIServer((":" + config.Envs.Port), db, redisClient)
+	server := api.NewAPIServer((":" + config.Envs.Port), db)
 
 	// check the error, if error is not nill
 	if err := server.Run(); err != nil {
@@ -42,14 +34,8 @@ func main() {
 	}
 }
 
-// TODO: modify not using redis
-func initStorage(db *sql.DB, client *redis.Client) {
+func initStorage(db *sql.DB) {
 	err := db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = client.Ping(context.Background()).Result()
 	if err != nil {
 		log.Fatal(err)
 	}

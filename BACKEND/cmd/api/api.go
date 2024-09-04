@@ -19,20 +19,17 @@ import (
 	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
 	"github.com/nicolaics/pos_pharmacy/service/unit"
-	"github.com/redis/go-redis/v9"
 )
 
 type APIServer struct {
 	addr        string
 	db          *sql.DB
-	redisClient *redis.Client
 }
 
-func NewAPIServer(addr string, db *sql.DB, redisClient *redis.Client) *APIServer {
+func NewAPIServer(addr string, db *sql.DB) *APIServer {
 	return &APIServer{
 		addr:        addr,
 		db:          db,
-		redisClient: redisClient,
 	}
 }
 
@@ -42,7 +39,7 @@ func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	userStore := user.NewStore(s.db, s.redisClient)
+	userStore := user.NewStore(s.db)
 	customerStore := customer.NewStore(s.db)
 	supplierStore := supplier.NewStore(s.db)
 	medicineStore := medicine.NewStore(s.db)

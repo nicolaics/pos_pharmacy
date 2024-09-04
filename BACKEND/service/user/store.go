@@ -10,16 +10,14 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/service/auth"
 	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/redis/go-redis/v9"
 )
 
 type Store struct {
 	db          *sql.DB
-	redisClient *redis.Client
 }
 
-func NewStore(db *sql.DB, redisClient *redis.Client) *Store {
-	return &Store{db: db, redisClient: redisClient}
+func NewStore(db *sql.DB) *Store {
+	return &Store{db: db,}
 }
 
 func (s *Store) GetUserByName(name string) (*types.User, error) {

@@ -17,112 +17,34 @@ type contextKey string
 
 const UserKey contextKey = "userID"
 
-// TODO: remove refresh token
 func CreateJWT(userId int) (*types.TokenDetails, error) {
 	tokenDetails := new(types.TokenDetails)
 
-	accessExp := time.Second * time.Duration(config.Envs.JWTAccessExpirationInSeconds)
+	tokenExp := time.Second * time.Duration(config.Envs.JWTExpirationInSeconds)
 
-	tokenDetails.TokenExp = time.Now().Add(accessExp).Unix()
+	tokenDetails.TokenExp = time.Now().Add(tokenExp).Unix()
 
 	tempUUID, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
-	tokenDetails.AccessUUID = tempUUID.String()
-
-	tokenDetails.RefreshTokenExp = time.Now().Add(time.Hour * 24 * 7).Unix()
-
-	tempUUID, err = uuid.NewV7()
-	if err != nil {
-		return nil, err
-	}
-	tokenDetails.RefreshToken = tempUUID.String()
+	tokenDetails.UUID = tempUUID.String()
 
 	//Creating Access Token
-	accessSecret := []byte(config.Envs.JWTAccessSecret)
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	tokenSecret := []byte(config.Envs.JWTSecret)
+	tokenToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"authorized": true,
-		"accessUuid": tokenDetails.AccessUUID,
+		"tokenUuid":  tokenDetails.UUID,
 		"userId":     userId,
 		// expired of the token
 		"expiredAt": tokenDetails.TokenExp,
 	})
-	tokenDetails.Token, err = accessToken.SignedString(accessSecret)
-	if err != nil {
-		return nil, err
-	}
-
-	//Creating Refresh Token
-	refreshSecret := []byte(config.Envs.JWTRefreshSecret)
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"refreshUuid": tokenDetails.RefreshUUID,
-		"userId":      userId,
-		// expired of the token
-		"expiredAt": tokenDetails.RefreshTokenExp,
-	})
-	tokenDetails.RefreshToken, err = refreshToken.SignedString(refreshSecret)
+	tokenDetails.Token, err = tokenToken.SignedString(tokenSecret)
 	if err != nil {
 		return nil, err
 	}
 
 	return tokenDetails, nil
-}
-
-func ExtractRefreshTokenFromClient(r *http.Request) (*types.RefreshDetails, error) {
-	token, err := verifyRefreshToken(r)
-	if err != nil {
-		return nil, err
-	}
-
-	err = token.Claims.Valid()
-
-	if err != nil && !token.Valid {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
-
-	if ok && token.Valid {
-		refreshUuid, ok := claims["refreshUuid"].(string) //convert the interface to string
-		if !ok {
-			return nil, err
-		}
-
-		userId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["userId"]))
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.RefreshDetails{
-			RefreshUUID: refreshUuid,
-			UserID:      userId,
-		}, nil
-	}
-
-	return nil, fmt.Errorf("refresh expired")
-}
-
-func verifyRefreshToken(r *http.Request) (*jwt.Token, error) {
-	tokenStr, err := extractToken(r)
-	if err != nil {
-		return nil, fmt.Errorf("unable to verify token")
-	}
-
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		//Make sure that the token method conform to "SigningMethodHMAC"
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(config.Envs.JWTRefreshSecret), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
 }
 
 func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
@@ -134,7 +56,7 @@ func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if ok && token.Valid {
-		accessUuid, ok := claims["accessUuid"].(string)
+		tokenUuid, ok := claims["tokenUuid"].(string)
 		if !ok {
 			return nil, err
 		}
@@ -145,8 +67,8 @@ func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
 		}
 
 		return &types.AccessDetails{
-			AccessUUID: accessUuid,
-			UserID:     userId,
+			UUID:   tokenUuid,
+			UserID: userId,
 		}, nil
 	}
 
@@ -165,7 +87,7 @@ func verifyToken(r *http.Request) (*jwt.Token, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(config.Envs.JWTAccessSecret), nil
+		return []byte(config.Envs.JWTSecret), nil
 	})
 
 	if err != nil {

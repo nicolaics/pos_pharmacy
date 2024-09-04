@@ -27,20 +27,12 @@ type Unit struct {
 }
 
 type TokenDetails struct {
-	Token           string `json:"accessToken"`
-	RefreshToken    string `json:"refreshToken"`
-	AccessUUID      string `json:"accessUuid"`
-	RefreshUUID     string `json:"refreshUuid"`
-	TokenExp        int64  `json:"accessTokenExp"`
-	RefreshTokenExp int64  `json:"refreshTokenExp"`
+	Token    string `json:"token"`
+	UUID     string `json:"uuid"`
+	TokenExp int64  `json:"tokenExp"`
 }
 
 type AccessDetails struct {
-	AccessUUID string
-	UserID     int
-}
-
-type RefreshDetails struct {
-	RefreshUUID string
-	UserID      int
+	UUID   string
+	UserID int
 }

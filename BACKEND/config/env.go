@@ -9,18 +9,14 @@ import (
 )
 
 type Config struct {
-	PublicHost                    string
-	Port                          string
-	DBUser                        string
-	DBPassword                    string
-	DBAddress                     string
-	DBName                        string
-	JWTAccessExpirationInSeconds  int64
-	JWTRefreshExpirationInSeconds int64
-	JWTAccessSecret               string
-	JWTRefreshSecret              string
-	RedisDSN                      string
-	RedisPassword                 string
+	PublicHost             string
+	Port                   string
+	DBUser                 string
+	DBPassword             string
+	DBAddress              string
+	DBName                 string
+	JWTExpirationInSeconds int64
+	JWTSecret              string
 }
 
 var Envs = initConfig()
@@ -36,12 +32,8 @@ func initConfig() Config {
 		DBAddress: fmt.Sprintf("%s:%s", getEnv("DB_HOST", "127.0.0.1"),
 			getEnv("DB_PORT", "3306")),
 		DBName:                        getEnv("DB_NAME", "pos_pharmacy"),
-		JWTAccessExpirationInSeconds:  getEnvAsInt("JWT_ACCESS_EXP", (3600 * 12)),  // for seven days
-		JWTRefreshExpirationInSeconds: getEnvAsInt("JWT_REFRESH_EXP", (3600 * 24)), // for seven days
-		JWTAccessSecret:               getEnv("JWT_ACCESS_SECRET", "access-secret"),
-		JWTRefreshSecret:              getEnv("JWT_REFRESH_SECRET", "refresh-secret"),
-		RedisDSN:                      getEnv("REDIS_DSN", "localhost:6379"),
-		RedisPassword:                 getEnv("REDIS_PASSWORD", ""),
+		JWTExpirationInSeconds:        getEnvAsInt("JWT_EXP", (3600 * 12)),         // for 12 hours
+		JWTSecret:                     getEnv("JWT_SECRET", "access-secret"),
 	}
 }
 
