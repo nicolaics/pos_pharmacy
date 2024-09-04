@@ -118,7 +118,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.custStore.DeleteCustomer(customer)
+	err = h.custStore.DeleteCustomer(user.ID, customer)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

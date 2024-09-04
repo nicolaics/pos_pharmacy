@@ -13,7 +13,7 @@ type ModifyCustomerPayload struct {
 }
 
 type DeleteCustomerPayload struct {
-	ID      int    `json:"id" validate:"required"`
+	ID   int    `json:"id" validate:"required"`
 	Name string `json:"name" validate:"required"`
 }
 
@@ -22,13 +22,14 @@ type CustomerStore interface {
 	GetCustomerByID(id int) (*Customer, error)
 	CreateCustomer(Customer) error
 	GetAllCustomers() ([]Customer, error)
-	DeleteCustomer(*Customer) error
+	DeleteCustomer(int, *Customer) error
 	ModifyCustomer(int, string) error
 }
 
-// TODO: made some changes with the DB, check the store.go as well
 type Customer struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID              int       `json:"id"`
+	Name            string    `json:"name"`
+	CreatedAt       time.Time `json:"createdAt"`
+	DeletedAt       time.Time `json:"deletedAt"`
+	DeletedByUserID int       `json:"deletedByUserId"`
 }

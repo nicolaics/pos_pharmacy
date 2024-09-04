@@ -3,6 +3,7 @@ package customer
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -16,8 +17,9 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
-	rows, err := s.db.Query("SELECT * FROM customer WHERE name = ? ", name)
-
+	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
+	
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +42,9 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 }
 
 func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
-	rows, err := s.db.Query("SELECT * FROM customer WHERE id = ?", id)
+	query := "SELECT * FROM customer WHERE id = ? AND deleted_at IS NULL"
 
+	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,8 +78,7 @@ func (s *Store) CreateCustomer(customer types.Customer) error {
 }
 
 func (s *Store) GetAllCustomers() ([]types.Customer, error) {
-	rows, err := s.db.Query("SELECT * FROM customer")
-
+	rows, err := s.db.Query("SELECT * FROM customer WHERE deleted_at IS NULL")
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +98,9 @@ func (s *Store) GetAllCustomers() ([]types.Customer, error) {
 	return customers, nil
 }
 
-func (s *Store) DeleteCustomer(customer *types.Customer) error {
-	_, err := s.db.Exec("DELETE FROM customer WHERE id = ?", customer.ID)
+func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
+	query := "UPDATE customer SET deleted_at ?, deleted_by_user_id = ? WHERE id = ?"
+	_, err := s.db.Exec(query, time.Now(), uid, customer.ID)
 	if err != nil {
 		return err
 	}
@@ -122,6 +125,8 @@ func scanRowIntoCustomer(rows *sql.Rows) (*types.Customer, error) {
 		&customer.ID,
 		&customer.Name,
 		&customer.CreatedAt,
+		&customer.DeletedAt,
+		&customer.DeletedByUserID,
 	)
 
 	if err != nil {
