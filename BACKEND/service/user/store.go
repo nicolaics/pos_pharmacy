@@ -231,25 +231,6 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 	return user, nil
 }
 
-func (s *Store) ValidateUserRefreshToken(w http.ResponseWriter, r *http.Request) (*types.User, error) {
-	refreshDetails, err := auth.ExtractRefreshTokenFromClient(r)
-	if err != nil {
-		return nil, err
-	}
-
-	userID, err := s.GetUserIDFromRedis(nil, refreshDetails)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if user exist
-	user, err := s.GetUserByID(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
 
 func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	user := new(types.User)

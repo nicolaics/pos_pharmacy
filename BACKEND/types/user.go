@@ -5,6 +5,20 @@ import (
 	"time"
 )
 
+type UserStore interface {
+	GetUserByName(string) (*User, error)
+	GetUserByID(int) (*User, error)
+	CreateUser(User) error
+	DeleteUser(*User) error
+	GetAllUsers() ([]User, error)
+	UpdateLastLoggedIn(int) error
+	ModifyUser(int, User) error
+	SaveToken(int, *TokenDetails) error
+	GetUserIDFromRedis(*AccessDetails) (int, error)
+	DeleteToken(string) (int, error)
+	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
+}
+
 // initialize the very first admin account
 type InitAdminPayload struct {
 	Name     string `json:"name" validate:"required"`
@@ -41,21 +55,6 @@ type ModifyUserPayload struct {
 type LoginUserPayload struct {
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password" validate:"required"`
-}
-
-type UserStore interface {
-	GetUserByName(string) (*User, error)
-	GetUserByID(int) (*User, error)
-	CreateUser(User) error
-	DeleteUser(*User) error
-	GetAllUsers() ([]User, error)
-	UpdateLastLoggedIn(int) error
-	ModifyUser(int, User) error
-	SaveToken(int, *TokenDetails) error
-	GetUserIDFromRedis(*AccessDetails, *RefreshDetails) (int, error)
-	DeleteToken(string) (int, error)
-	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
-	ValidateUserRefreshToken(http.ResponseWriter, *http.Request) (*User, error)
 }
 
 // basic user data info

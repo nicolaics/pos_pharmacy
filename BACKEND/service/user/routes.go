@@ -40,9 +40,6 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/user/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
 	router.HandleFunc("/user/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-
-	router.HandleFunc("/user/refresh-token", h.handleRefreshToken).Methods(http.MethodGet)
-	router.HandleFunc("/user/refresh-token", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -333,32 +330,4 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name))
-}
-
-func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-	// validate refresh token
-	user, err := h.store.ValidateUserRefreshToken(w, r)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("sign in again: %v", err))
-		return
-	}
-
-	tokenDetails, err := auth.CreateJWT(user.ID)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	err = h.store.SaveToken(user.ID, tokenDetails)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	tokens := map[string]string{
-		"access_token":  tokenDetails.Token,
-		"refresh_token": tokenDetails.RefreshToken,
-	}
-
-	utils.WriteJSON(w, http.StatusOK, tokens)
 }
