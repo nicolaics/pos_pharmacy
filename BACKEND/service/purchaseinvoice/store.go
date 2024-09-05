@@ -97,7 +97,7 @@ func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) err
 
 	query := `INSERT INTO purchase_invoice (
 		number, company_id, supplier_id, subtotal, discount, tax, total_price, 
-		description, user_id, invoice_date, modified_by_user_id
+		description, user_id, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
@@ -220,14 +220,14 @@ func (s *Store) ModifyPurchaseInvoice(id int, purchaseInvoice types.PurchaseInvo
 	query := `UPDATE purchase_invoice SET 
 				number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, 
 				tax = ?, total_price = ?, description = ?, invoice_date = ?, last_modified = ?,
-				modified_by_user_id = ? 
+				last_modified_by_user_id = ? 
 				 WHERE id = ?`
 
 	_, err := s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
 		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.InvoiceDate, 
-		time.Now(), purchaseInvoice.ModifiedByUserID, id)
+		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.InvoiceDate,
+		time.Now(), purchaseInvoice.LastModifiedByUserID, id)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.InvoiceDate,
 		&purchaseInvoice.CreatedAt,
 		&purchaseInvoice.LastModified,
-		&purchaseInvoice.ModifiedByUserID,
+		&purchaseInvoice.LastModifiedByUserID,
 		&purchaseInvoice.DeletedAt,
 		&purchaseInvoice.DeletedByUserID,
 	)

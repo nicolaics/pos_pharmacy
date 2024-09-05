@@ -19,11 +19,11 @@ type PurchaseOrderInvoiceStore interface {
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
 type NewPurchaseOrderInvoicePayload struct {
-	Number       int       `json:"number" validate:"required"`
-	CompanyID    int       `json:"companyId" validate:"required"`
-	SupplierID   int       `json:"supplierId" validate:"required"`
-	TotalItems   int       `json:"totalItems" validate:"required"`
-	InvoiceDate  time.Time `json:"invoiceDate" validate:"required"`
+	Number      int       `json:"number" validate:"required"`
+	CompanyID   int       `json:"companyId" validate:"required"`
+	SupplierID  int       `json:"supplierId" validate:"required"`
+	TotalItems  int       `json:"totalItems" validate:"required"`
+	InvoiceDate time.Time `json:"invoiceDate" validate:"required"`
 
 	MedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList" validate:"required"`
 }
@@ -60,23 +60,23 @@ type ModifyPurchaseOrderInvoicePayload struct {
 }
 
 type PurchaseOrderItemsReturn struct {
-	ID                 int       `json:"id"`
-	MedicineBarcode    string    `json:"medicineBarcode"`
-	MedicineName       string    `json:"medicineName"`
-	OrderQty           float64   `json:"orderQty"`
-	ReceivedQty        float64   `json:"receivedQty"`
-	Unit               string    `json:"unit"`
-	Remarks            string    `json:"remarks"`
+	ID              int     `json:"id"`
+	MedicineBarcode string  `json:"medicineBarcode"`
+	MedicineName    string  `json:"medicineName"`
+	OrderQty        float64 `json:"orderQty"`
+	ReceivedQty     float64 `json:"receivedQty"`
+	Unit            string  `json:"unit"`
+	Remarks         string  `json:"remarks"`
 }
 
 type PurchaseOrderInvoiceDetailPayload struct {
-	ID               int       `json:"id"`
-	Number           int       `json:"number"`
-	TotalItems       int       `json:"totalItems"`
-	InvoiceDate      time.Time `json:"invoiceDate"`
-	CreatedAt        time.Time `json:"createdAt"`
-	LastModified     time.Time `json:"lastModified"`
-	ModifiedByUserName string       `json:"modifiedByUserName"`
+	ID                 int       `json:"id"`
+	Number             int       `json:"number"`
+	TotalItems         int       `json:"totalItems"`
+	InvoiceDate        time.Time `json:"invoiceDate"`
+	CreatedAt          time.Time `json:"createdAt"`
+	LastModified       time.Time `json:"lastModified"`
+	ModifiedByUserName string    `json:"modifiedByUserName"`
 
 	CompanyProfile struct {
 		ID                      int    `json:"id"`
@@ -111,26 +111,26 @@ type DeletePurchaseOrderInvoice struct {
 }
 
 type PurchaseOrderInvoice struct {
-	ID               int       `json:"id"`
-	Number           int       `json:"number"`
-	CompanyID        int       `json:"companyId"`
-	SupplierID       int       `json:"supplierId"`
-	UserID           int       `json:"userId"`
-	TotalItems       int       `json:"totalItems"`
-	InvoiceDate      time.Time `json:"invoiceDate"`
-	CreatedAt        time.Time `json:"createdAt"`
-	LastModified     time.Time `json:"lastModified"`
-	ModifiedByUserID int       `json:"modifiedByUserId"`
-	DeletedAt        time.Time `json:"deletedAt"`
-	DeletedByUserID  int       `json:"deletedByUserId"`
+	ID                   int       `json:"id"`
+	Number               int       `json:"number"`
+	CompanyID            int       `json:"companyId"`
+	SupplierID           int       `json:"supplierId"`
+	UserID               int       `json:"userId"`
+	TotalItems           int       `json:"totalItems"`
+	InvoiceDate          time.Time `json:"invoiceDate"`
+	CreatedAt            time.Time `json:"createdAt"`
+	LastModified         time.Time `json:"lastModified"`
+	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
+	DeletedAt            time.Time `json:"deletedAt"`
+	DeletedByUserID      int       `json:"deletedByUserId"`
 }
 
 type PurchaseOrderItem struct {
-	ID                     int       `json:"id"`
-	PurchaseOrderInvoiceID int       `json:"purchaseOrderInvoiceId"`
-	MedicineID             int       `json:"medicineId"`
-	OrderQty               float64   `json:"orderQty"`
-	ReceivedQty            float64   `json:"receivedQty"`
-	UnitID                 int       `json:"unitId"`
-	Remarks                string    `json:"remarks"`
+	ID                     int     `json:"id"`
+	PurchaseOrderInvoiceID int     `json:"purchaseOrderInvoiceId"`
+	MedicineID             int     `json:"medicineId"`
+	OrderQty               float64 `json:"orderQty"`
+	ReceivedQty            float64 `json:"receivedQty"`
+	UnitID                 int     `json:"unitId"`
+	Remarks                string  `json:"remarks"`
 }

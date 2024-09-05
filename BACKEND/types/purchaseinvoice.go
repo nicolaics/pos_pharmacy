@@ -84,17 +84,17 @@ type PurchaseMedicineItemsReturn struct {
 }
 
 type PurchaseInvoiceDetailPayload struct {
-	ID               int       `json:"id"`
-	Number           int       `json:"number"`
-	Subtotal         float64   `json:"subtotal"`
-	Discount         float64   `json:"discount"`
-	Tax              float64   `json:"tax"`
-	TotalPrice       float64   `json:"totalPrice"`
-	Description      string    `json:"description"`
-	InvoiceDate      time.Time `json:"invoiceDate"`
-	CreatedAt        time.Time `json:"createdAt"`
-	LastModified     time.Time `json:"lastModified"`
-	ModifiedByUserName string       `json:"modifiedByUserName"`
+	ID                 int       `json:"id"`
+	Number             int       `json:"number"`
+	Subtotal           float64   `json:"subtotal"`
+	Discount           float64   `json:"discount"`
+	Tax                float64   `json:"tax"`
+	TotalPrice         float64   `json:"totalPrice"`
+	Description        string    `json:"description"`
+	InvoiceDate        time.Time `json:"invoiceDate"`
+	CreatedAt          time.Time `json:"createdAt"`
+	LastModified       time.Time `json:"lastModified"`
+	ModifiedByUserName string    `json:"modifiedByUserName"`
 
 	CompanyProfile struct {
 		ID                      int    `json:"id"`
@@ -129,22 +129,22 @@ type DeletePurchaseInvoice struct {
 }
 
 type PurchaseInvoice struct {
-	ID               int       `json:"id"`
-	Number           int       `json:"number"`
-	CompanyID        int       `json:"companyId"`
-	SupplierID       int       `json:"supplierId"`
-	Subtotal         float64   `json:"subtotal"`
-	Discount         float64   `json:"discount"`
-	Tax              float64   `json:"tax"`
-	TotalPrice       float64   `json:"totalPrice"`
-	Description      string    `json:"description"`
-	UserID           int       `json:"userId"`
-	InvoiceDate      time.Time `json:"invoiceDate"`
-	CreatedAt        time.Time `json:"createdAt"`
-	LastModified     time.Time `json:"lastModified"`
-	ModifiedByUserID int       `json:"modifiedByUserId"`
-	DeletedAt        time.Time `json:"deletedAt"`
-	DeletedByUserID  int       `json:"deletedByUserId"`
+	ID                   int       `json:"id"`
+	Number               int       `json:"number"`
+	CompanyID            int       `json:"companyId"`
+	SupplierID           int       `json:"supplierId"`
+	Subtotal             float64   `json:"subtotal"`
+	Discount             float64   `json:"discount"`
+	Tax                  float64   `json:"tax"`
+	TotalPrice           float64   `json:"totalPrice"`
+	Description          string    `json:"description"`
+	UserID               int       `json:"userId"`
+	InvoiceDate          time.Time `json:"invoiceDate"`
+	CreatedAt            time.Time `json:"createdAt"`
+	LastModified         time.Time `json:"lastModified"`
+	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
+	DeletedAt            time.Time `json:"deletedAt"`
+	DeletedByUserID      int       `json:"deletedByUserId"`
 }
 
 type PurchaseMedicineItem struct {

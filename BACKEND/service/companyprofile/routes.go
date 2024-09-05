@@ -65,7 +65,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		BusinessNumber:          payload.BusinessNumber,
 		Pharmacist:              payload.Pharmacist,
 		PharmacistLicenseNumber: payload.PharmacistLicenseNumber,
-		ModifiedByUserID:        user.ID,
+		LastModifiedByUserID:    user.ID,
 	})
 
 	if err != nil {
@@ -171,7 +171,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		BusinessNumber:          payload.NewAddress,
 		Pharmacist:              payload.NewPharmacist,
 		PharmacistLicenseNumber: payload.NewPharmacistLicenseNumber,
-		ModifiedByUserID:        user.ID,
+		LastModifiedByUserID:    user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

@@ -45,7 +45,7 @@ type CompanyProfile struct {
 	PharmacistLicenseNumber string    `json:"pharmacistLicenseNumber"`
 	CreatedAt               time.Time `json:"createdAt"`
 	LastModified            time.Time `json:"lastModified"`
-	ModifiedByUserID        int       `json:"modifiedByUserId"`
+	LastModifiedByUserID    int       `json:"lastModifiedByUserId"`
 	DeletedAt               time.Time `json:"deletedAt"`
 	DeletedByUserID         int       `json:"deletedByUserId"`
 }

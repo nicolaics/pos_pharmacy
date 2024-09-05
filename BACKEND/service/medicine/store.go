@@ -99,15 +99,15 @@ func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 		barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, 
 		second_unit_id, second_subtotal, second_discount, second_price, 
 		third_unit_id, third_subtotal, third_discount, third_price, description, 
-		modified_by_user_id
+		last_modified_by_user_id
 	) VALUES (` + values + `)`
-	
+
 	_, err := s.db.Exec(query,
-						med.Barcode, med.Name, med.Qty,
-						med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
-						med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
-						med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
-						med.Description, userId)
+		med.Barcode, med.Name, med.Qty,
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
+		med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
+		med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
+		med.Description, userId)
 	if err != nil {
 		return err
 	}
@@ -152,22 +152,21 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, userId int) error {
 		first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, 
 		second_unit_id = ?, second_subtotal = ?, second_discount = ?, second_price = ?, 
 		third_unit_id = ?, third_subtotal = ?, third_discount = ?, third_price = ?, description = ?, 
-		last_modified = ?, modified_by_user_id = ?
+		last_modified = ?, last_modified_by_user_id = ?
 	) WHERE id = ?`
 
 	_, err := s.db.Exec(query,
-						med.Barcode, med.Name, med.Qty,
-						med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
-						med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
-						med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
-						med.Description, time.Now(), userId, mid)
+		med.Barcode, med.Name, med.Qty,
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
+		med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
+		med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
+		med.Description, time.Now(), userId, mid)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-
 
 func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 	medicine := new(types.Medicine)
@@ -192,7 +191,7 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 		&medicine.Description,
 		&medicine.CreatedAt,
 		&medicine.LastModified,
-		&medicine.ModifiedByUserID,
+		&medicine.LastModifiedByUserID,
 		&medicine.DeletedAt,
 		&medicine.DeletedByUserID,
 	)

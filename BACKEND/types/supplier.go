@@ -40,17 +40,17 @@ type DeleteSupplierPayload struct {
 }
 
 type Supplier struct {
-	ID                  int       `json:"id"`
-	Name                string    `json:"name"`
-	Address             string    `json:"address"`
-	CompanyPhoneNumber  string    `json:"companyPhoneNumber"`
-	ContactPersonName   string    `json:"contactPersonName"`
-	ContactPersonNumber string    `json:"contactPersonNumber"`
-	Terms               string    `json:"terms"`
-	VendorIsTaxable     bool      `json:"vendorIsTaxable"`
-	CreatedAt           time.Time `json:"createdAt"`
-	LastModified     time.Time `json:"lastModified"`
-	ModifiedByUserID int       `json:"modifiedByUserId"`
-	DeletedAt        time.Time `json:"deletedAt"`
-	DeletedByUserID  int       `json:"deletedByUserId"`
+	ID                   int       `json:"id"`
+	Name                 string    `json:"name"`
+	Address              string    `json:"address"`
+	CompanyPhoneNumber   string    `json:"companyPhoneNumber"`
+	ContactPersonName    string    `json:"contactPersonName"`
+	ContactPersonNumber  string    `json:"contactPersonNumber"`
+	Terms                string    `json:"terms"`
+	VendorIsTaxable      bool      `json:"vendorIsTaxable"`
+	CreatedAt            time.Time `json:"createdAt"`
+	LastModified         time.Time `json:"lastModified"`
+	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
+	DeletedAt            time.Time `json:"deletedAt"`
+	DeletedByUserID      int       `json:"deletedByUserId"`
 }

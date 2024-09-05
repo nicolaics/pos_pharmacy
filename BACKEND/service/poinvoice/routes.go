@@ -81,13 +81,13 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.CreatePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-		Number:      payload.Number,
-		CompanyID:   payload.CompanyID,
-		SupplierID:  payload.SupplierID,
-		UserID:      user.ID,
-		TotalItems:  payload.TotalItems,
-		InvoiceDate: payload.InvoiceDate,
-		ModifiedByUserID: user.ID,
+		Number:               payload.Number,
+		CompanyID:            payload.CompanyID,
+		SupplierID:           payload.SupplierID,
+		UserID:               user.ID,
+		TotalItems:           payload.TotalItems,
+		InvoiceDate:          payload.InvoiceDate,
+		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -233,9 +233,9 @@ func (h *Handler) handleGetOnePurchaseOrderInvoiceDetail(w http.ResponseWriter, 
 	}
 
 	// get last modified user
-	lastModifiedUser, err := h.userStore.GetUserByID(purchaseOrderInvoice.ModifiedByUserID)
+	lastModifiedUser, err := h.userStore.GetUserByID(purchaseOrderInvoice.LastModifiedByUserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseOrderInvoice.ModifiedByUserID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseOrderInvoice.LastModifiedByUserID))
 		return
 	}
 
@@ -376,12 +376,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.PurchaseOrderInvoiceID, types.PurchaseOrderInvoice{
-		Number:           payload.NewNumber,
-		CompanyID:        payload.NewCompanyID,
-		SupplierID:       payload.NewSupplierID,
-		TotalItems:       payload.NewTotalItems,
-		InvoiceDate:      payload.NewInvoiceDate,
-		ModifiedByUserID: user.ID,
+		Number:               payload.NewNumber,
+		CompanyID:            payload.NewCompanyID,
+		SupplierID:           payload.NewSupplierID,
+		TotalItems:           payload.NewTotalItems,
+		InvoiceDate:          payload.NewInvoiceDate,
+		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

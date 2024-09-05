@@ -60,14 +60,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.supplierStore.CreateSupplier(types.Supplier{
-		Name:                payload.Name,
-		Address:             payload.Address,
-		CompanyPhoneNumber:  payload.CompanyPhoneNumber,
-		ContactPersonName:   payload.ContactPersonName,
-		ContactPersonNumber: payload.ContactPersonNumber,
-		Terms:               payload.Terms,
-		VendorIsTaxable:     payload.VendorIsTaxable,
-		ModifiedByUserID:    user.ID,
+		Name:                 payload.Name,
+		Address:              payload.Address,
+		CompanyPhoneNumber:   payload.CompanyPhoneNumber,
+		ContactPersonName:    payload.ContactPersonName,
+		ContactPersonNumber:  payload.ContactPersonNumber,
+		Terms:                payload.Terms,
+		VendorIsTaxable:      payload.VendorIsTaxable,
+		LastModifiedByUserID: user.ID,
 	})
 
 	if err != nil {
@@ -177,14 +177,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.supplierStore.ModifySupplier(supplier.ID, types.Supplier{
-		Name:                payload.NewName,
-		Address:             payload.NewAddress,
-		CompanyPhoneNumber:  payload.NewCompanyPhoneNumber,
-		ContactPersonName:   payload.NewContactPersonName,
-		ContactPersonNumber: payload.NewContactPersonNumber,
-		Terms:               payload.NewTerms,
-		VendorIsTaxable:     payload.NewVendorIsTaxable,
-		ModifiedByUserID:    user.ID,
+		Name:                 payload.NewName,
+		Address:              payload.NewAddress,
+		CompanyPhoneNumber:   payload.NewCompanyPhoneNumber,
+		ContactPersonName:    payload.NewContactPersonName,
+		ContactPersonNumber:  payload.NewContactPersonNumber,
+		Terms:                payload.NewTerms,
+		VendorIsTaxable:      payload.NewVendorIsTaxable,
+		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

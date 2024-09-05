@@ -74,13 +74,13 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 
 	query := `INSERT INTO supplier (
 		name, address, company_phone_number, contact_person_name, 
-		contact_person_number, terms, vendor_is_taxable, modified_by_user_id
+		contact_person_number, terms, vendor_is_taxable, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		supplier.Name, supplier.Address, supplier.CompanyPhoneNumber,
 		supplier.ContactPersonName, supplier.ContactPersonNumber,
-		supplier.Terms, supplier.VendorIsTaxable, supplier.ModifiedByUserID)
+		supplier.Terms, supplier.VendorIsTaxable, supplier.LastModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -124,13 +124,13 @@ func (s *Store) ModifySupplier(id int, newSupplierData types.Supplier) error {
 	query := `UPDATE suppplier SET 
 				name = ?, address = ?, company_phone_number = ?, contact_person_name = ?, 
 				contact_person_number = ?, terms = ?, vendor_is_taxable = ?, 
-				last_modified = ?, modified_by_user_id = ? 
+				last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 	_, err := s.db.Exec(query,
 		newSupplierData.Name, newSupplierData.Address, newSupplierData.CompanyPhoneNumber,
 		newSupplierData.ContactPersonName, newSupplierData.ContactPersonNumber,
 		newSupplierData.Terms, newSupplierData.VendorIsTaxable, time.Now(),
-		newSupplierData.ModifiedByUserID, id)
+		newSupplierData.LastModifiedByUserID, id)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 		&supplier.VendorIsTaxable,
 		&supplier.CreatedAt,
 		&supplier.LastModified,
-		&supplier.ModifiedByUserID,
+		&supplier.LastModifiedByUserID,
 		&supplier.DeletedAt,
 		&supplier.DeletedByUserID,
 	)
