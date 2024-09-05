@@ -16,7 +16,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
-	rows, err := s.db.Query("SELECT * FROM unit WHERE unit = ? ", strings.ToUpper(unitName))
+	rows, err := s.db.Query("SELECT * FROM unit WHERE name = ? ", strings.ToUpper(unitName))
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
 }
 
 func (s *Store) CreateUnit(unitName string) error {
-	_, err := s.db.Exec("INSERT INTO unit (unit) VALUES (?)", strings.ToUpper(unitName))
+	_, err := s.db.Exec("INSERT INTO unit (name) VALUES (?)", strings.ToUpper(unitName))
 
 	if err != nil {
 		return err

@@ -12,7 +12,7 @@ type PaymentMethodStore interface {
 
 type PaymentMethod struct {
 	ID        int       `json:"id"`
-	Method    string    `json:"method"`
+	Name    string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -22,7 +22,7 @@ type UnitStore interface {
 }
 type Unit struct {
 	ID        int       `json:"id"`
-	Unit      string    `json:"unit"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 

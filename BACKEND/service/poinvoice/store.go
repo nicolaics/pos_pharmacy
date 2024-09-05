@@ -161,7 +161,7 @@ func (s *Store) GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]types.Purch
 				poit.id, 
 				medicine.barcode, medicine.name, 
 				poit.order_qty, poit.received_qty, 
-				unit.unit, 
+				unit.name, 
 				poit.remarks  
 				FROM purchase_order_items as poit 
 				JOIN purchase_order_invoice as poin 

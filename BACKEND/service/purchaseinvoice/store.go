@@ -167,7 +167,7 @@ func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 			pmi.id, 
 			medicine.barcode, medicine.name, 
 			pmi.qty, 
-			unit.unit, 
+			unit.name, 
 			pmi.purchase_price, pmi.purchase_discount, 
 			pmi.purchase_tax, pmi.subtotal, pmi.batch_number, pmi.expired_date 
 			
