@@ -12,11 +12,11 @@ type RegisterMedicinePayload struct {
 	FirstSubtotal  float64 `json:"firstSubtotal" validate:"required"`
 	FirstDiscount  float64 `json:"firstDiscount"`
 	FirstPrice     float64 `json:"firstPrice" validate:"required"`
-	SecondUnit     string  `json:"secondUnit" validate:"required"` // if empty, type: "None"
+	SecondUnit     string  `json:"secondUnit"`
 	SecondSubtotal float64 `json:"secondSubtotal"`
 	SecondDiscount float64 `json:"secondDiscount"`
 	SecondPrice    float64 `json:"secondPrice"`
-	ThirdUnit      string  `json:"thirdUnit" validate:"required"` // if empty, type: "None"
+	ThirdUnit      string  `json:"thirdUnit"`
 	ThirdSubtotal  float64 `json:"thirdSubtotal"`
 	ThirdDiscount  float64 `json:"thirdDiscount"`
 	ThirdPrice     float64 `json:"thirdPrice"`
@@ -52,30 +52,33 @@ type MedicineStore interface {
 	GetMedicineByName(string) (*Medicine, error)
 	GetMedicineByID(int) (*Medicine, error)
 	GetMedicineByBarcode(string) (*Medicine, error)
-	CreateMedicine(Medicine) error
+	CreateMedicine(Medicine, int) error
 	GetAllMedicines() ([]Medicine, error)
-	DeleteMedicine(*Medicine) error
-	ModifyMedicine(int, Medicine) error
+	DeleteMedicine(*Medicine, int) error
+	ModifyMedicine(int, Medicine, int) error
 }
 
-// TODO: made some changes with the DB, check the store.go as well
 type Medicine struct {
-	ID             int       `json:"id"`
-	Barcode        string    `json:"barcode"`
-	Name           string    `json:"name"`
-	Qty            float64   `json:"qty"`
-	FirstUnitID    int       `json:"firstUnitId"`
-	FirstSubtotal  float64   `json:"firstSubtotal"`
-	FirstDiscount  float64   `json:"firstDiscount"`
-	FirstPrice     float64   `json:"firstPrice"`
-	SecondUnitID   int       `json:"secondUnitId"`
-	SecondSubtotal float64   `json:"secondSubtotal"`
-	SecondDiscount float64   `json:"secondDiscount"`
-	SecondPrice    float64   `json:"secondPrice"`
-	ThirdUnitID    int       `json:"thirdUnitId"`
-	ThirdSubtotal  float64   `json:"thirdSubtotal"`
-	ThirdDiscount  float64   `json:"thirdDiscount"`
-	ThirdPrice     float64   `json:"thirdPrice"`
-	Description    string    `json:"description"`
-	CreatedAt      time.Time `json:"createdAt"`
+	ID               int       `json:"id"`
+	Barcode          string    `json:"barcode"`
+	Name             string    `json:"name"`
+	Qty              float64   `json:"qty"`
+	FirstUnitID      int       `json:"firstUnitId"`
+	FirstSubtotal    float64   `json:"firstSubtotal"`
+	FirstDiscount    float64   `json:"firstDiscount"`
+	FirstPrice       float64   `json:"firstPrice"`
+	SecondUnitID     int       `json:"secondUnitId"`
+	SecondSubtotal   float64   `json:"secondSubtotal"`
+	SecondDiscount   float64   `json:"secondDiscount"`
+	SecondPrice      float64   `json:"secondPrice"`
+	ThirdUnitID      int       `json:"thirdUnitId"`
+	ThirdSubtotal    float64   `json:"thirdSubtotal"`
+	ThirdDiscount    float64   `json:"thirdDiscount"`
+	ThirdPrice       float64   `json:"thirdPrice"`
+	Description      string    `json:"description"`
+	CreatedAt        time.Time `json:"createdAt"`
+	LastModified     time.Time `json:"lastModified"`
+	ModifiedByUserID int       `json:"modifiedByUserId"`
+	DeletedAt        time.Time `json:"deletedAt"`
+	DeletedByUserID  int       `json:"deletedByUserId"`
 }

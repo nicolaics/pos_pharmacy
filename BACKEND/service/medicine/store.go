@@ -3,6 +3,7 @@ package medicine
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -15,8 +16,10 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
+// TODO: handle duplicate name and barcode
 func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
-	rows, err := s.db.Query("SELECT * FROM medicine WHERE name = ? ", name)
+	query := "SELECT * FROM medicine WHERE name = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +42,9 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 }
 
 func (s *Store) GetMedicineByID(id int) (*types.Medicine, error) {
-	rows, err := s.db.Query("SELECT * FROM medicine WHERE id = ?", id)
+	query := "SELECT * FROM medicine WHERE id = ? AND deleted_at IS NULL"
+
+	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +67,8 @@ func (s *Store) GetMedicineByID(id int) (*types.Medicine, error) {
 }
 
 func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
-	rows, err := s.db.Query("SELECT * FROM medicine WHERE barcode = ?", barcode)
+	query := "SELECT * FROM medicine WHERE barcode = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, barcode)
 	if err != nil {
 		return nil, err
 	}
@@ -84,22 +90,31 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 	return medicine, nil
 }
 
-func (s *Store) CreateMedicine(med types.Medicine) error {
-	fields := "barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, "
-    fields += "second_unit_id, second_subtotal, second_discount, second_price, "
-	fields += "third_unit_id, third_subtotal, third_discount, third_price, description"
+func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
+	// fields := "barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, "
+    // fields += "second_unit_id, second_subtotal, second_discount, second_price, "
+	// fields += "third_unit_id, third_subtotal, third_discount, third_price, description, modified_by_user_id "
 
 	values := "?"
 	for i := 0; i < 15; i++ {
 		values += ", ?"
 	}
 
-	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO medicine (%s) VALUES (%s)", fields, values),
+	// TODO: DOUBLE CHECK
+	query := `INSERT INTO medicine (
+		barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, 
+		second_unit_id, second_subtotal, second_discount, second_price, 
+		third_unit_id, third_subtotal, third_discount, third_price, description, 
+		modified_by_user_id
+	) VALUES (
+		{values}
+	)`
+	_, err := s.db.Exec(query,
 						med.Barcode, med.Name, med.Qty,
 						med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
 						med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
 						med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
-						med.Description)
+						med.Description, userId)
 	if err != nil {
 		return err
 	}
@@ -108,8 +123,7 @@ func (s *Store) CreateMedicine(med types.Medicine) error {
 }
 
 func (s *Store) GetAllMedicines() ([]types.Medicine, error) {
-	rows, err := s.db.Query("SELECT * FROM medicine")
-
+	rows, err := s.db.Query("SELECT * FROM medicine WHERE deleted_at IS NULL")
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +143,9 @@ func (s *Store) GetAllMedicines() ([]types.Medicine, error) {
 	return medicines, nil
 }
 
-func (s *Store) DeleteMedicine(med *types.Medicine) error {
-	_, err := s.db.Exec("DELETE FROM medicine WHERE id = ?", med.ID)
+func (s *Store) DeleteMedicine(med *types.Medicine, userId int) error {
+	query := "UPDATE medicine SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+	_, err := s.db.Exec(query, time.Now(), userId, med.ID)
 	if err != nil {
 		return err
 	}
@@ -138,18 +153,21 @@ func (s *Store) DeleteMedicine(med *types.Medicine) error {
 	return nil
 }
 
-func (s *Store) ModifyMedicine(id int, med types.Medicine) error {
-	fields := "barcode = ?, name = ?, qty = ?, "
-	fields += "first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, "
-    fields += "second_unit_id = ?, second_subtotal = ?, second_discount = ?, second_price = ?, "
-	fields += "third_unit_id = ?, third_subtotal = ?, third_discount = ?, third_price = ?, description = ?"
+func (s *Store) ModifyMedicine(mid int, med types.Medicine, userId int) error {
+	query := `UPDATE medicine SET (
+		barcode = ?, name = ?, qty = ?, 
+		first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, 
+		second_unit_id = ?, second_subtotal = ?, second_discount = ?, second_price = ?, 
+		third_unit_id = ?, third_subtotal = ?, third_discount = ?, third_price = ?, description = ?, 
+		last_modified = ?, modified_by_user_id = ?
+	) WHERE id = ?`
 
-	_, err := s.db.Exec(fmt.Sprintf("UPDATE SET (%s) WHERE id = ?", fields),
+	_, err := s.db.Exec(query,
 						med.Barcode, med.Name, med.Qty,
 						med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
 						med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
 						med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
-						med.Description, id)
+						med.Description, time.Now(), userId, mid)
 	if err != nil {
 		return err
 	}
@@ -180,6 +198,10 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 		&medicine.ThirdPrice,
 		&medicine.Description,
 		&medicine.CreatedAt,
+		&medicine.LastModified,
+		&medicine.ModifiedByUserID,
+		&medicine.DeletedAt,
+		&medicine.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -187,6 +209,7 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 	}
 
 	medicine.CreatedAt = medicine.CreatedAt.Local()
+	medicine.LastModified = medicine.LastModified.Local()
 
 	return medicine, nil
 }

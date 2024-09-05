@@ -20,6 +20,7 @@ func NewHandler(medStore types.MedicineStore, userStore types.UserStore, unitSto
 	return &Handler{medStore: medStore, userStore: userStore, unitStore: unitStore}
 }
 
+// TODO: handle duplicate name and barcode
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/medicine", h.handleGetAll).Methods(http.MethodGet)
@@ -122,7 +123,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		ThirdDiscount:  payload.ThirdDiscount,
 		ThirdPrice:     payload.ThirdPrice,
 		Description:    payload.Description,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -179,7 +180,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.medStore.DeleteMedicine(medicine)
+	err = h.medStore.DeleteMedicine(medicine, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -254,7 +255,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		ThirdDiscount:  payload.NewThirdDiscount,
 		ThirdPrice:     payload.NewThirdPrice,
 		Description:    payload.NewDescription,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
