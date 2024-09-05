@@ -62,30 +62,29 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 	return purchaseOrderInvoice, nil
 }
 
-func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (*types.PurchaseOrderInvoice, error) {
-	query := `SELECT * FROM purchase_order_invoice WHERE number = ? AND company_id ? AND 
+func (s *Store) GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error) {
+	query := `SELECT id FROM purchase_order_invoice WHERE number = ? AND company_id ? AND 
 	supplier_id = ? AND userId = ? AND total_items = ? AND invoice_date ? AND deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, number, companyId, supplierId, userId, totalItems, invoiceDate)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	purchaseOrderInvoice := new(types.PurchaseOrderInvoice)
+	var purchaseOrderInvoiceId int
 
 	for rows.Next() {
-		purchaseOrderInvoice, err = scanRowIntoPurchaseOrderInvoice(rows)
-
+		err = rows.Scan(&purchaseOrderInvoiceId)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 	}
 
-	if purchaseOrderInvoice.ID == 0 {
-		return nil, fmt.Errorf("purchase order invoice not found")
+	if purchaseOrderInvoiceId == 0 {
+		return -1, fmt.Errorf("purchase order invoice not found")
 	}
 
-	return purchaseOrderInvoice, nil
+	return purchaseOrderInvoiceId, nil
 }
 
 func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice, userId int) error {

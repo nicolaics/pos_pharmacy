@@ -7,7 +7,7 @@ import (
 type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (*PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error)
 	CreatePurchaseOrderInvoice(PurchaseOrderInvoice, int) error
 	CreatePurchaseOrderItems(PurchaseOrderItem, int) error
 	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)

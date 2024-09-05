@@ -92,8 +92,8 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	// get purchaseInvoice number
-	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByAll(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, payload.InvoiceDate)
+	// get purchaseInvoice ID
+	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, payload.InvoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists", payload.Number))
 		return
@@ -122,7 +122,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.poInvoiceStore.CreatePurchaseOrderItems(types.PurchaseOrderItem{
-			PurchaseOrderInvoiceID: purchaseOrderInvoice.ID,
+			PurchaseOrderInvoiceID: purchaseOrderInvoiceId,
 			MedicineID:             medData.ID,
 			OrderQty:               medicine.OrderQty,
 			ReceivedQty:            medicine.ReceivedQty,
