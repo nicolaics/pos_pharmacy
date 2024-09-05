@@ -8,23 +8,22 @@ type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error)
-	CreatePurchaseOrderInvoice(PurchaseOrderInvoice, int) error
-	CreatePurchaseOrderItems(PurchaseOrderItem, int) error
+	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
+	CreatePurchaseOrderItems(PurchaseOrderItem) error
 	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
 	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
 	DeletePurchaseOrderItems(int) error
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, int) error
+	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice) error
 }
 
+// SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
 type NewPurchaseOrderInvoicePayload struct {
 	Number       int       `json:"number" validate:"required"`
 	CompanyID    int       `json:"companyId" validate:"required"`
 	SupplierID   int       `json:"supplierId" validate:"required"`
 	TotalItems   int       `json:"totalItems" validate:"required"`
 	InvoiceDate  time.Time `json:"invoiceDate" validate:"required"`
-	LastModified time.Time `json:"lastModified" validate:"required"`
-	CreatedAt    time.Time `json:"createdAt" validate:"required"`
 
 	MedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList" validate:"required"`
 }
@@ -56,7 +55,6 @@ type ModifyPurchaseOrderInvoicePayload struct {
 	NewSupplierID          int       `json:"newSupplierId" validate:"required"`
 	NewTotalItems          int       `json:"newTotalItems" validate:"required"`
 	NewInvoiceDate         time.Time `json:"newInvoiceDate" validate:"required"`
-	NewLastModified        time.Time `json:"newLastModified" validate:"required"`
 
 	NewMedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList" validate:"required"`
 }
@@ -69,16 +67,16 @@ type PurchaseOrderItemsReturn struct {
 	ReceivedQty        float64   `json:"receivedQty"`
 	Unit               string    `json:"unit"`
 	Remarks            string    `json:"remarks"`
-	LastModified       time.Time `json:"lastModified"`
-	ModifiedByUserName string    `json:"modifiedByUserName"`
 }
 
 type PurchaseOrderInvoiceDetailPayload struct {
-	ID           int       `json:"id"`
-	Number       int       `json:"number"`
-	TotalItems   int       `json:"totalItems"`
-	InvoiceDate  time.Time `json:"invoiceDate"`
-	LastModified time.Time `json:"lastModified"`
+	ID               int       `json:"id"`
+	Number           int       `json:"number"`
+	TotalItems       int       `json:"totalItems"`
+	InvoiceDate      time.Time `json:"invoiceDate"`
+	CreatedAt        time.Time `json:"createdAt"`
+	LastModified     time.Time `json:"lastModified"`
+	ModifiedByUserName string       `json:"modifiedByUserName"`
 
 	CompanyProfile struct {
 		ID                      int    `json:"id"`
@@ -135,6 +133,4 @@ type PurchaseOrderItem struct {
 	ReceivedQty            float64   `json:"receivedQty"`
 	UnitID                 int       `json:"unitId"`
 	Remarks                string    `json:"remarks"`
-	LastModified           time.Time `json:"lastModified"`
-	ModifiedByUserID       int       `json:"modifiedByUserId"`
 }

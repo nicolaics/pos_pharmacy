@@ -81,23 +81,24 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.purchaseInvoiceStore.CreatePurchaseInvoice(types.PurchaseInvoice{
-		Number:      payload.Number,
-		CompanyID:   payload.CompanyID,
-		SupplierID:  payload.SupplierID,
-		Subtotal:    payload.Subtotal,
-		Discount:    payload.Discount,
-		Tax:         payload.Tax,
-		TotalPrice:  payload.TotalPrice,
-		Description: payload.Description,
-		UserID:      user.ID,
-		InvoiceDate: payload.InvoiceDate,
+		Number:           payload.Number,
+		CompanyID:        payload.CompanyID,
+		SupplierID:       payload.SupplierID,
+		Subtotal:         payload.Subtotal,
+		Discount:         payload.Discount,
+		Tax:              payload.Tax,
+		TotalPrice:       payload.TotalPrice,
+		Description:      payload.Description,
+		UserID:           user.ID,
+		InvoiceDate:      payload.InvoiceDate,
+		ModifiedByUserID: user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	// get purchaseInvoice number
-	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByAll(payload.Number, payload.CompanyID, payload.SupplierID, payload.Subtotal, payload.TotalPrice, user.ID, payload.InvoiceDate)
+	// get purchaseInvoiceID
+	purchaseInvoiceId, err := h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.Subtotal, payload.TotalPrice, user.ID, payload.InvoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice number %d doesn't exists", payload.Number))
 		return
@@ -126,7 +127,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItems(types.PurchaseMedicineItem{
-			PurchaseInvoiceID: purchaseInvoice.ID,
+			PurchaseInvoiceID: purchaseInvoiceId,
 			MedicineID:        medData.ID,
 			Qty:               medicine.Qty,
 			UnitID:            unit.ID,
@@ -239,34 +240,69 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// get last modified user data
+	lastModifiedUser, err := h.userStore.GetUserByID(purchaseInvoice.ModifiedByUserID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseInvoice.ModifiedByUserID))
+		return
+	}
+
 	returnPayload := types.PurchaseInvoiceDetailPayload{
-		PurchaseInvoiceID:          purchaseInvoice.ID,
-		PurchaseInvoiceNumber:      purchaseInvoice.Number,
-		PurchaseInvoiceSubtotal:    purchaseInvoice.Subtotal,
-		PurchaseInvoiceDiscount:    purchaseInvoice.Discount,
-		PurchaseInvoiceTax:         purchaseInvoice.Tax,
-		PurchaseInvoiceTotalPrice:  purchaseInvoice.TotalPrice,
-		PurchaseInvoiceDescription: purchaseInvoice.Description,
-		PurchaseInvoiceInvoiceDate: purchaseInvoice.InvoiceDate,
+		ID:                 purchaseInvoice.ID,
+		Number:             purchaseInvoice.Number,
+		Subtotal:           purchaseInvoice.Subtotal,
+		Discount:           purchaseInvoice.Discount,
+		Tax:                purchaseInvoice.Tax,
+		TotalPrice:         purchaseInvoice.TotalPrice,
+		Description:        purchaseInvoice.Description,
+		InvoiceDate:        purchaseInvoice.InvoiceDate,
+		CreatedAt:          purchaseInvoice.CreatedAt,
+		LastModified:       purchaseInvoice.LastModified,
+		ModifiedByUserName: lastModifiedUser.Name,
 
-		CompanyID:               company.ID,
-		CompanyName:             company.Name,
-		CompanyAddress:          company.Address,
-		CompanyBusinessNumber:   company.BusinessNumber,
-		Pharmacist:              company.Pharmacist,
-		PharmacistLicenseNumber: company.PharmacistLicenseNumber,
+		CompanyProfile: struct {
+			ID                      int    "json:\"id\""
+			Name                    string "json:\"name\""
+			Address                 string "json:\"address\""
+			BusinessNumber          string "json:\"businessNumber\""
+			Pharmacist              string "json:\"pharmacist\""
+			PharmacistLicenseNumber string "json:\"pharmacistLicenseNumber\""
+		}{
+			ID:                      company.ID,
+			Name:                    company.Name,
+			Address:                 company.Address,
+			BusinessNumber:          company.BusinessNumber,
+			Pharmacist:              company.Pharmacist,
+			PharmacistLicenseNumber: company.PharmacistLicenseNumber,
+		},
 
-		SupplierID:                  supplier.ID,
-		SupplierName:                supplier.Name,
-		SupplierAddress:             supplier.Address,
-		SupplierPhoneNumber:         supplier.CompanyPhoneNumber,
-		SupplierContactPersonName:   supplier.ContactPersonName,
-		SupplierContactPersonNumber: supplier.ContactPersonNumber,
-		SupplierTerms:               supplier.Terms,
-		SupplierVendorIsTaxable:     supplier.VendorIsTaxable,
+		Supplier: struct {
+			ID                  int    "json:\"id\""
+			Name                string "json:\"name\""
+			Address             string "json:\"address\""
+			CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
+			ContactPersonName   string "json:\"contactPersonName\""
+			ContactPersonNumber string "json:\"contactPersonNumber\""
+			Terms               string "json:\"terms\""
+			VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
+		}{
+			ID:                  supplier.ID,
+			Name:                supplier.Name,
+			Address:             supplier.Address,
+			CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
+			ContactPersonName:   supplier.ContactPersonName,
+			ContactPersonNumber: supplier.ContactPersonNumber,
+			Terms:               supplier.Terms,
+			VendorIsTaxable:     supplier.VendorIsTaxable,
+		},
 
-		UserID:   inputter.ID,
-		UserName: inputter.Name,
+		User: struct {
+			ID   int    "json:\"id\""
+			Name string "json:\"name\""
+		}{
+			ID:   inputter.ID,
+			Name: inputter.Name,
+		},
 
 		MedicineLists: purchaseMedicineItems,
 	}
@@ -311,7 +347,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseInvoice(purchaseInvoice)
+	err = h.purchaseInvoiceStore.DeletePurchaseInvoice(purchaseInvoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -352,16 +388,16 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.purchaseInvoiceStore.ModifyPurchaseInvoice(payload.PurchaseInvoiceID, types.PurchaseInvoice{
-		Number:      payload.NewNumber,
-		CompanyID:   payload.NewCompanyID,
-		SupplierID:  payload.NewSupplierID,
-		Subtotal:    payload.NewSubtotal,
-		Discount:    payload.NewDiscount,
-		Tax:         payload.NewTax,
-		TotalPrice:  payload.NewTotalPrice,
-		Description: payload.NewDescription,
-		UserID:      user.ID,
-		InvoiceDate: payload.NewInvoiceDate,
+		Number:           payload.NewNumber,
+		CompanyID:        payload.NewCompanyID,
+		SupplierID:       payload.NewSupplierID,
+		Subtotal:         payload.NewSubtotal,
+		Discount:         payload.NewDiscount,
+		Tax:              payload.NewTax,
+		TotalPrice:       payload.NewTotalPrice,
+		Description:      payload.NewDescription,
+		InvoiceDate:      payload.NewInvoiceDate,
+		ModifiedByUserID: user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

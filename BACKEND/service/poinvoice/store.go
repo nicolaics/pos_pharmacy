@@ -89,7 +89,7 @@ func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId 
 	return purchaseOrderInvoiceId, nil
 }
 
-func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice, userId int) error {
+func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice) error {
 	values := "?"
 	for i := 0; i < 6; i++ {
 		values += ", ?"
@@ -98,12 +98,12 @@ func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice,
 	query := `INSERT INTO purchase_order_invoice (
 		number, company_id, supplier_id, user_id, total_items, 
 		invoice_date, modified_by_user_id
-	) VALUES ({values})`
+	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		poInvoice.Number, poInvoice.CompanyID, poInvoice.SupplierID,
 		poInvoice.UserID, poInvoice.TotalItems, poInvoice.InvoiceDate,
-		userId)
+		poInvoice.ModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -111,20 +111,19 @@ func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice,
 	return nil
 }
 
-func (s *Store) CreatePurchaseOrderItems(purchaseMedItem types.PurchaseOrderItem, userId int) error {
+func (s *Store) CreatePurchaseOrderItems(purchaseMedItem types.PurchaseOrderItem) error {
 	values := "?"
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 5; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_order_items (
-		purchase_order_invoice_id, medicine_id, order_qty, received_qty, unit_id, 
-		remarks, modified_by_user_id
-	) VALUES ({values})`
+		purchase_order_invoice_id, medicine_id, order_qty, received_qty, unit_id, remarks
+	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		purchaseMedItem.PurchaseOrderInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.OrderQty,
-		purchaseMedItem.ReceivedQty, purchaseMedItem.UnitID, purchaseMedItem.Remarks, userId)
+		purchaseMedItem.ReceivedQty, purchaseMedItem.UnitID, purchaseMedItem.Remarks)
 	if err != nil {
 		return err
 	}
@@ -163,13 +162,12 @@ func (s *Store) GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]types.Purch
 				medicine.barcode, medicine.name, 
 				poit.order_qty, poit.received_qty, 
 				unit.unit, 
-				poit.remarks, poit.last_modified, user.name 
+				poit.remarks  
 				FROM purchase_order_items as poit 
 				JOIN purchase_order_invoice as poin 
 					ON poit.purchase_order_invoice_id = purchase_order_invoice.id 
 				JOIN medicine ON poit.medicine_id = medicine.id 
 				JOIN unit ON poit.unit_id = unit.id 
-				JOIN user ON user.id = poin.modified_by_user_id 
 				WHERE poin.id = ? AND poin.deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, purchaseOrderInvoiceId)
@@ -211,16 +209,16 @@ func (s *Store) DeletePurchaseOrderItems(purchaseOrderInvoiceId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types.PurchaseOrderInvoice, userId int) error {
+func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types.PurchaseOrderInvoice) error {
 	query := `UPDATE purchase_order_invoice 
-				SET number = ?, company_id = ?, supplier_id = ?, user_id = ?, total_items = ?, 
+				SET number = ?, company_id = ?, supplier_id = ?, total_items = ?, 
 				invoice_date = ?, last_modified = ?, modified_by_user_id = ? 
 				WHERE id = ?`
 
 	_, err := s.db.Exec(query,
 		purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
-		purchaseOrderInvoice.UserID, purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
-		purchaseOrderInvoice.LastModified, userId, poiid)
+		purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
+		time.Now(), purchaseOrderInvoice.ModifiedByUserID, poiid)
 	if err != nil {
 		return err
 	}
@@ -243,7 +241,7 @@ func scanRowIntoPurchaseOrderInvoice(rows *sql.Rows) (*types.PurchaseOrderInvoic
 		&purchaseOrderInvoice.LastModified,
 		&purchaseOrderInvoice.ModifiedByUserID,
 		&purchaseOrderInvoice.DeletedAt,
-		&purchaseOrderInvoice.DeletedByUserID,		
+		&purchaseOrderInvoice.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -268,8 +266,6 @@ func scanRowIntoPurchaseOrderItems(rows *sql.Rows) (*types.PurchaseOrderItemsRet
 		&purchaseOrderItem.ReceivedQty,
 		&purchaseOrderItem.Unit,
 		&purchaseOrderItem.Remarks,
-		&purchaseOrderItem.LastModified,
-		&purchaseOrderItem.ModifiedByUserName,
 	)
 
 	if err != nil {

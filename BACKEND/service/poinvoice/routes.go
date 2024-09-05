@@ -87,7 +87,8 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 		UserID:      user.ID,
 		TotalItems:  payload.TotalItems,
 		InvoiceDate: payload.InvoiceDate,
-	}, user.ID)
+		ModifiedByUserID: user.ID,
+	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
@@ -128,7 +129,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 			ReceivedQty:            medicine.ReceivedQty,
 			UnitID:                 unit.ID,
 			Remarks:                medicine.Remarks,
-		}, user.ID)
+		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
@@ -231,12 +232,21 @@ func (h *Handler) handleGetOnePurchaseOrderInvoiceDetail(w http.ResponseWriter, 
 		return
 	}
 
+	// get last modified user
+	lastModifiedUser, err := h.userStore.GetUserByID(purchaseOrderInvoice.ModifiedByUserID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseOrderInvoice.ModifiedByUserID))
+		return
+	}
+
 	returnPayload := types.PurchaseOrderInvoiceDetailPayload{
-		ID:           purchaseOrderInvoice.ID,
-		Number:       purchaseOrderInvoice.Number,
-		TotalItems:   purchaseOrderInvoice.TotalItems,
-		InvoiceDate:  purchaseOrderInvoice.InvoiceDate,
-		LastModified: purchaseOrderInvoice.LastModified,
+		ID:                 purchaseOrderInvoice.ID,
+		Number:             purchaseOrderInvoice.Number,
+		TotalItems:         purchaseOrderInvoice.TotalItems,
+		InvoiceDate:        purchaseOrderInvoice.InvoiceDate,
+		CreatedAt:          purchaseOrderInvoice.CreatedAt,
+		LastModified:       purchaseOrderInvoice.LastModified,
+		ModifiedByUserName: lastModifiedUser.Name,
 
 		CompanyProfile: struct {
 			ID                      int    "json:\"id\""
@@ -366,13 +376,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.PurchaseOrderInvoiceID, types.PurchaseOrderInvoice{
-		Number:       payload.NewNumber,
-		CompanyID:    payload.NewCompanyID,
-		SupplierID:   payload.NewSupplierID,
-		UserID:       user.ID,
-		TotalItems:   payload.NewTotalItems,
-		InvoiceDate:  payload.NewInvoiceDate,
-	}, user.ID)
+		Number:           payload.NewNumber,
+		CompanyID:        payload.NewCompanyID,
+		SupplierID:       payload.NewSupplierID,
+		TotalItems:       payload.NewTotalItems,
+		InvoiceDate:      payload.NewInvoiceDate,
+		ModifiedByUserID: user.ID,
+	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -413,7 +423,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			ReceivedQty:            medicine.ReceivedQty,
 			UnitID:                 unit.ID,
 			Remarks:                medicine.Remarks,
-		}, user.ID)
+		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
