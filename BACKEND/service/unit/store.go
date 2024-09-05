@@ -49,7 +49,7 @@ func scanRowIntoUnit(rows *sql.Rows) (*types.Unit, error) {
 
 	err := rows.Scan(
 		&unit.ID,
-		&unit.Unit,
+		&unit.Name,
 		&unit.CreatedAt,
 	)
 
