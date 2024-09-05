@@ -28,7 +28,6 @@ type PurchaseInvoicePayload struct {
 	Description   string                        `json:"description"`
 	InvoiceDate   time.Time                     `json:"invoiceDate" validate:"required"`
 	MedicineLists []PurchaseMedicineListPayload `json:"purchaseMedicineList" validate:"required"`
-	CreatedAt     time.Time                     `json:"createdAt" validate:"required"`
 }
 
 type PurchaseMedicineListPayload struct {
@@ -45,7 +44,7 @@ type PurchaseMedicineListPayload struct {
 }
 
 // only view the purchase invoice list
-type ViewOnePurchaseInvoicePayload struct {
+type ViewPurchaseInvoicePayload struct {
 	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
 	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
@@ -84,17 +83,17 @@ type PurchaseMedicineItemsReturn struct {
 }
 
 type PurchaseInvoiceDetailPayload struct {
-	ID                 int       `json:"id"`
-	Number             int       `json:"number"`
-	Subtotal           float64   `json:"subtotal"`
-	Discount           float64   `json:"discount"`
-	Tax                float64   `json:"tax"`
-	TotalPrice         float64   `json:"totalPrice"`
-	Description        string    `json:"description"`
-	InvoiceDate        time.Time `json:"invoiceDate"`
-	CreatedAt          time.Time `json:"createdAt"`
-	LastModified       time.Time `json:"lastModified"`
-	ModifiedByUserName string    `json:"modifiedByUserName"`
+	ID                     int       `json:"id"`
+	Number                 int       `json:"number"`
+	Subtotal               float64   `json:"subtotal"`
+	Discount               float64   `json:"discount"`
+	Tax                    float64   `json:"tax"`
+	TotalPrice             float64   `json:"totalPrice"`
+	Description            string    `json:"description"`
+	InvoiceDate            time.Time `json:"invoiceDate"`
+	CreatedAt              time.Time `json:"createdAt"`
+	LastModified           time.Time `json:"lastModified"`
+	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 
 	CompanyProfile struct {
 		ID                      int    `json:"id"`
