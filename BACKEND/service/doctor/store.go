@@ -3,6 +3,7 @@ package doctor
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -17,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetDoctorByName(name string) (*types.Doctor, error) {
 	query := "SELECT * FROM doctor WHERE name = ?"
-	rows, err := s.db.Query(query, name)
+	rows, err := s.db.Query(query, strings.ToUpper(name))
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (s *Store) GetDoctorByID(id int) (*types.Doctor, error) {
 
 func (s *Store) CreateDoctor(doctor types.Doctor) error {
 	_, err := s.db.Exec("INSERT INTO doctor (name) VALUES (?)",
-						doctor.Name)
+						strings.ToUpper(doctor.Name))
 
 	if err != nil {
 		return err
@@ -106,7 +107,7 @@ func (s *Store) DeleteDoctor(doctor *types.Doctor) error {
 }
 
 func (s *Store) ModifyDoctor(id int, newName string) error {
-	_, err := s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", newName, id)
+	_, err := s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
 
 	if err != nil {
 		return err

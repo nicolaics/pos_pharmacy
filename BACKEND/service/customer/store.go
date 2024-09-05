@@ -3,6 +3,7 @@ package customer
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
@@ -19,7 +20,7 @@ func NewStore(db *sql.DB) *Store {
 func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
 	
-	rows, err := s.db.Query(query, name)
+	rows, err := s.db.Query(query, strings.ToUpper(name))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 
 func (s *Store) CreateCustomer(customer types.Customer) error {
 	_, err := s.db.Exec("INSERT INTO customer (name) VALUES (?)",
-		customer.Name)
+						strings.ToUpper(customer.Name))
 
 	if err != nil {
 		return err
@@ -109,7 +110,7 @@ func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
 }
 
 func (s *Store) ModifyCustomer(id int, newName string) error {
-	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", newName, id)
+	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
 
 	if err != nil {
 		return err
