@@ -17,7 +17,8 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
-	rows, err := s.db.Query("SELECT * FROM invoice WHERE id = ?", id)
+	query := "SELECT * FROM invoice WHERE id = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -39,34 +40,35 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 	return invoice, nil
 }
 
-func (s *Store) GetInvoiceByAll(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (*types.Invoice, error) {
-	query := "SELECT * FROM invoice WHERE number = ? AND user_id = ? AND customer_id = ? AND "
-	query += "total_price = ? AND invoice_date ?"
+func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error) {
+	query := `SELECT id FROM invoice 
+				WHERE number = ? AND user_id = ? AND customer_id = ? AND 
+				total_price = ? AND invoice_date ? AND deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, number, userId, customerId, totalPrice, invoiceDate)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	invoice := new(types.Invoice)
+	var invoiceId int
 
 	for rows.Next() {
-		invoice, err = scanRowIntoInvoice(rows)
-
+		err = rows.Scan(&invoiceId)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 	}
 
-	if invoice.ID == 0 {
-		return nil, fmt.Errorf("invoice not found")
+	if invoiceId == 0 {
+		return -1, fmt.Errorf("invoice not found")
 	}
 
-	return invoice, nil
+	return invoiceId, nil
 }
 
 func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
-	rows, err := s.db.Query("SELECT * FROM invoice WHERE number = ? ", number)
+	query := "SELECT * FROM invoice WHERE number = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +77,6 @@ func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
 
 	for rows.Next() {
 		invoice, err := scanRowIntoInvoice(rows)
-
 		if err != nil {
 			return nil, err
 		}
@@ -87,10 +88,11 @@ func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
 }
 
 func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.Invoice, error) {
-	query := fmt.Sprintf("SELECT * FROM invoice WHERE invoice_date BETWEEN DATE('%s') AND DATE('%s') ORDER BY invoice_date DESC",
-		startDate, endDate)
-
-	rows, err := s.db.Query(query)
+	query := `SELECT * FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+	rows, err := s.db.Query(query, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +101,6 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 
 	for rows.Next() {
 		invoice, err := scanRowIntoInvoice(rows)
-
 		if err != nil {
 			return nil, err
 		}
@@ -111,20 +112,23 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 }
 
 func (s *Store) CreateInvoice(invoice types.Invoice) error {
-	fields := "number, user_id, customer_id, subtotal, discount, tax, "
-	fields += "total_price, paid_amount, change_amount, payment_method_id, description, "
-	fields += "invoice_date"
 	values := "?"
-
-	for i := 0; i < 11; i++ {
+	for i := 0; i < 12; i++ {
 		values += ", ?"
 	}
 
-	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO invoice (%s) VALUES (%s)", fields, values),
+	query := `INSERT INTO invoice (
+			number, user_id, customer_id, subtotal, discount, tax, 
+			total_price, paid_amount, change_amount, payment_method_id, description, 
+			invoice_date, last_modified_by_user_id
+	) VALUES (` + values + `)`
+
+	_, err := s.db.Exec(query,
 		invoice.Number, invoice.UserID, invoice.CustomerID,
 		invoice.Subtotal, invoice.Discount, invoice.Tax,
 		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
-		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate)
+		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
+		invoice.LastModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -133,15 +137,15 @@ func (s *Store) CreateInvoice(invoice types.Invoice) error {
 }
 
 func (s *Store) CreateMedicineItems(medicineItem types.MedicineItems) error {
-	fields := "invoice_id, medicine_id, qty, unit_id, "
-	fields += "price, discount, subtotal"
 	values := "?"
-
 	for i := 0; i < 6; i++ {
 		values += ", ?"
 	}
 
-	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO medicine_items (%s) VALUES (%s)", fields, values),
+	query := `INSERT INTO medicine_items (
+		invoice_id, medicine_id, qty, unit_id, price, discount, subtotal
+	) VALUES (` + values + `)`
+	_, err := s.db.Exec(query,
 		medicineItem.InvoiceID, medicineItem.MedicineID, medicineItem.Qty,
 		medicineItem.UnitID, medicineItem.Price, medicineItem.Discount,
 		medicineItem.Subtotal)
@@ -153,16 +157,17 @@ func (s *Store) CreateMedicineItems(medicineItem types.MedicineItems) error {
 }
 
 func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPayload, error) {
-	query := "SELECT "
-
-	query += "mi.id, medicine.barcode, medicine.name, mi.qty, unit.unit, mi.price, mi.discount, "
-	query += "mi.subtotal "
-
-	query += "FROM medicine_items as mi "
-	query += "JOIN invoice ON mi.invoice_id = invoice.id "
-	query += "JOIN medicine ON mi.medicine_id = medicine.id "
-	query += "JOIN unit ON mi.unit_id = unit.id "
-	query += "WHERE invoice.id = ? "
+	query := `SELECT 
+				mi.id, 
+				medicine.barcode, medicine.name, 
+				mi.qty, 
+				unit.name, 
+				mi.price, mi.discount, mi.subtotal 
+				FROM medicine_items as mi 
+				JOIN invoice ON mi.invoice_id = invoice.id 
+				JOIN medicine ON mi.medicine_id = medicine.id 
+				JOIN unit ON mi.unit_id = unit.id 
+				WHERE invoice.id = ? AND invoice.deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, invoiceId)
 	if err != nil {
@@ -184,8 +189,9 @@ func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPaylo
 	return medicineItems, nil
 }
 
-func (s *Store) DeleteInvoice(invoice *types.Invoice) error {
-	_, err := s.db.Exec("DELETE FROM invoice WHERE id = ?", invoice.ID)
+func (s *Store) DeleteInvoice(invoice *types.Invoice, userId int) error {
+	query := "UPDATE invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+	_, err := s.db.Exec(query, time.Now(), userId, invoice.ID)
 	if err != nil {
 		return err
 	}
@@ -203,18 +209,23 @@ func (s *Store) DeleteMedicineItems(invoiceId int) error {
 }
 
 func (s *Store) ModifyInvoice(id int, invoice types.Invoice) error {
-	fields := "number = ?, user_id = ?, customer_id = ?, subtotal = ?, discount = ?, "
-	fields += "tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, "
-	fields += "payment_method_id = ?, description = ?, invoice_date = ?"
+	fields := ""
+	fields += ""
+	fields += ""
 
-	query := fmt.Sprintf("UPDATE invoice SET %s WHERE id = ?", fields)
+	query := `UPDATE invoice SET 
+			number = ?, user_id = ?, customer_id = ?, subtotal = ?, discount = ?, 
+			tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, 
+			payment_method_id = ?, description = ?, invoice_date = ?, last_modified = ?,
+			last_modified_by_user_id = ? 
+			WHERE id = ? AND deleted_at IS NULL`
 
 	_, err := s.db.Exec(query,
 		invoice.Number, invoice.UserID, invoice.CustomerID,
 		invoice.Subtotal, invoice.Discount, invoice.Tax,
 		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
 		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
-		id)
+		time.Now(), invoice.LastModifiedByUserID, id)
 	if err != nil {
 		return err
 	}
@@ -240,6 +251,10 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		&invoice.Description,
 		&invoice.InvoiceDate,
 		&invoice.CreatedAt,
+		&invoice.LastModified,
+		&invoice.LastModifiedByUserID,
+		&invoice.DeletedAt,
+		&invoice.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -248,6 +263,7 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 
 	invoice.InvoiceDate = invoice.InvoiceDate.Local()
 	invoice.CreatedAt = invoice.CreatedAt.Local()
+	invoice.LastModified = invoice.LastModified.Local()
 
 	return invoice, nil
 }

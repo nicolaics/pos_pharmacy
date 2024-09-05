@@ -6,14 +6,14 @@ import (
 
 type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
-	GetInvoiceByAll(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (*Invoice, error)
+	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetInvoicesByNumber(int) ([]Invoice, error)
 	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
 	CreateInvoice(Invoice) error
 	CreateMedicineItems(MedicineItems) error
 	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)
 	DeleteMedicineItems(int) error
-	DeleteInvoice(*Invoice) error
+	DeleteInvoice(*Invoice, int) error
 	ModifyInvoice(int, Invoice) error
 }
 
@@ -71,50 +71,45 @@ type MedicineListsPayload struct {
 
 type MedicineItemReturnPayload struct {
 	ID              int     `json:"id"`
-	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
-	MedicineName    string  `json:"medicineName" validate:"required"`
-	Qty             float64 `json:"qty" validate:"required"`
-	Unit            string  `json:"unit" validate:"required"`
-	Price           float64 `json:"price" validate:"required"`
+	MedicineBarcode string  `json:"medicineBarcode"`
+	MedicineName    string  `json:"medicineName"`
+	Qty             float64 `json:"qty"`
+	Unit            string  `json:"unit"`
+	Price           float64 `json:"price"`
 	Discount        float64 `json:"discount"`
-	Subtotal        float64 `json:"subtotal" validate:"required"`
+	Subtotal        float64 `json:"subtotal"`
 }
 
 type InvoiceDetailPayload struct {
-	InvoiceID          int       `json:"invoiceId"`
-	InvoiceNumber      int       `json:"invoiceNumber"`
-	InvoiceSubtotal    float64   `json:"invoiceSubtotal"`
-	InvoiceDiscount    float64   `json:"invoiceDiscount"`
-	InvoiceTax         float64   `json:"invoiceTax"`
-	InvoiceTotalPrice  float64   `json:"invoiceTotalPrice"`
+	ID                 int       `json:"id"`
+	Number             int       `json:"number"`
+	Subtotal           float64   `json:"subtotal"`
+	Discount           float64   `json:"discount"`
+	Tax                float64   `json:"tax"`
+	TotalPrice         float64   `json:"totalPrice"`
 	PaidAmount         float64   `json:"paidAmount"`
 	ChangeAmount       float64   `json:"changeAmount"`
-	InvoiceDescription string    `json:"invoiceDescription"`
+	Description        string    `json:"description"`
 	InvoiceDate        time.Time `json:"invoiceDate"`
+	CreatedAt          time.Time `json:"createdAt"`
+	LastModified       time.Time `json:"lastModified"`
+	ModifiedByUserName string    `json:"modifiedByUserName"`
 
+	// the one who creates the invoice
 	User struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"user"`
-
-	// UserID   int    `json:"userId"`
-	// UserName string `json:"userName"`
 
 	Customer struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"customer"`
 
-	// CustomerID   int    `json:"customerId"`
-	// CustomerName string `json:"customerName"`
-
 	PaymentMethod struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"paymentMethod"`
-
-	// PaymentMethodID   int    `json:"paymentMethodId"`
-	// PaymentMethodName string `json:"paymentMethodName"`
 
 	MedicineLists []MedicineItemReturnPayload `json:"medicineLists"`
 }
@@ -122,31 +117,33 @@ type InvoiceDetailPayload struct {
 type DeleteInvoicePayload ViewInvoiceDetailPayload
 
 type MedicineItems struct {
-	ID         int       `json:"id"`
-	InvoiceID  int       `json:"invoiceId"`
-	MedicineID int       `json:"medicineId"`
-	Qty        float64   `json:"qty"`
-	UnitID     int       `json:"unitId"`
-	Price      float64   `json:"price"`
-	Discount   float64   `json:"discount"`
-	Subtotal   float64   `json:"subtotal"`
-	CreatedAt  time.Time `json:"createdAt"`
+	ID         int     `json:"id"`
+	InvoiceID  int     `json:"invoiceId"`
+	MedicineID int     `json:"medicineId"`
+	Qty        float64 `json:"qty"`
+	UnitID     int     `json:"unitId"`
+	Price      float64 `json:"price"`
+	Discount   float64 `json:"discount"`
+	Subtotal   float64 `json:"subtotal"`
 }
 
-// TODO: made some changes with the DB, check the store.go as well
 type Invoice struct {
-	ID              int       `json:"id"`
-	Number          int       `json:"number"`
-	UserID          int       `json:"userId"`
-	CustomerID      int       `json:"customerId"`
-	Subtotal        float64   `json:"subtotal"`
-	Discount        float64   `json:"discount"`
-	Tax             float64   `json:"tax"`
-	TotalPrice      float64   `json:"totalPrice"`
-	PaidAmount      float64   `json:"paidAmount"`
-	ChangeAmount    float64   `json:"changeAmount"`
-	PaymentMethodID int       `json:"paymentMethodId"`
-	Description     string    `json:"description"`
-	InvoiceDate     time.Time `json:"invoiceDate"`
-	CreatedAt       time.Time `json:"createdAt"`
+	ID                   int       `json:"id"`
+	Number               int       `json:"number"`
+	UserID               int       `json:"userId"`
+	CustomerID           int       `json:"customerId"`
+	Subtotal             float64   `json:"subtotal"`
+	Discount             float64   `json:"discount"`
+	Tax                  float64   `json:"tax"`
+	TotalPrice           float64   `json:"totalPrice"`
+	PaidAmount           float64   `json:"paidAmount"`
+	ChangeAmount         float64   `json:"changeAmount"`
+	PaymentMethodID      int       `json:"paymentMethodId"`
+	Description          string    `json:"description"`
+	InvoiceDate          time.Time `json:"invoiceDate"`
+	CreatedAt            time.Time `json:"createdAt"`
+	LastModified         time.Time `json:"lastModified"`
+	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
+	DeletedAt            time.Time `json:"deletedAt"`
+	DeletedByUserID      int       `json:"deletedByUserId"`
 }
