@@ -1,26 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { SyntheticEvent, useEffect, useLayoutEffect, useState } from "react";
 import {
   FaLock,
   FaShoppingCart,
   FaPills,
   FaReceipt,
   FaUser,
-  FaClock
+  FaClock,
 } from "react-icons/fa";
 
-import { IoIosLogOut } from "react-icons/io"
+import { IoIosLogOut } from "react-icons/io";
 import "./Home.css";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
+const url = "http://localhost:19230/api/v1/user/verify";
+
+// TODO: think about back navigation
+// TODO: if the user goes back, reverify the token in the local storage
+// TODO: to the URL
 const LandingPage: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication
-  const [error, setError] = useState<string | null>(null); // Track error state if needed
-  
   const navigate = useNavigate();
-  
+
   const logout = () => {
+    sessionStorage.removeItem("token");
     navigate("/", { replace: true });
-  }
+  };
+
+  console.log("before: ", sessionStorage.getItem("token"));
 
   return (
     <div className="landing-page">

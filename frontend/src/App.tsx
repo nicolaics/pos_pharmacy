@@ -5,15 +5,11 @@ import { Routes, Route } from "react-router-dom";
 
 const App: React.FC = () => {
   return (
-    <div className="App">
-      {/* <LoginPage /> */}
-      
+    <div className="App">      
       <Routes>
         <Route path="/" element={<LoginPage/>} />
         <Route path="/Home" element={<LandingPage/>} />
-      </Routes> */
-      
-      {/* {/* <LandingPage /> */}
+      </Routes>
     </div>
   );
 };

@@ -46,7 +46,8 @@ const LoginPage: React.FC = () => {
         setPassword(event.target.value);
     };
 
-    const handleSubmit = (event: any) => {
+    // TODO: fetch from API
+    const handleSubmit = (event: any) => {  
         event.preventDefault();
 
         if (username === "" || password === "") {
@@ -54,10 +55,11 @@ const LoginPage: React.FC = () => {
             return;
         }
 
-        // alert(`You typed ${username}\n ${password}`);
         // console.log(login());
         // setUsername("");
         // setPassword("");
+
+        sessionStorage.setItem("token", "asc");
         navigate("/Home");
     };
 
