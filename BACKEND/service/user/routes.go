@@ -40,6 +40,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/user/init-admin", h.handleInitAdmin).Methods(http.MethodPost)
 	router.HandleFunc("/user/init-admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/user/verify", h.handleVerify).Methods(http.MethodGet)
+	router.HandleFunc("/user/verify", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -89,8 +92,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens := map[string]string{
-		"access_token":  tokenDetails.Token,
-		"refresh_token": tokenDetails.RefreshToken,
+		"token":  tokenDetails.Token,
 	}
 
 	utils.WriteJSON(w, http.StatusOK, tokens)
@@ -275,9 +277,9 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.store.DeleteToken(accessDetails.AccessUUID)
+	err = h.store.DeleteToken(accessDetails.UUID)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -330,4 +332,29 @@ func (h *Handler) handleInitAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name))
+}
+
+func (h *Handler) handleVerify(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload struct {Token string `json:"token" validate:"required"`}
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	_, err := h.store.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not authorized: %v", err))
+		return
+	}
+	
+	utils.WriteJSON(w, http.StatusOK, nil)
 }

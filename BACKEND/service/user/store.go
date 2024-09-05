@@ -135,16 +135,10 @@ func (s *Store) ModifyUser(id int, user types.User) error {
 }
 
 func (s *Store) SaveToken(userId int, tokenDetails *types.TokenDetails) error {
-	accessTokenExp := time.Unix(tokenDetails.TokenExp, 0) //converting Unix to UTC(to Time object)
-	refreshTokenExp := time.Unix(tokenDetails.RefreshTokenExp, 0)
-	now := time.Now()
+	tokenExp := time.Unix(tokenDetails.TokenExp, 0) //converting Unix to UTC(to Time object)
 
-	err := s.redisClient.Set(context.Background(), tokenDetails.AccessUUID, strconv.Itoa(int(userId)), accessTokenExp.Sub(now)).Err()
-	if err != nil {
-		return err
-	}
-
-	err = s.redisClient.Set(context.Background(), tokenDetails.RefreshUUID, strconv.Itoa(int(userId)), refreshTokenExp.Sub(now)).Err()
+	query := "INSERT INTO verify_token(user_id, uuid, expired_at) VALUES (?, ?, ?)"
+	_, err := s.db.Exec(query, userId, tokenDetails.UUID, tokenExp)
 	if err != nil {
 		return err
 	}
@@ -152,51 +146,14 @@ func (s *Store) SaveToken(userId int, tokenDetails *types.TokenDetails) error {
 	return nil
 }
 
-func (s *Store) GetUserIDFromRedis(accessDetails *types.AccessDetails, refreshDetails *types.RefreshDetails) (int, error) {
-	var userIdStr string
-	var err error
-
-	if refreshDetails == nil {
-		userIdStr, err = s.redisClient.Get(context.Background(), accessDetails.AccessUUID).Result()
-	} else {
-		userIdStr, err = s.redisClient.Get(context.Background(), refreshDetails.RefreshUUID).Result()
-	}
+func (s *Store) DeleteToken(givenUuid string) error {
+	query := "DELETE FROM verify_token WHERE uuid = ?"
+	_, err := s.db.Exec(query, givenUuid)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
-	userId, _ := strconv.Atoi(userIdStr)
-
-	return userId, nil
-}
-
-func (s *Store) DeleteToken(givenUuid string) (int, error) {
-	deleted, err := s.redisClient.Del(context.Background(), givenUuid).Result()
-	if err != nil {
-		return -1, err
-	}
-
-	return int(deleted), nil
-}
-
-func (s *Store) FindUserID(db *sql.DB, userName string) (int, error) {
-	rows, err := db.Query("SELECT * FROM user WHERE name = ? ", userName)
-
-	if err != nil {
-		return -1, err
-	}
-
-	user := new(types.User)
-
-	for rows.Next() {
-		user, err = scanRowIntoUser(rows)
-
-		if err != nil {
-			return -1, err
-		}
-	}
-
-	return user.ID, nil
+	return nil
 }
 
 // TODO: change into from sql, not redis
@@ -210,13 +167,28 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 		return nil, err
 	}
 
-	userID, err := s.GetUserIDFromRedis(accessDetails, nil)
+	query := "SELECT user_id FROM verify_token WHERE uuid = ? AND user_id = ? AND expired_at <= ?"
+	rows, err := s.db.Query(query, accessDetails.UUID, accessDetails.UserID, time.Now())
 	if err != nil {
-		return nil, fmt.Errorf("renew your token")
+		return nil, err
+	}
+
+	var userId int
+
+	for rows.Next() {
+		err = rows.Scan(&userId)
+		if err != nil {
+			delErr := s.DeleteToken(accessDetails.UUID)
+			if delErr != nil {
+				return nil, fmt.Errorf("delete error: %v", delErr)
+			}
+
+			return nil, fmt.Errorf("token expired, log in again")
+		}
 	}
 
 	// check if user exist
-	user, err := s.GetUserByID(userID)
+	user, err := s.GetUserByID(userId)
 	if err != nil {
 		return nil, err
 	}
