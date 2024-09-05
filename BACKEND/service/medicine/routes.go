@@ -20,7 +20,6 @@ func NewHandler(medStore types.MedicineStore, userStore types.UserStore, unitSto
 	return &Handler{medStore: medStore, userStore: userStore, unitStore: unitStore}
 }
 
-// TODO: handle duplicate name and barcode
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/medicine", h.handleGetAll).Methods(http.MethodGet)

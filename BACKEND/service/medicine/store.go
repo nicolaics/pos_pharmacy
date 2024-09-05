@@ -16,7 +16,6 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-// TODO: handle duplicate name and barcode
 func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 	query := "SELECT * FROM medicine WHERE name = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, name)
