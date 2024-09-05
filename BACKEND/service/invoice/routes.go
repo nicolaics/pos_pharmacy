@@ -246,18 +246,18 @@ func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	returnPayload := types.InvoiceDetailPayload{
-		ID:                 invoice.ID,
-		Number:             invoice.Number,
-		Subtotal:           invoice.Subtotal,
-		Discount:           invoice.Discount,
-		Tax:                invoice.Tax,
-		TotalPrice:         invoice.TotalPrice,
-		PaidAmount:         invoice.PaidAmount,
-		ChangeAmount:       invoice.ChangeAmount,
-		Description:        invoice.Description,
-		InvoiceDate:        invoice.InvoiceDate,
-		LastModified:       invoice.LastModified,
-		ModifiedByUserName: lastModifiedUser.Name,
+		ID:                     invoice.ID,
+		Number:                 invoice.Number,
+		Subtotal:               invoice.Subtotal,
+		Discount:               invoice.Discount,
+		Tax:                    invoice.Tax,
+		TotalPrice:             invoice.TotalPrice,
+		PaidAmount:             invoice.PaidAmount,
+		ChangeAmount:           invoice.ChangeAmount,
+		Description:            invoice.Description,
+		InvoiceDate:            invoice.InvoiceDate,
+		LastModified:           invoice.LastModified,
+		LastModifiedByUserName: lastModifiedUser.Name,
 
 		User: struct {
 			ID   int    "json:\"id\""
@@ -374,17 +374,17 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.invoiceStore.ModifyInvoice(payload.ID, types.Invoice{
-		Number:          payload.NewNumber,
-		CustomerID:      payload.NewCustomerID,
-		Subtotal:        payload.NewSubtotal,
-		Discount:        payload.NewDiscount,
-		Tax:             payload.NewTax,
-		TotalPrice:      payload.NewTotalPrice,
-		PaidAmount:      payload.NewPaidAmount,
-		ChangeAmount:    payload.NewChangeAmount,
-		PaymentMethodID: paymentMethod.ID,
-		Description:     payload.NewDescription,
-		InvoiceDate:     payload.NewInvoiceDate,
+		Number:               payload.NewNumber,
+		CustomerID:           payload.NewCustomerID,
+		Subtotal:             payload.NewSubtotal,
+		Discount:             payload.NewDiscount,
+		Tax:                  payload.NewTax,
+		TotalPrice:           payload.NewTotalPrice,
+		PaidAmount:           payload.NewPaidAmount,
+		ChangeAmount:         payload.NewChangeAmount,
+		PaymentMethodID:      paymentMethod.ID,
+		Description:          payload.NewDescription,
+		InvoiceDate:          payload.NewInvoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {

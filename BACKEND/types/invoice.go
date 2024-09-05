@@ -81,19 +81,19 @@ type MedicineItemReturnPayload struct {
 }
 
 type InvoiceDetailPayload struct {
-	ID                 int       `json:"id"`
-	Number             int       `json:"number"`
-	Subtotal           float64   `json:"subtotal"`
-	Discount           float64   `json:"discount"`
-	Tax                float64   `json:"tax"`
-	TotalPrice         float64   `json:"totalPrice"`
-	PaidAmount         float64   `json:"paidAmount"`
-	ChangeAmount       float64   `json:"changeAmount"`
-	Description        string    `json:"description"`
-	InvoiceDate        time.Time `json:"invoiceDate"`
-	CreatedAt          time.Time `json:"createdAt"`
-	LastModified       time.Time `json:"lastModified"`
-	ModifiedByUserName string    `json:"modifiedByUserName"`
+	ID                     int       `json:"id"`
+	Number                 int       `json:"number"`
+	Subtotal               float64   `json:"subtotal"`
+	Discount               float64   `json:"discount"`
+	Tax                    float64   `json:"tax"`
+	TotalPrice             float64   `json:"totalPrice"`
+	PaidAmount             float64   `json:"paidAmount"`
+	ChangeAmount           float64   `json:"changeAmount"`
+	Description            string    `json:"description"`
+	InvoiceDate            time.Time `json:"invoiceDate"`
+	CreatedAt              time.Time `json:"createdAt"`
+	LastModified           time.Time `json:"lastModified"`
+	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 
 	// the one who creates the invoice
 	User struct {
