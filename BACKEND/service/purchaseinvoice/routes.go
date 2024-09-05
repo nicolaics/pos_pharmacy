@@ -34,13 +34,14 @@ func NewHandler(purchaseInvoiceStore types.PurchaseInvoiceStore, userStore types
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/purchase", h.handleNew).Methods(http.MethodPost)
-	router.HandleFunc("/invoice/purchase", h.handleGetPurchaseInvoices).Methods(http.MethodGet)
-	router.HandleFunc("/invoice/purchase/detail", h.handleGetPurchaseInvoiceDetail).Methods(http.MethodGet)
+	router.HandleFunc("/invoice/purchase/all", h.handleGetPurchaseInvoices).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/purchase/detail", h.handleGetPurchaseInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice/purchase", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/invoice/purchase", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/purchase/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/purchase/all", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +152,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewOnePurchaseInvoicePayload
+	var payload types.ViewPurchaseInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -248,17 +249,17 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 	}
 
 	returnPayload := types.PurchaseInvoiceDetailPayload{
-		ID:                 purchaseInvoice.ID,
-		Number:             purchaseInvoice.Number,
-		Subtotal:           purchaseInvoice.Subtotal,
-		Discount:           purchaseInvoice.Discount,
-		Tax:                purchaseInvoice.Tax,
-		TotalPrice:         purchaseInvoice.TotalPrice,
-		Description:        purchaseInvoice.Description,
-		InvoiceDate:        purchaseInvoice.InvoiceDate,
-		CreatedAt:          purchaseInvoice.CreatedAt,
-		LastModified:       purchaseInvoice.LastModified,
-		ModifiedByUserName: lastModifiedUser.Name,
+		ID:                     purchaseInvoice.ID,
+		Number:                 purchaseInvoice.Number,
+		Subtotal:               purchaseInvoice.Subtotal,
+		Discount:               purchaseInvoice.Discount,
+		Tax:                    purchaseInvoice.Tax,
+		TotalPrice:             purchaseInvoice.TotalPrice,
+		Description:            purchaseInvoice.Description,
+		InvoiceDate:            purchaseInvoice.InvoiceDate,
+		CreatedAt:              purchaseInvoice.CreatedAt,
+		LastModified:           purchaseInvoice.LastModified,
+		LastModifiedByUserName: lastModifiedUser.Name,
 
 		CompanyProfile: struct {
 			ID                      int    "json:\"id\""
