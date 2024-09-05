@@ -16,7 +16,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.PaymentMethod, error) {
-	rows, err := s.db.Query("SELECT * FROM payment_method WHERE method = ? ", strings.ToUpper(paymentMethodName))
+	rows, err := s.db.Query("SELECT * FROM payment_method WHERE name = ? ", strings.ToUpper(paymentMethodName))
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
 }
 
 func (s *Store) CreatePaymentMethod(paymentMethodName string) error {
-	_, err := s.db.Exec("INSERT INTO payment_method (method) VALUES (?)", strings.ToUpper(paymentMethodName))
+	_, err := s.db.Exec("INSERT INTO payment_method (name) VALUES (?)", strings.ToUpper(paymentMethodName))
 
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
 
 	err := rows.Scan(
 		&paymentMethod.ID,
-		&paymentMethod.Method,
+		&paymentMethod.Name,
 		&paymentMethod.CreatedAt,
 	)
 
