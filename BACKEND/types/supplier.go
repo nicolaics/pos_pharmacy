@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+type SupplierStore interface {
+	GetSupplierByName(name string) (*Supplier, error)
+	GetSupplierByID(id int) (*Supplier, error)
+	CreateSupplier(Supplier) error
+	GetAllSuppliers() ([]Supplier, error)
+	DeleteSupplier(*Supplier, int) error
+	ModifySupplier(id int, newSupplierData Supplier) error
+}
+
 type RegisterSupplierPayload struct {
 	Name                string `json:"name" validate:"required"`
 	Address             string `json:"address" validate:"required"`
@@ -30,16 +39,6 @@ type DeleteSupplierPayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
-type SupplierStore interface {
-	GetSupplierByName(name string) (*Supplier, error)
-	GetSupplierByID(id int) (*Supplier, error)
-	CreateSupplier(Supplier) error
-	GetAllSuppliers() ([]Supplier, error)
-	DeleteSupplier(*Supplier) error
-	ModifySupplier(id int, newSupplierData Supplier) error
-}
-
-// TODO: made some changes with the DB, check the store.go as well
 type Supplier struct {
 	ID                  int       `json:"id"`
 	Name                string    `json:"name"`
@@ -50,4 +49,8 @@ type Supplier struct {
 	Terms               string    `json:"terms"`
 	VendorIsTaxable     bool      `json:"vendorIsTaxable"`
 	CreatedAt           time.Time `json:"createdAt"`
+	LastModified     time.Time `json:"lastModified"`
+	ModifiedByUserID int       `json:"modifiedByUserId"`
+	DeletedAt        time.Time `json:"deletedAt"`
+	DeletedByUserID  int       `json:"deletedByUserId"`
 }

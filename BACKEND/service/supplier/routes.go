@@ -67,6 +67,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		ContactPersonNumber: payload.ContactPersonNumber,
 		Terms:               payload.Terms,
 		VendorIsTaxable:     payload.VendorIsTaxable,
+		ModifiedByUserID:    user.ID,
 	})
 
 	if err != nil {
@@ -126,7 +127,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.supplierStore.DeleteSupplier(supplier)
+	err = h.supplierStore.DeleteSupplier(supplier, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -183,6 +184,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		ContactPersonNumber: payload.NewContactPersonNumber,
 		Terms:               payload.NewTerms,
 		VendorIsTaxable:     payload.NewVendorIsTaxable,
+		ModifiedByUserID:    user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

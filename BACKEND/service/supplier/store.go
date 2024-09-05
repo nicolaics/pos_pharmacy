@@ -3,6 +3,7 @@ package supplier
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -16,7 +17,8 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier WHERE name = ? ", name)
+	query := "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, name)
 
 	if err != nil {
 		return nil, err
@@ -40,7 +42,8 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 }
 
 func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier WHERE id = ?", id)
+	query := "SELECT * FROM supplier WHERE id = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, id)
 
 	if err != nil {
 		return nil, err
@@ -64,13 +67,20 @@ func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
 }
 
 func (s *Store) CreateSupplier(supplier types.Supplier) error {
-	fields := "name, address, company_phone_number, contact_person_name, contact_person_number, terms, vendor_is_taxable"
-	values := "?, ?, ?, ?, ?, ?, ?"
+	values := "?"
+	for i := 0; i < 7; i++ {
+		values += ", ?"
+	}
 
-	_, err := s.db.Exec(fmt.Sprintf("INSERT INTO supplier (%s) VALUES (%s)", fields, values),
+	query := `INSERT INTO supplier (
+		name, address, company_phone_number, contact_person_name, 
+		contact_person_number, terms, vendor_is_taxable, modified_by_user_id
+	) VALUES (` + values + `)`
+
+	_, err := s.db.Exec(query,
 		supplier.Name, supplier.Address, supplier.CompanyPhoneNumber,
 		supplier.ContactPersonName, supplier.ContactPersonNumber,
-		supplier.Terms, supplier.VendorIsTaxable)
+		supplier.Terms, supplier.VendorIsTaxable, supplier.ModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -79,7 +89,7 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 }
 
 func (s *Store) GetAllSuppliers() ([]types.Supplier, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier")
+	rows, err := s.db.Query("SELECT * FROM supplier WHERE deleted_at IS NULL")
 
 	if err != nil {
 		return nil, err
@@ -100,8 +110,9 @@ func (s *Store) GetAllSuppliers() ([]types.Supplier, error) {
 	return suppliers, nil
 }
 
-func (s *Store) DeleteSupplier(supplier *types.Supplier) error {
-	_, err := s.db.Exec("DELETE FROM supplier WHERE id = ? ", supplier.ID)
+func (s *Store) DeleteSupplier(supplier *types.Supplier, userId int) error {
+	query := "UPDATE supplier SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+	_, err := s.db.Exec(query, time.Now(), userId, supplier.ID)
 	if err != nil {
 		return err
 	}
@@ -110,12 +121,16 @@ func (s *Store) DeleteSupplier(supplier *types.Supplier) error {
 }
 
 func (s *Store) ModifySupplier(id int, newSupplierData types.Supplier) error {
-	columns := "name = ?, address = ?, company_phone_number = ?, contact_person_name = ?, contact_person_number = ?, terms = ?, vendor_is_taxable = ?"
-
-	_, err := s.db.Exec(fmt.Sprintf("UPDATE supplier SET %s WHERE id = ?", columns),
+	query := `UPDATE suppplier SET 
+				name = ?, address = ?, company_phone_number = ?, contact_person_name = ?, 
+				contact_person_number = ?, terms = ?, vendor_is_taxable = ?, 
+				last_modified = ?, modified_by_user_id = ? 
+				WHERE id = ?`
+	_, err := s.db.Exec(query,
 		newSupplierData.Name, newSupplierData.Address, newSupplierData.CompanyPhoneNumber,
 		newSupplierData.ContactPersonName, newSupplierData.ContactPersonNumber,
-		newSupplierData.Terms, newSupplierData.VendorIsTaxable, id)
+		newSupplierData.Terms, newSupplierData.VendorIsTaxable, time.Now(),
+		newSupplierData.ModifiedByUserID, id)
 	if err != nil {
 		return err
 	}
@@ -136,6 +151,10 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 		&supplier.Terms,
 		&supplier.VendorIsTaxable,
 		&supplier.CreatedAt,
+		&supplier.LastModified,
+		&supplier.ModifiedByUserID,
+		&supplier.DeletedAt,
+		&supplier.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -143,6 +162,7 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 	}
 
 	supplier.CreatedAt = supplier.CreatedAt.Local()
+	supplier.LastModified = supplier.LastModified.Local()
 
 	return supplier, nil
 }
