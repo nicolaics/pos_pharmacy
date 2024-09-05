@@ -277,13 +277,20 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.DeleteToken(accessDetails.UUID)
+	// check user exists or not
+	_, err = h.store.GetUserByID(accessDetails.UserID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", http.StatusAccepted))
+		return
+	}
+	
+	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
+	err = h.store.DeleteToken(accessDetails.UUID, accessDetails.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

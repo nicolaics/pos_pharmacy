@@ -1,11 +1,9 @@
 package user
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/service/auth"
@@ -13,11 +11,11 @@ import (
 )
 
 type Store struct {
-	db          *sql.DB
+	db *sql.DB
 }
 
 func NewStore(db *sql.DB) *Store {
-	return &Store{db: db,}
+	return &Store{db: db}
 }
 
 func (s *Store) GetUserByName(name string) (*types.User, error) {
@@ -122,9 +120,9 @@ func (s *Store) UpdateLastLoggedIn(id int) error {
 }
 
 func (s *Store) ModifyUser(id int, user types.User) error {
-	columns := "name = ?, password = ?, admin = ?, phone_number = ?"
-
-	_, err := s.db.Exec(fmt.Sprintf("UPDATE user SET %s WHERE id = ? ", columns),
+	query := `UPDATE user SET name = ?, password = ?, admin = ?, phone_number = ? 
+				WHERE id = ?`
+	_, err := s.db.Exec(query,
 		user.Name, user.Password, user.Admin, user.PhoneNumber, id)
 
 	if err != nil {
@@ -146,9 +144,9 @@ func (s *Store) SaveToken(userId int, tokenDetails *types.TokenDetails) error {
 	return nil
 }
 
-func (s *Store) DeleteToken(givenUuid string) error {
-	query := "DELETE FROM verify_token WHERE uuid = ?"
-	_, err := s.db.Exec(query, givenUuid)
+func (s *Store) DeleteToken(givenUuid string, userId int) error {
+	query := "DELETE FROM verify_token WHERE uuid = ? AND user_id = ?"
+	_, err := s.db.Exec(query, givenUuid, userId)
 	if err != nil {
 		return err
 	}
@@ -178,7 +176,7 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 	for rows.Next() {
 		err = rows.Scan(&userId)
 		if err != nil {
-			delErr := s.DeleteToken(accessDetails.UUID)
+			delErr := s.DeleteToken(accessDetails.UUID, accessDetails.UserID)
 			if delErr != nil {
 				return nil, fmt.Errorf("delete error: %v", delErr)
 			}
@@ -202,7 +200,6 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 
 	return user, nil
 }
-
 
 func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	user := new(types.User)

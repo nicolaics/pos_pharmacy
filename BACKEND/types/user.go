@@ -14,8 +14,7 @@ type UserStore interface {
 	UpdateLastLoggedIn(int) error
 	ModifyUser(int, User) error
 	SaveToken(int, *TokenDetails) error
-	GetUserIDFromRedis(*AccessDetails) (int, error)
-	DeleteToken(string) (int, error)
+	DeleteToken(string, int) error
 	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
 }
 
@@ -58,7 +57,6 @@ type LoginUserPayload struct {
 }
 
 // basic user data info
-// TODO: made some changes with the DB, check the store.go as well
 type User struct {
 	ID           int       `json:"id"`
 	Name         string    `json:"name"`
