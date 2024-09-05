@@ -81,14 +81,13 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.CreatePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-		Number:       payload.Number,
-		CompanyID:    payload.CompanyID,
-		SupplierID:   payload.SupplierID,
-		UserID:       user.ID,
-		TotalItems:   payload.TotalItems,
-		InvoiceDate:  payload.InvoiceDate,
-		LastModified: payload.LastModified,
-	})
+		Number:      payload.Number,
+		CompanyID:   payload.CompanyID,
+		SupplierID:  payload.SupplierID,
+		UserID:      user.ID,
+		TotalItems:  payload.TotalItems,
+		InvoiceDate: payload.InvoiceDate,
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 	}
@@ -129,7 +128,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 			ReceivedQty:            medicine.ReceivedQty,
 			UnitID:                 unit.ID,
 			Remarks:                medicine.Remarks,
-		})
+		}, user.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
@@ -233,30 +232,55 @@ func (h *Handler) handleGetOnePurchaseOrderInvoiceDetail(w http.ResponseWriter, 
 	}
 
 	returnPayload := types.PurchaseOrderInvoiceDetailPayload{
-		PurchaseOrderInvoiceID:           purchaseOrderInvoice.ID,
-		PurchaseOrderInvoiceNumber:       purchaseOrderInvoice.Number,
-		PurchaseOrderInvoiceTotalItems:   purchaseOrderInvoice.TotalItems,
-		PurchaseOrderInvoiceInvoiceDate:  purchaseOrderInvoice.InvoiceDate,
-		PurchaseOrderInvoiceLastModified: purchaseOrderInvoice.LastModified,
+		ID:           purchaseOrderInvoice.ID,
+		Number:       purchaseOrderInvoice.Number,
+		TotalItems:   purchaseOrderInvoice.TotalItems,
+		InvoiceDate:  purchaseOrderInvoice.InvoiceDate,
+		LastModified: purchaseOrderInvoice.LastModified,
 
-		CompanyID:               company.ID,
-		CompanyName:             company.Name,
-		CompanyAddress:          company.Address,
-		CompanyBusinessNumber:   company.BusinessNumber,
-		Pharmacist:              company.Pharmacist,
-		PharmacistLicenseNumber: company.PharmacistLicenseNumber,
+		CompanyProfile: struct {
+			ID                      int    "json:\"id\""
+			Name                    string "json:\"name\""
+			Address                 string "json:\"address\""
+			BusinessNumber          string "json:\"businessNumber\""
+			Pharmacist              string "json:\"pharmacist\""
+			PharmacistLicenseNumber string "json:\"pharmacistLicenseNumber\""
+		}{
+			ID:                      company.ID,
+			Name:                    company.Name,
+			Address:                 company.Address,
+			BusinessNumber:          company.BusinessNumber,
+			Pharmacist:              company.Pharmacist,
+			PharmacistLicenseNumber: company.PharmacistLicenseNumber,
+		},
 
-		SupplierID:                  supplier.ID,
-		SupplierName:                supplier.Name,
-		SupplierAddress:             supplier.Address,
-		SupplierPhoneNumber:         supplier.CompanyPhoneNumber,
-		SupplierContactPersonName:   supplier.ContactPersonName,
-		SupplierContactPersonNumber: supplier.ContactPersonNumber,
-		SupplierTerms:               supplier.Terms,
-		SupplierVendorIsTaxable:     supplier.VendorIsTaxable,
+		Supplier: struct {
+			ID                  int    "json:\"id\""
+			Name                string "json:\"name\""
+			Address             string "json:\"address\""
+			CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
+			ContactPersonName   string "json:\"contactPersonName\""
+			ContactPersonNumber string "json:\"contactPersonNumber\""
+			Terms               string "json:\"terms\""
+			VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
+		}{
+			ID:                  supplier.ID,
+			Name:                supplier.Name,
+			Address:             supplier.Address,
+			CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
+			ContactPersonName:   supplier.ContactPersonName,
+			ContactPersonNumber: supplier.ContactPersonNumber,
+			Terms:               supplier.Terms,
+			VendorIsTaxable:     supplier.VendorIsTaxable,
+		},
 
-		UserID:   inputter.ID,
-		UserName: inputter.Name,
+		User: struct {
+			ID   int    "json:\"id\""
+			Name string "json:\"name\""
+		}{
+			ID:   inputter.ID,
+			Name: inputter.Name,
+		},
 
 		MedicineLists: purchaseOrderItems,
 	}
@@ -301,7 +325,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderInvoice(purchaseOrderInvoice)
+	err = h.poInvoiceStore.DeletePurchaseOrderInvoice(purchaseOrderInvoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -348,8 +372,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		UserID:       user.ID,
 		TotalItems:   payload.NewTotalItems,
 		InvoiceDate:  payload.NewInvoiceDate,
-		LastModified: payload.NewLastModified,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -390,7 +413,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			ReceivedQty:            medicine.ReceivedQty,
 			UnitID:                 unit.ID,
 			Remarks:                medicine.Remarks,
-		})
+		}, user.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))

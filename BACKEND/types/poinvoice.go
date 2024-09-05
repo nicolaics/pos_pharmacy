@@ -8,13 +8,13 @@ type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByAll(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (*PurchaseOrderInvoice, error)
-	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
-	CreatePurchaseOrderItems(PurchaseOrderItem) error
+	CreatePurchaseOrderInvoice(PurchaseOrderInvoice, int) error
+	CreatePurchaseOrderItems(PurchaseOrderItem, int) error
 	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
-	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice) error
+	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
 	DeletePurchaseOrderItems(int) error
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice) error
+	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, int) error
 }
 
 type NewPurchaseOrderInvoicePayload struct {
@@ -62,13 +62,15 @@ type ModifyPurchaseOrderInvoicePayload struct {
 }
 
 type PurchaseOrderItemsReturn struct {
-	ID              int     `json:"id"`
-	MedicineBarcode string  `json:"medicineBarcode"`
-	MedicineName    string  `json:"medicineName"`
-	OrderQty        float64 `json:"orderQty"`
-	ReceivedQty     float64 `json:"receivedQty"`
-	Unit            string  `json:"unit"`
-	Remarks         string  `json:"remarks"`
+	ID                 int       `json:"id"`
+	MedicineBarcode    string    `json:"medicineBarcode"`
+	MedicineName       string    `json:"medicineName"`
+	OrderQty           float64   `json:"orderQty"`
+	ReceivedQty        float64   `json:"receivedQty"`
+	Unit               string    `json:"unit"`
+	Remarks            string    `json:"remarks"`
+	LastModified       time.Time `json:"lastModified"`
+	ModifiedByUserName string    `json:"modifiedByUserName"`
 }
 
 type PurchaseOrderInvoiceDetailPayload struct {
@@ -86,12 +88,6 @@ type PurchaseOrderInvoiceDetailPayload struct {
 		Pharmacist              string `json:"pharmacist"`
 		PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
 	} `json:"companyProfile"`
-	// CompanyID               int    `json:"companyId"`
-	// CompanyName             string `json:"companyName"`
-	// CompanyAddress          string `json:"companyAddress"`
-	// CompanyBusinessNumber   string `json:"companyBusinessNumber"`
-	// Pharmacist              string `json:"pharmacist"`
-	// PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
 
 	Supplier struct {
 		ID                  int    `json:"id"`
@@ -103,21 +99,11 @@ type PurchaseOrderInvoiceDetailPayload struct {
 		Terms               string `json:"terms"`
 		VendorIsTaxable     bool   `json:"vendorIsTaxable"`
 	} `json:"supplier"`
-	// SupplierID                  int    `json:"supplierId"`
-	// SupplierName                string `json:"supplierName"`
-	// SupplierAddress             string `json:"supplierAddress"`
-	// SupplierPhoneNumber         string `json:"supplierPhoneNumber"`
-	// SupplierContactPersonName   string `json:"supplierContactPersonName"`
-	// SupplierContactPersonNumber string `json:"supplierContactPersonNumber"`
-	// SupplierTerms               string `json:"supplierTerms"`
-	// SupplierVendorIsTaxable     bool   `json:"supplierVendorIsTaxable"`
 
 	User struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"user"`
-	// UserID   int    `json:"userId"`
-	// UserName string `json:"userName"`
 
 	MedicineLists []PurchaseOrderItemsReturn `json:"medicineLists"`
 }
@@ -127,24 +113,28 @@ type DeletePurchaseOrderInvoice struct {
 }
 
 type PurchaseOrderInvoice struct {
-	ID           int       `json:"id"`
-	Number       int       `json:"number"`
-	CompanyID    int       `json:"companyId"`
-	SupplierID   int       `json:"supplierId"`
-	UserID       int       `json:"userId"`
-	TotalItems   int       `json:"totalItems"`
-	InvoiceDate  time.Time `json:"invoiceDate"`
-	LastModified time.Time `json:"lastModified"`
-	CreatedAt    time.Time `json:"createdAt"`
+	ID               int       `json:"id"`
+	Number           int       `json:"number"`
+	CompanyID        int       `json:"companyId"`
+	SupplierID       int       `json:"supplierId"`
+	UserID           int       `json:"userId"`
+	TotalItems       int       `json:"totalItems"`
+	InvoiceDate      time.Time `json:"invoiceDate"`
+	CreatedAt        time.Time `json:"createdAt"`
+	LastModified     time.Time `json:"lastModified"`
+	ModifiedByUserID int       `json:"modifiedByUserId"`
+	DeletedAt        time.Time `json:"deletedAt"`
+	DeletedByUserID  int       `json:"deletedByUserId"`
 }
 
-// TODO: made some changes with the DB, check the store.go as well
 type PurchaseOrderItem struct {
-	ID                     int     `json:"id"`
-	PurchaseOrderInvoiceID int     `json:"purchaseOrderInvoiceId"`
-	MedicineID             int     `json:"medicineId"`
-	OrderQty               float64 `json:"orderQty"`
-	ReceivedQty            float64 `json:"receivedQty"`
-	UnitID                 int     `json:"unitId"`
-	Remarks                string  `json:"remarks"`
+	ID                     int       `json:"id"`
+	PurchaseOrderInvoiceID int       `json:"purchaseOrderInvoiceId"`
+	MedicineID             int       `json:"medicineId"`
+	OrderQty               float64   `json:"orderQty"`
+	ReceivedQty            float64   `json:"receivedQty"`
+	UnitID                 int       `json:"unitId"`
+	Remarks                string    `json:"remarks"`
+	LastModified           time.Time `json:"lastModified"`
+	ModifiedByUserID       int       `json:"modifiedByUserId"`
 }
