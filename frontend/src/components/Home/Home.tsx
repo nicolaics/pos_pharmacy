@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaLock,
   FaShoppingCart,
@@ -7,9 +7,21 @@ import {
   FaUser,
   FaClock
 } from "react-icons/fa";
+
+import { IoIosLogOut } from "react-icons/io"
 import "./Home.css";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication
+  const [error, setError] = useState<string | null>(null); // Track error state if needed
+  
+  const navigate = useNavigate();
+  
+  const logout = () => {
+    navigate("/", { replace: true });
+  }
+
   return (
     <div className="landing-page">
       <h1>Welcome!</h1>
@@ -37,6 +49,10 @@ const LandingPage: React.FC = () => {
         <div className="grid-item">
           <FaClock size={50} />
           <h2>Purchasing</h2>
+        </div>
+        <div className="logout-item" onClick={logout}>
+          <IoIosLogOut size={50} />
+          <h2>Logout</h2>
         </div>
       </div>
     </div>
