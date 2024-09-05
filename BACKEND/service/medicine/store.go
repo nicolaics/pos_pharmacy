@@ -90,24 +90,18 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 }
 
 func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
-	// fields := "barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, "
-    // fields += "second_unit_id, second_subtotal, second_discount, second_price, "
-	// fields += "third_unit_id, third_subtotal, third_discount, third_price, description, modified_by_user_id "
-
 	values := "?"
-	for i := 0; i < 15; i++ {
+	for i := 0; i < 16; i++ {
 		values += ", ?"
 	}
 
-	// TODO: DOUBLE CHECK
 	query := `INSERT INTO medicine (
 		barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, 
 		second_unit_id, second_subtotal, second_discount, second_price, 
 		third_unit_id, third_subtotal, third_discount, third_price, description, 
 		modified_by_user_id
-	) VALUES (
-		{values}
-	)`
+	) VALUES (` + values + `)`
+	
 	_, err := s.db.Exec(query,
 						med.Barcode, med.Name, med.Qty,
 						med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
