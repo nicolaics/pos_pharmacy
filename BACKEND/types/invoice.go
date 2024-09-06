@@ -21,7 +21,7 @@ type ViewInvoiceDetailPayload struct {
 	InvoiceID int `json:"invoiceId" validate:"required"`
 }
 
-type NewInvoicePayload struct {
+type RegisterInvoicePayload struct {
 	Number            int       `json:"number" validate:"required"`
 	CustomerID        int       `json:"customerId" validate:"required"`
 	Subtotal          float64   `json:"subtotal" validate:"required"`
@@ -39,7 +39,7 @@ type NewInvoicePayload struct {
 
 type ModifyInvoicePayload struct {
 	ID      int               `json:"id" validate:"required"`
-	NewData NewInvoicePayload `json:"newData" validate:"required"`
+	NewData RegisterInvoicePayload `json:"newData" validate:"required"`
 }
 
 type ViewInvoicePayload struct {

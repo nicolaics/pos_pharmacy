@@ -18,7 +18,7 @@ type PurchaseOrderInvoiceStore interface {
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
-type NewPurchaseOrderInvoicePayload struct {
+type RegisterPurchaseOrderInvoicePayload struct {
 	Number      int       `json:"number" validate:"required"`
 	CompanyID   int       `json:"companyId" validate:"required"`
 	SupplierID  int       `json:"supplierId" validate:"required"`
@@ -45,12 +45,12 @@ type ViewPurchaseOrderInvoicePayload struct {
 
 // view the detail of the purchase invoice
 type ViewPurchaseOrderItemsPayload struct {
-	PurchaseOrderInvoiceID int `json:"purchaseOrderInvoiceId" validate:"required"`
+	ID int `json:"id" validate:"required"`
 }
 
 type ModifyPurchaseOrderInvoicePayload struct {
-	PurchaseOrderInvoiceID int                            `json:"purchaseOrderInvoiceId" validate:"required"`
-	NewData                NewPurchaseOrderInvoicePayload `json:"newData" validate:"required"`
+	ID      int                                 `json:"id" validate:"required"`
+	NewData RegisterPurchaseOrderInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseOrderItemsReturn struct {

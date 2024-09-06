@@ -51,12 +51,12 @@ type ViewPurchaseInvoicePayload struct {
 
 // view the detail of the purchase invoice
 type ViewPurchaseMedicineItemsPayload struct {
-	PurchaseInvoiceID int `json:"purchaseInvoiceId" validate:"required"`
+	ID int `json:"id" validate:"required"`
 }
 
 type ModifyPurchaseInvoicePayload struct {
-	PurchaseInvoiceID int                    `json:"purchaseInvoiceId" validate:"required"`
-	NewData           PurchaseInvoicePayload `json:"newData" validate:"required"`
+	ID      int                    `json:"id" validate:"required"`
+	NewData PurchaseInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseMedicineItemsReturn struct {

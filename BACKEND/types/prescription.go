@@ -19,7 +19,7 @@ type PrescriptionStore interface {
 	ModifyPrescription(int, Prescription) error
 }
 
-type NewPrescriptionPayload struct {
+type RegisterPrescriptionPayload struct {
 	Invoice struct {
 		Number       int       `json:"number" validate:"required"`
 		UserName     string    `json:"userName" validate:"required"`
@@ -35,7 +35,7 @@ type NewPrescriptionPayload struct {
 	Qty              float64                           `json:"qty" validate:"required"`
 	Price            float64                           `json:"price" validate:"required"`
 	TotalPrice       float64                           `json:"totalPrice" validate:"required"`
-	Description      string                            `json:"description" validate:"required"`
+	Description      string                            `json:"description"`
 	MedicineLists    []PrescriptionMedicineListPayload `json:"prescriptionMedicineList" validate:"required"`
 }
 
@@ -61,8 +61,8 @@ type ViewPrescriptionMedicineItemsPayload struct {
 }
 
 type ModifyPrescriptionPayload struct {
-	ID        int                    `json:"id" validate:"required"`
-	NewData   NewPrescriptionPayload `json:"newData" validate:"required"`
+	ID      int                         `json:"id" validate:"required"`
+	NewData RegisterPrescriptionPayload `json:"newData" validate:"required"`
 }
 
 // data of the medicine per row in the prescription
