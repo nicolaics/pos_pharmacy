@@ -55,17 +55,8 @@ type ViewPurchaseMedicineItemsPayload struct {
 }
 
 type ModifyPurchaseInvoicePayload struct {
-	PurchaseInvoiceID int                           `json:"purchaseInvoiceId" validate:"required"`
-	NewNumber         int                           `json:"newNumber" validate:"required"`
-	NewCompanyID      int                           `json:"newCompanyId" validate:"required"`
-	NewSupplierID     int                           `json:"newSupplierId" validate:"required"`
-	NewSubtotal       float64                       `json:"newSubtotal" validate:"required"`
-	NewDiscount       float64                       `json:"newDiscount"`
-	NewTax            float64                       `json:"newTax" validate:"required"`
-	NewTotalPrice     float64                       `json:"newTotalPrice" validate:"required"`
-	NewDescription    string                        `json:"newDescription"`
-	NewInvoiceDate    time.Time                     `json:"newInvoiceDate" validate:"required"`
-	NewMedicineLists  []PurchaseMedicineListPayload `json:"newPurchaseMedicineList" validate:"required"`
+	PurchaseInvoiceID int                    `json:"purchaseInvoiceId" validate:"required"`
+	NewData           PurchaseInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseMedicineItemsReturn struct {

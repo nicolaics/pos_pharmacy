@@ -73,7 +73,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenDetails, err := auth.CreateJWT(user.ID)
+	tokenDetails, err := auth.CreateJWT(user.ID, user.Admin)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -238,7 +238,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate admin password
-	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
+	if !(auth.ComparePassword(admin.Password, []byte(payload.NewData.AdminPassword))) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"))
 		return
 	}
@@ -249,25 +249,25 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Name != payload.NewName {
-		_, err = h.store.GetUserByName(payload.NewName)
+	if user.Name != payload.NewData.Name {
+		_, err = h.store.GetUserByName(payload.NewData.Name)
 		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewName))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewData.Name))
 		}
 	}
 
 	err = h.store.ModifyUser(user.ID, types.User{
-		Name:        payload.NewName,
-		Password:    payload.NewPassword,
-		Admin:       payload.NewAdmin,
-		PhoneNumber: payload.NewPhoneNumber,
+		Name:        payload.NewData.Name,
+		Password:    payload.NewData.Password,
+		Admin:       payload.NewData.Admin,
+		PhoneNumber: payload.NewData.PhoneNumber,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewName))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewData.Name))
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {

@@ -96,6 +96,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	// get purchaseInvoiceID
@@ -389,15 +390,15 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.purchaseInvoiceStore.ModifyPurchaseInvoice(payload.PurchaseInvoiceID, types.PurchaseInvoice{
-		Number:               payload.NewNumber,
-		CompanyID:            payload.NewCompanyID,
-		SupplierID:           payload.NewSupplierID,
-		Subtotal:             payload.NewSubtotal,
-		Discount:             payload.NewDiscount,
-		Tax:                  payload.NewTax,
-		TotalPrice:           payload.NewTotalPrice,
-		Description:          payload.NewDescription,
-		InvoiceDate:          payload.NewInvoiceDate,
+		Number:               payload.NewData.Number,
+		CompanyID:            payload.NewData.CompanyID,
+		SupplierID:           payload.NewData.SupplierID,
+		Subtotal:             payload.NewData.Subtotal,
+		Discount:             payload.NewData.Discount,
+		Tax:                  payload.NewData.Tax,
+		TotalPrice:           payload.NewData.TotalPrice,
+		Description:          payload.NewData.Description,
+		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -411,7 +412,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, medicine := range payload.NewMedicineLists {
+	for _, medicine := range payload.NewData.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
@@ -447,7 +448,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("purchase invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
+				fmt.Errorf("purchase invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 			return
 		}
 	}

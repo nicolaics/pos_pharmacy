@@ -60,45 +60,59 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	firstUnit, err := h.unitStore.GetUnitByName(payload.FirstUnit)
+	firstUnitStr := payload.FirstUnit
+	secondUnitStr := payload.SecondUnit
+	thirdUnitStr := payload.ThirdUnit
+
+	if payload.FirstUnit == ""  {
+		firstUnitStr = "None"
+	}
+	if payload.SecondUnit == "" {
+		secondUnitStr = "None"
+	}
+	if payload.ThirdUnit == "" {
+		thirdUnitStr = "None"
+	}
+
+	firstUnit, err := h.unitStore.GetUnitByName(firstUnitStr)
 	if firstUnit == nil {
-		err = h.unitStore.CreateUnit(payload.FirstUnit)
+		err = h.unitStore.CreateUnit(firstUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		firstUnit, err = h.unitStore.GetUnitByName(payload.FirstUnit)
+		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
 	}
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	secondUnit, err := h.unitStore.GetUnitByName(payload.SecondUnit)
+	secondUnit, err := h.unitStore.GetUnitByName(secondUnitStr)
 	if secondUnit == nil {
-		err = h.unitStore.CreateUnit(payload.SecondUnit)
+		err = h.unitStore.CreateUnit(secondUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		secondUnit, err = h.unitStore.GetUnitByName(payload.SecondUnit)
+		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
 	}
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	thirdUnit, err := h.unitStore.GetUnitByName(payload.ThirdUnit)
+	thirdUnit, err := h.unitStore.GetUnitByName(thirdUnitStr)
 	if thirdUnit == nil {
-		err = h.unitStore.CreateUnit(payload.ThirdUnit)
+		err = h.unitStore.CreateUnit(thirdUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		thirdUnit, err = h.unitStore.GetUnitByName(payload.ThirdUnit)
+		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
 	}
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -219,41 +233,100 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if medicine.Name != payload.NewName {
-		_, err = h.medStore.GetMedicineByName(payload.NewName)
+	if medicine.Name != payload.NewData.Name {
+		_, err = h.medStore.GetMedicineByName(payload.NewData.Name)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with name %s already exist", payload.NewName))
+				fmt.Errorf("medicine with name %s already exist", payload.NewData.Name))
 			return
 		}
 	}
 
-	if medicine.Barcode != payload.NewBarcode {
-		_, err = h.medStore.GetMedicineByBarcode(payload.NewBarcode)
+	if medicine.Barcode != payload.NewData.Barcode {
+		_, err = h.medStore.GetMedicineByBarcode(payload.NewData.Barcode)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with barcode %s already exist", payload.NewBarcode))
+				fmt.Errorf("medicine with barcode %s already exist", payload.NewData.Barcode))
 			return
 		}
+	}
+
+	firstUnitStr := payload.NewData.FirstUnit
+	secondUnitStr := payload.NewData.SecondUnit
+	thirdUnitStr := payload.NewData.ThirdUnit
+
+	if payload.NewData.FirstUnit == ""  {
+		firstUnitStr = "None"
+	}
+	if payload.NewData.SecondUnit == "" {
+		secondUnitStr = "None"
+	}
+	if payload.NewData.ThirdUnit == "" {
+		thirdUnitStr = "None"
+	}
+
+	firstUnit, err := h.unitStore.GetUnitByName(firstUnitStr)
+	if firstUnit == nil {
+		err = h.unitStore.CreateUnit(firstUnitStr)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	secondUnit, err := h.unitStore.GetUnitByName(secondUnitStr)
+	if secondUnit == nil {
+		err = h.unitStore.CreateUnit(secondUnitStr)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	thirdUnit, err := h.unitStore.GetUnitByName(thirdUnitStr)
+	if thirdUnit == nil {
+		err = h.unitStore.CreateUnit(thirdUnitStr)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	err = h.medStore.ModifyMedicine(medicine.ID, types.Medicine{
-		Barcode:        payload.NewBarcode,
-		Name:           payload.NewName,
-		Qty:            payload.NewQty,
-		FirstUnitID:    payload.NewFirstUnitID,
-		FirstSubtotal:  payload.NewFirstSubtotal,
-		FirstDiscount:  payload.NewFirstDiscount,
-		FirstPrice:     payload.NewFirstPrice,
-		SecondUnitID:   payload.NewSecondUnitID,
-		SecondSubtotal: payload.NewSecondSubtotal,
-		SecondDiscount: payload.NewSecondDiscount,
-		SecondPrice:    payload.NewSecondPrice,
-		ThirdUnitID:    payload.NewThirdUnitID,
-		ThirdSubtotal:  payload.NewThirdSubtotal,
-		ThirdDiscount:  payload.NewThirdDiscount,
-		ThirdPrice:     payload.NewThirdPrice,
-		Description:    payload.NewDescription,
+		Barcode:        payload.NewData.Barcode,
+		Name:           payload.NewData.Name,
+		Qty:            payload.NewData.Qty,
+		FirstUnitID:    firstUnit.ID,
+		FirstSubtotal:  payload.NewData.FirstSubtotal,
+		FirstDiscount:  payload.NewData.FirstDiscount,
+		FirstPrice:     payload.NewData.FirstPrice,
+		SecondUnitID:   secondUnit.ID,
+		SecondSubtotal: payload.NewData.SecondSubtotal,
+		SecondDiscount: payload.NewData.SecondDiscount,
+		SecondPrice:    payload.NewData.SecondPrice,
+		ThirdUnitID:    thirdUnit.ID,
+		ThirdSubtotal:  payload.NewData.ThirdSubtotal,
+		ThirdDiscount:  payload.NewData.ThirdDiscount,
+		ThirdPrice:     payload.NewData.ThirdPrice,
+		Description:    payload.NewData.Description,
 	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -261,5 +334,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("medicine modified into %s by %s",
-		payload.NewName, user.Name))
+		payload.NewData.Name, user.Name))
 }

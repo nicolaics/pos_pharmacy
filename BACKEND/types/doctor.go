@@ -9,7 +9,7 @@ type RegisterDoctorPayload struct {
 }
 type ModifyDoctorPayload struct {
 	ID      int    `json:"id" validate:"required"`
-	NewName string `json:"newName" validate:"required"`
+	NewData RegisterDoctorPayload `json:"newData" validate:"required"`
 }
 
 type DeleteDoctorPayload struct {

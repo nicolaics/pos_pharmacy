@@ -167,23 +167,23 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if supplier.Name != payload.NewName {
-		_, err = h.supplierStore.GetSupplierByName(payload.NewName)
+	if supplier.Name != payload.NewData.Name {
+		_, err = h.supplierStore.GetSupplierByName(payload.NewData.Name)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("supplier with name %s already exists", payload.NewName))
+				fmt.Errorf("supplier with name %s already exists", payload.NewData.Name))
 			return
 		}
 	}
 
 	err = h.supplierStore.ModifySupplier(supplier.ID, types.Supplier{
-		Name:                 payload.NewName,
-		Address:              payload.NewAddress,
-		CompanyPhoneNumber:   payload.NewCompanyPhoneNumber,
-		ContactPersonName:    payload.NewContactPersonName,
-		ContactPersonNumber:  payload.NewContactPersonNumber,
-		Terms:                payload.NewTerms,
-		VendorIsTaxable:      payload.NewVendorIsTaxable,
+		Name:                 payload.NewData.Name,
+		Address:              payload.NewData.Address,
+		CompanyPhoneNumber:   payload.NewData.CompanyPhoneNumber,
+		ContactPersonName:    payload.NewData.ContactPersonName,
+		ContactPersonNumber:  payload.NewData.ContactPersonNumber,
+		Terms:                payload.NewData.Terms,
+		VendorIsTaxable:      payload.NewData.VendorIsTaxable,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -191,5 +191,5 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewName, user.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewData.Name, user.Name))
 }

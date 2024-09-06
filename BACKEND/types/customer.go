@@ -4,19 +4,6 @@ import (
 	"time"
 )
 
-type RegisterCustomerPayload struct {
-	Name string `json:"name" validate:"required"`
-}
-type ModifyCustomerPayload struct {
-	ID      int    `json:"id" validate:"required"`
-	NewName string `json:"newName" validate:"required"`
-}
-
-type DeleteCustomerPayload struct {
-	ID   int    `json:"id" validate:"required"`
-	Name string `json:"name" validate:"required"`
-}
-
 type CustomerStore interface {
 	GetCustomerByName(name string) (*Customer, error)
 	GetCustomerByID(id int) (*Customer, error)
@@ -24,6 +11,19 @@ type CustomerStore interface {
 	GetAllCustomers() ([]Customer, error)
 	DeleteCustomer(int, *Customer) error
 	ModifyCustomer(int, string) error
+}
+
+type RegisterCustomerPayload struct {
+	Name string `json:"name" validate:"required"`
+}
+type ModifyCustomerPayload struct {
+	ID      int                     `json:"id" validate:"required"`
+	NewData RegisterCustomerPayload `json:"newData" validate:"required"`
+}
+
+type DeleteCustomerPayload struct {
+	ID   int    `json:"id" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }
 
 type Customer struct {

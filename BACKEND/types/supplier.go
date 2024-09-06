@@ -24,14 +24,8 @@ type RegisterSupplierPayload struct {
 }
 
 type ModifySupplierPayload struct {
-	ID                     int    `json:"id" validate:"required"`
-	NewName                string `json:"newName" validate:"required"`
-	NewAddress             string `json:"newAddress" validate:"required"`
-	NewCompanyPhoneNumber  string `json:"newCompanyPhoneNumber" validate:"required"`
-	NewContactPersonName   string `json:"newContactPersonName"`
-	NewContactPersonNumber string `json:"newContactPersonNumber"`
-	NewTerms               string `json:"newTerms" validate:"required"`
-	NewVendorIsTaxable     bool   `json:"newVendorIsTaxable" validate:"required"`
+	ID      int                     `json:"id" validate:"required"`
+	NewData RegisterSupplierPayload `json:"newData" validate:"required"`
 }
 
 type DeleteSupplierPayload struct {

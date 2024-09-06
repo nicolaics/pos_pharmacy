@@ -158,19 +158,19 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.patientStore.GetPatientByName(payload.NewName)
+	_, err = h.patientStore.GetPatientByName(payload.NewData.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("patient with name %s already exist", payload.NewName))
+			fmt.Errorf("patient with name %s already exist", payload.NewData.Name))
 		return
 	}
 
-	err = h.patientStore.ModifyPatient(patient.ID, payload.NewName)
+	err = h.patientStore.ModifyPatient(patient.ID, payload.NewData.Name)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("patient modified into %s by %s",
-		payload.NewName, user.Name))
+		payload.NewData.Name, user.Name))
 }

@@ -18,12 +18,8 @@ type DeleteCompanyProfilePayload struct {
 }
 
 type ModifyCompanyProfilePayload struct {
-	ID                         int    `json:"id" validate:"required"`
-	NewName                    string `json:"newName" validate:"required"`
-	NewAddress                 string `json:"newAddress" validate:"required"`
-	NewBuinessNumber           string `json:"newBusinessNumber" validate:"required"`
-	NewPharmacist              string `json:"newPharmacist" validate:"required"`
-	NewPharmacistLicenseNumber string `json:"newPharmacistLicenseNumber" validate:"required"`
+	ID      int                           `json:"id" validate:"required"`
+	NewData RegisterCompanyProfilePayload `json:"newData" validate:"required"`
 }
 
 type CompanyProfileStore interface {

@@ -92,6 +92,7 @@ func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	// get purchaseInvoice ID
@@ -377,11 +378,11 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.PurchaseOrderInvoiceID, types.PurchaseOrderInvoice{
-		Number:               payload.NewNumber,
-		CompanyID:            payload.NewCompanyID,
-		SupplierID:           payload.NewSupplierID,
-		TotalItems:           payload.NewTotalItems,
-		InvoiceDate:          payload.NewInvoiceDate,
+		Number:               payload.NewData.Number,
+		CompanyID:            payload.NewData.CompanyID,
+		SupplierID:           payload.NewData.SupplierID,
+		TotalItems:           payload.NewData.TotalItems,
+		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -395,7 +396,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, medicine := range payload.NewMedicineLists {
+	for _, medicine := range payload.NewData.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
@@ -427,7 +428,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
+				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 			return
 		}
 	}

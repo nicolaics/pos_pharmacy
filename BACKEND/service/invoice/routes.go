@@ -359,9 +359,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get payment name
-	paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(payload.NewPaymentMethodName)
+	paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(payload.NewData.PaymentMethodName)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment name %s not found", payload.NewPaymentMethodName))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment name %s not found", payload.NewData.PaymentMethodName))
 		return
 	}
 
@@ -374,17 +374,17 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.invoiceStore.ModifyInvoice(payload.ID, types.Invoice{
-		Number:               payload.NewNumber,
-		CustomerID:           payload.NewCustomerID,
-		Subtotal:             payload.NewSubtotal,
-		Discount:             payload.NewDiscount,
-		Tax:                  payload.NewTax,
-		TotalPrice:           payload.NewTotalPrice,
-		PaidAmount:           payload.NewPaidAmount,
-		ChangeAmount:         payload.NewChangeAmount,
+		Number:               payload.NewData.Number,
+		CustomerID:           payload.NewData.CustomerID,
+		Subtotal:             payload.NewData.Subtotal,
+		Discount:             payload.NewData.Discount,
+		Tax:                  payload.NewData.Tax,
+		TotalPrice:           payload.NewData.TotalPrice,
+		PaidAmount:           payload.NewData.PaidAmount,
+		ChangeAmount:         payload.NewData.ChangeAmount,
 		PaymentMethodID:      paymentMethod.ID,
-		Description:          payload.NewDescription,
-		InvoiceDate:          payload.NewInvoiceDate,
+		Description:          payload.NewData.Description,
+		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -398,7 +398,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, medicine := range payload.NewMedicineLists {
+	for _, medicine := range payload.NewData.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
@@ -431,7 +431,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("invoice %d, med %s: %v", payload.NewNumber, medicine.MedicineName, err))
+				fmt.Errorf("invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 			return
 		}
 	}

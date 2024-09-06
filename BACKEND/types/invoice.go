@@ -38,20 +38,8 @@ type NewInvoicePayload struct {
 }
 
 type ModifyInvoicePayload struct {
-	ID                   int       `json:"id" validate:"required"`
-	NewNumber            int       `json:"newNumber" validate:"required"`
-	NewCustomerID        int       `json:"newcustomerId" validate:"required"`
-	NewSubtotal          float64   `json:"newsubtotal" validate:"required"`
-	NewDiscount          float64   `json:"newdiscount"`
-	NewTax               float64   `json:"newTax"`
-	NewTotalPrice        float64   `json:"newTotalPrice" validate:"required"`
-	NewPaidAmount        float64   `json:"newPaidAmount" validate:"required"`
-	NewChangeAmount      float64   `json:"newChangeAmount" validate:"required"`
-	NewPaymentMethodName string    `json:"newPaymentMethodString" validate:"required"`
-	NewDescription       string    `json:"newDescription"`
-	NewInvoiceDate       time.Time `json:"newInvoiceDate" validate:"required"`
-
-	NewMedicineLists []MedicineListsPayload `json:"newMedicineLists" validate:"required"`
+	ID      int               `json:"id" validate:"required"`
+	NewData NewInvoicePayload `json:"newData" validate:"required"`
 }
 
 type ViewInvoicePayload struct {

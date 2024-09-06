@@ -158,19 +158,19 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the company profile exists
-	companyProfile, err := h.companyProfileStore.GetCompanyProfileByName(payload.NewName)
+	companyProfile, err := h.companyProfileStore.GetCompanyProfileByName(payload.NewData.Name)
 	if err != nil || companyProfile == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("company profile with name %s doesn't exists", payload.NewName))
+			fmt.Errorf("company profile with name %s doesn't exists", payload.NewData.Name))
 		return
 	}
 
 	err = h.companyProfileStore.ModifyCompanyProfile(companyProfile.ID, user.ID, types.CompanyProfile{
-		Name:                    payload.NewName,
-		Address:                 payload.NewAddress,
-		BusinessNumber:          payload.NewAddress,
-		Pharmacist:              payload.NewPharmacist,
-		PharmacistLicenseNumber: payload.NewPharmacistLicenseNumber,
+		Name:                    payload.NewData.Name,
+		Address:                 payload.NewData.Address,
+		BusinessNumber:          payload.NewData.Address,
+		Pharmacist:              payload.NewData.Pharmacist,
+		PharmacistLicenseNumber: payload.NewData.PharmacistLicenseNumber,
 		LastModifiedByUserID:    user.ID,
 	})
 	if err != nil {

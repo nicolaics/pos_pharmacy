@@ -49,14 +49,8 @@ type ViewPurchaseOrderItemsPayload struct {
 }
 
 type ModifyPurchaseOrderInvoicePayload struct {
-	PurchaseOrderInvoiceID int       `json:"purchaseOrderInvoiceId" validate:"required"`
-	NewNumber              int       `json:"newNumber" validate:"required"`
-	NewCompanyID           int       `json:"newCompanyId" validate:"required"`
-	NewSupplierID          int       `json:"newSupplierId" validate:"required"`
-	NewTotalItems          int       `json:"newTotalItems" validate:"required"`
-	NewInvoiceDate         time.Time `json:"newInvoiceDate" validate:"required"`
-
-	NewMedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList" validate:"required"`
+	PurchaseOrderInvoiceID int                            `json:"purchaseOrderInvoiceId" validate:"required"`
+	NewData                NewPurchaseOrderInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseOrderItemsReturn struct {

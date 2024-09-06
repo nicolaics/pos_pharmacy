@@ -29,23 +29,8 @@ type DeleteMedicinePayload struct {
 }
 
 type ModifyMedicinePayload struct {
-	ID                int     `json:"id" validate:"required"`
-	NewBarcode        string  `json:"newBarcode" validate:"required"`
-	NewName           string  `json:"newName" validate:"required"`
-	NewQty            float64 `json:"newQty" validate:"required"`
-	NewFirstUnitID    int     `json:"newFirstUnitId" validate:"required"`
-	NewFirstSubtotal  float64 `json:"newFirstSubtotal" validate:"required"`
-	NewFirstDiscount  float64 `json:"newFirstDiscount"`
-	NewFirstPrice     float64 `json:"newFirstPrice" validate:"required"`
-	NewSecondUnitID   int     `json:"newSecondUnitId"`
-	NewSecondSubtotal float64 `json:"newSecondSubtotal"`
-	NewSecondDiscount float64 `json:"newSecondDiscount"`
-	NewSecondPrice    float64 `json:"newSecondPrice"`
-	NewThirdUnitID    int     `json:"newThirdUnitId"`
-	NewThirdSubtotal  float64 `json:"newThirdSubtotal"`
-	NewThirdDiscount  float64 `json:"newThirdDiscount"`
-	NewThirdPrice     float64 `json:"newThirdPrice"`
-	NewDescription    string  `json:"newDescription"`
+	ID      int                     `json:"id" validate:"required"`
+	NewData RegisterMedicinePayload `json:"newData" validate:"required"`
 }
 
 type MedicineStore interface {
