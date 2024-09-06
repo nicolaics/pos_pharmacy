@@ -90,7 +90,6 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 	return prescriptions, nil
 }
 
-// TODO: ADD DEFER
 func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, patientName string, totalPrice float64) (int, error) {
 	query := `SELECT id FROM prescription 
 				WHERE invoice_id = ? AND number = ? AND prescription_date = ? 
@@ -101,6 +100,7 @@ func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, pat
 	if err != nil {
 		return -1, err
 	}
+	defer rows.Close()
 
 	var prescriptionId int
 
