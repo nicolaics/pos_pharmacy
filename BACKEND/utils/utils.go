@@ -21,10 +21,24 @@ func ParseJSON(r *http.Request, payload any) error {
 }
 
 // GenerateRandomCode 는 랜덤한 6자리의 이메일 인증코드를 생성합니다.
-func GenerateRandomCode(length int) string {
+func GenerateRandomCodeNumbers(length int) string {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	const charset = "0123456789"
+
+	result := make([]byte, length)
+
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+
+	return string(result)
+}
+
+func GenerateRandomCodeAlphanumeric(length int) string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 	result := make([]byte, length)
 
