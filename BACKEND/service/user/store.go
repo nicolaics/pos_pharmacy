@@ -20,10 +20,10 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetUserByName(name string) (*types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM user WHERE name = ? ", name)
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	user := new(types.User)
 
@@ -44,10 +44,10 @@ func (s *Store) GetUserByName(name string) (*types.User, error) {
 
 func (s *Store) GetUserByID(id int) (*types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM user WHERE id = ?", id)
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	user := new(types.User)
 
@@ -88,10 +88,10 @@ func (s *Store) DeleteUser(user *types.User) error {
 
 func (s *Store) GetAllUsers() ([]types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM user")
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	users := make([]types.User, 0)
 
@@ -170,6 +170,7 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var userId int
 

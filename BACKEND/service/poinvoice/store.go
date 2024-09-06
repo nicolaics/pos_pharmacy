@@ -22,6 +22,7 @@ func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) ([]types.PurchaseOr
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseOrderInvoices := make([]types.PurchaseOrderInvoice, 0)
 
@@ -44,6 +45,7 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseOrderInvoice := new(types.PurchaseOrderInvoice)
 
@@ -72,6 +74,7 @@ func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId 
 	if err != nil {
 		return -1, err
 	}
+	defer rows.Close()
 
 	var purchaseOrderInvoiceId int
 
@@ -140,6 +143,7 @@ func (s *Store) GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseOrderInvoices := make([]types.PurchaseOrderInvoice, 0)
 
@@ -174,6 +178,7 @@ func (s *Store) GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]types.Purch
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseOrderItems := make([]types.PurchaseOrderItemsReturn, 0)
 

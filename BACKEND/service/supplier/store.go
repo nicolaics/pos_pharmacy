@@ -19,10 +19,10 @@ func NewStore(db *sql.DB) *Store {
 func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 	query := "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, name)
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	supplier := new(types.Supplier)
 
@@ -44,10 +44,10 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
 	query := "SELECT * FROM supplier WHERE id = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, id)
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	supplier := new(types.Supplier)
 
@@ -90,10 +90,10 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 
 func (s *Store) GetAllSuppliers() ([]types.Supplier, error) {
 	rows, err := s.db.Query("SELECT * FROM supplier WHERE deleted_at IS NULL")
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	suppliers := make([]types.Supplier, 0)
 

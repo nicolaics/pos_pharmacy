@@ -19,11 +19,11 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
-	
 	rows, err := s.db.Query(query, strings.ToUpper(name))
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	customer := new(types.Customer)
 
@@ -44,11 +44,11 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 
 func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 	query := "SELECT * FROM customer WHERE id = ? AND deleted_at IS NULL"
-
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	customer := new(types.Customer)
 
@@ -83,6 +83,7 @@ func (s *Store) GetAllCustomers() ([]types.Customer, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	customers := make([]types.Customer, 0)
 

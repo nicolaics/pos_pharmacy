@@ -22,6 +22,7 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	medicine := new(types.Medicine)
 
@@ -42,11 +43,11 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 
 func (s *Store) GetMedicineByID(id int) (*types.Medicine, error) {
 	query := "SELECT * FROM medicine WHERE id = ? AND deleted_at IS NULL"
-
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	medicine := new(types.Medicine)
 
@@ -71,6 +72,7 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	medicine := new(types.Medicine)
 
@@ -120,6 +122,7 @@ func (s *Store) GetAllMedicines() ([]types.Medicine, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	medicines := make([]types.Medicine, 0)
 

@@ -22,6 +22,7 @@ func (s *Store) GetPatientByName(name string) (*types.Patient, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	patient := new(types.Patient)
 
@@ -46,6 +47,7 @@ func (s *Store) GetPatientByID(id int) (*types.Patient, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	patient := new(types.Patient)
 
@@ -80,6 +82,7 @@ func (s *Store) GetAllPatients() ([]types.Patient, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	patients := make([]types.Patient, 0)
 

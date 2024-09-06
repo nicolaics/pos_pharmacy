@@ -23,6 +23,7 @@ func (s *Store) GetCompanyProfileByName(name string) (*types.CompanyProfile, err
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	companyProfile := new(types.CompanyProfile)
 
@@ -48,6 +49,7 @@ func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	companyProfile := new(types.CompanyProfile)
 
@@ -85,10 +87,10 @@ func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error 
 
 func (s *Store) GetAllCompanyProfiles() ([]types.CompanyProfile, error) {
 	rows, err := s.db.Query("SELECT * FROM self_company_profile WHERE deleted_at IS NULL")
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	companyProfiles := make([]types.CompanyProfile, 0)
 

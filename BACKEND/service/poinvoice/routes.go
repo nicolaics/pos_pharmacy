@@ -33,7 +33,7 @@ func NewHandler(poInvoiceStore types.PurchaseOrderInvoiceStore, userStore types.
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/invoice/purchase-order", h.handleNew).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/purchase-order", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order/all", h.handleGetPurchaseOrderInvoices).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order/detail", h.handleGetPurchaseOrderInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order", h.handleDelete).Methods(http.MethodDelete)
@@ -44,9 +44,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/purchase-order/all", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
-func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.NewPurchaseOrderInvoicePayload
+	var payload types.RegisterPurchaseOrderInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -200,14 +200,14 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 	}
 
 	// get purchase order invoice data
-	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByID(payload.PurchaseOrderInvoiceID)
+	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice id %d doesn't exists", payload.PurchaseOrderInvoiceID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice id %d doesn't exists", payload.ID))
 		return
 	}
 
 	// get medicine items of the purchase invoice
-	purchaseOrderItems, err := h.poInvoiceStore.GetPurchaseOrderItems(payload.PurchaseOrderInvoiceID)
+	purchaseOrderItems, err := h.poInvoiceStore.GetPurchaseOrderItems(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -370,14 +370,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the purchase order invoice exists
-	_, err = h.poInvoiceStore.GetPurchaseOrderInvoiceByID(payload.PurchaseOrderInvoiceID)
+	_, err = h.poInvoiceStore.GetPurchaseOrderInvoiceByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase order invoice with id %d doesn't exists", payload.PurchaseOrderInvoiceID))
+			fmt.Errorf("purchase order invoice with id %d doesn't exists", payload.ID))
 		return
 	}
 
-	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.PurchaseOrderInvoiceID, types.PurchaseOrderInvoice{
+	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.ID, types.PurchaseOrderInvoice{
 		Number:               payload.NewData.Number,
 		CompanyID:            payload.NewData.CompanyID,
 		SupplierID:           payload.NewData.SupplierID,
@@ -390,7 +390,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderItems(payload.PurchaseOrderInvoiceID)
+	err = h.poInvoiceStore.DeletePurchaseOrderItems(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -419,7 +419,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.poInvoiceStore.CreatePurchaseOrderItems(types.PurchaseOrderItem{
-			PurchaseOrderInvoiceID: payload.PurchaseOrderInvoiceID,
+			PurchaseOrderInvoiceID: payload.ID,
 			MedicineID:             medData.ID,
 			OrderQty:               medicine.OrderQty,
 			ReceivedQty:            medicine.ReceivedQty,

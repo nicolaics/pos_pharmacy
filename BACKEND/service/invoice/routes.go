@@ -33,17 +33,19 @@ func NewHandler(invoiceStore types.InvoiceStore, userStore types.UserStore,
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/invoice", h.handleNew).Methods(http.MethodPost)
-	router.HandleFunc("/invoice", h.handleGetInvoices).Methods(http.MethodGet)
-	router.HandleFunc("/invoice/detail", h.handleGetInvoiceDetail).Methods(http.MethodGet)
+	router.HandleFunc("/invoice", h.handleRegister).Methods(http.MethodPost)
+	router.HandleFunc("/invoice", h.handleGetInvoiceNumberForToday).Methods(http.MethodGet)
+	router.HandleFunc("/invoice/all", h.handleGetInvoices).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/detail", h.handleGetInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/all", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
-func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
 	var payload types.NewInvoicePayload
 

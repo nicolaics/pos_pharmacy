@@ -22,6 +22,7 @@ func (s *Store) GetPurchaseInvoicesByNumber(number int) ([]types.PurchaseInvoice
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseInvoices := make([]types.PurchaseInvoice, 0)
 
@@ -44,6 +45,7 @@ func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseInvoice := new(types.PurchaseInvoice)
 
@@ -72,6 +74,7 @@ func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, 
 	if err != nil {
 		return -1, err
 	}
+	defer rows.Close()
 
 	var purchaseInvoiceId int
 
@@ -146,6 +149,7 @@ func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseInvoices := make([]types.PurchaseInvoice, 0)
 
@@ -181,6 +185,7 @@ func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	purchaseMedicineItems := make([]types.PurchaseMedicineItemsReturn, 0)
 

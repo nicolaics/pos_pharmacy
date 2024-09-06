@@ -22,6 +22,7 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	invoice := new(types.Invoice)
 
@@ -49,6 +50,7 @@ func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice 
 	if err != nil {
 		return -1, err
 	}
+	defer rows.Close()
 
 	var invoiceId int
 
@@ -72,6 +74,7 @@ func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	invoices := make([]types.Invoice, 0)
 
@@ -96,6 +99,7 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	invoices := make([]types.Invoice, 0)
 
@@ -173,6 +177,7 @@ func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPaylo
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	medicineItems := make([]types.MedicineItemReturnPayload, 0)
 
@@ -209,10 +214,6 @@ func (s *Store) DeleteMedicineItems(invoiceId int) error {
 }
 
 func (s *Store) ModifyInvoice(id int, invoice types.Invoice) error {
-	fields := ""
-	fields += ""
-	fields += ""
-
 	query := `UPDATE invoice SET 
 			number = ?, user_id = ?, customer_id = ?, subtotal = ?, discount = ?, 
 			tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, 
