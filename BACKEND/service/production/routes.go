@@ -33,7 +33,7 @@ func NewHandler(productionStore types.ProductionStore,
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/production", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/production", h.handleGetProductionNumber).Methods(http.MethodGet)
+	router.HandleFunc("/production", h.handleGetNumberOfProductions).Methods(http.MethodGet)
 	router.HandleFunc("/production/all/date", h.handleGetProductions).Methods(http.MethodPost)
 	router.HandleFunc("/production/detail", h.handleGetProductionDetail).Methods(http.MethodPost)
 	router.HandleFunc("/production", h.handleDelete).Methods(http.MethodDelete)
@@ -138,7 +138,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production batch number %d successfully created by %s", payload.BatchNumber, user.Name))
 }
 
-func (h *Handler) handleGetProductionNumber(w http.ResponseWriter, r *http.Request) {
+// beginning of invoice page, will request here
+func (h *Handler) handleGetNumberOfProductions(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
@@ -146,13 +147,13 @@ func (h *Handler) handleGetProductionNumber(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	productionNumber, err := h.productionStore.GetProductionTotalNumbers()
+	numberOfProductions, err := h.productionStore.GetNumberOfProductions()
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]int{"number": productionNumber})
+	utils.WriteJSON(w, http.StatusOK, map[string]int{"nextNumber": (numberOfProductions + 1)})
 }
 
 // only view the production list

@@ -121,7 +121,7 @@ func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate tim
 	return productionId, nil
 }
 
-func (s *Store) GetProductionTotalNumbers() (int, error) {
+func (s *Store) GetNumberOfProductions() (int, error) {
 	query := `SELECT COUNT(*) FROM production 
 				WHERE deleted_at IS NULL`
 
@@ -130,14 +130,14 @@ func (s *Store) GetProductionTotalNumbers() (int, error) {
 		return -1, row.Err()
 	}
 
-	var productionId int
+	var numberOfProductions int
 
-	err := row.Scan(&productionId)
+	err := row.Scan(&numberOfProductions)
 	if err != nil {
 		return -1, err
 	}
 
-	return productionId, nil
+	return numberOfProductions, nil
 }
 
 func (s *Store) CreateProduction(production types.Production) error {

@@ -6,9 +6,12 @@ import (
 
 type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
-	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetInvoicesByNumber(int) ([]Invoice, error)
 	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
+
+	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
+	GetNumberOfInvoices() (int, error)
+
 	CreateInvoice(Invoice) error
 	CreateMedicineItems(MedicineItems) error
 	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)

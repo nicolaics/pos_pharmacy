@@ -115,6 +115,24 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 	return invoices, nil
 }
 
+func (s *Store) GetNumberOfInvoices() (int, error) {
+	query := `SELECT COUNT(*) FROM invoice 
+				WHERE deleted_at IS NULL`
+	row := s.db.QueryRow(query)
+	if row.Err() != nil {
+		return -1, row.Err()
+	}
+
+	var numberOfInvoices int
+
+	err := row.Scan(&numberOfInvoices)
+	if err != nil {
+		return -1, err
+	}
+
+	return numberOfInvoices, nil
+}
+
 func (s *Store) CreateInvoice(invoice types.Invoice) error {
 	values := "?"
 	for i := 0; i < 12; i++ {

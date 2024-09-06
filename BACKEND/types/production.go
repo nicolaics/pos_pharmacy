@@ -9,7 +9,7 @@ type ProductionStore interface {
 	GetProductionByID(int) (*Production, error)
 	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]Production, error)
 	GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64, userId int) (int, error)
-	GetProductionTotalNumbers() (int, error)
+	GetNumberOfProductions() (int, error)
 
 	CreateProduction(Production) error
 	CreateProductionMedicineItems(ProductionMedicineItems) error
