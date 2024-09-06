@@ -31,6 +31,6 @@ func GenerateRandomCode(length int) string {
 	for i := range result {
 		result[i] = charset[rand.Intn(len(charset))]
 	}
-	
+
 	return string(result)
 }
