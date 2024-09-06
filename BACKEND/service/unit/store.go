@@ -20,6 +20,7 @@ func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	unit := new(types.Unit)
 

@@ -20,6 +20,7 @@ func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.Payment
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	paymentMethod := new(types.PaymentMethod)
 
@@ -39,6 +40,7 @@ func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	paymentMethod := new(types.PaymentMethod)
 

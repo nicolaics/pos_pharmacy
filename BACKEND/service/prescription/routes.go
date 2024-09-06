@@ -24,7 +24,7 @@ type Handler struct {
 	patientStore      types.PatientStore
 }
 
-func NewHandler(pprescriptionStore types.PrescriptionStore,
+func NewHandler(prescriptionStore types.PrescriptionStore,
 	userStore types.UserStore,
 	customerStore types.CustomerStore,
 	medStore types.MedicineStore,
@@ -33,7 +33,7 @@ func NewHandler(pprescriptionStore types.PrescriptionStore,
 	doctorStore types.DoctorStore,
 	patientStore types.PatientStore) *Handler {
 	return &Handler{
-		prescriptionStore: pprescriptionStore,
+		prescriptionStore: prescriptionStore,
 		userStore:         userStore,
 		customerStore:     customerStore,
 		medStore:          medStore,
@@ -45,7 +45,7 @@ func NewHandler(pprescriptionStore types.PrescriptionStore,
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/prescription", h.handleNew).Methods(http.MethodPost)
+	router.HandleFunc("/prescription", h.handleRegister).Methods(http.MethodPost)
 
 	// TODO: add more get prescriptions
 	router.HandleFunc("/prescription/all/date", h.handleGetPrescriptions).Methods(http.MethodPost)
@@ -59,9 +59,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/prescription/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
-func (h *Handler) handleNew(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.NewPrescriptionPayload
+	var payload types.RegisterPrescriptionPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)

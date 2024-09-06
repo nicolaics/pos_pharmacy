@@ -44,6 +44,7 @@ func (s *Store) GetPrescriptionByID(id int) (*types.Prescription, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	prescription := new(types.Prescription)
 
@@ -72,6 +73,7 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	prescriptions := make([]types.Prescription, 0)
 
@@ -88,6 +90,7 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 	return prescriptions, nil
 }
 
+// TODO: ADD DEFER
 func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, patientName string, totalPrice float64) (int, error) {
 	query := `SELECT id FROM prescription 
 				WHERE invoice_id = ? AND number = ? AND prescription_date = ? 
@@ -179,6 +182,7 @@ func (s *Store) GetPrescriptionMedicineItems(prescriptionId int) ([]types.Prescr
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	prescMedItems := make([]types.PrescriptionMedicineItemRow, 0)
 
