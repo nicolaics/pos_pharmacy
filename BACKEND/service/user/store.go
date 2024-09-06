@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -144,9 +145,9 @@ func (s *Store) SaveToken(userId int, tokenDetails *types.TokenDetails) error {
 	return nil
 }
 
-func (s *Store) DeleteToken(givenUuid string, userId int) error {
-	query := "DELETE FROM verify_token WHERE uuid = ? AND user_id = ?"
-	_, err := s.db.Exec(query, givenUuid, userId)
+func (s *Store) DeleteToken(userId int) error {
+	query := "DELETE FROM verify_token WHERE user_id = ?"
+	_, err := s.db.Exec(query, userId)
 	if err != nil {
 		return err
 	}
@@ -154,19 +155,16 @@ func (s *Store) DeleteToken(givenUuid string, userId int) error {
 	return nil
 }
 
-// TODO: change into from sql, not redis
-// TODO: using SELECT COUNT(*) WHERE name = ? AND
-// TODO: token = ? AND TIMESTAMPDIFF(HOUR, created_at, NOW()) <= ?
-// TODO: check using the count, if count 0, means not valid
-// TODO: delete the token
 func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.User, error) {
 	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {
 		return nil, err
 	}
 
-	query := "SELECT user_id FROM verify_token WHERE uuid = ? AND user_id = ? AND expired_at <= ?"
-	rows, err := s.db.Query(query, accessDetails.UUID, accessDetails.UserID, time.Now())
+	log.Println(time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	query := "SELECT user_id FROM verify_token WHERE uuid = ? AND user_id = ? AND expired_at >= ?"
+	rows, err := s.db.Query(query, accessDetails.UUID, accessDetails.UserID, time.Now().UTC().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return nil, err
 	}
@@ -177,27 +175,30 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 	for rows.Next() {
 		err = rows.Scan(&userId)
 		if err != nil {
-			delErr := s.DeleteToken(accessDetails.UUID, accessDetails.UserID)
-			if delErr != nil {
-				return nil, fmt.Errorf("delete error: %v", delErr)
-			}
-
-			return nil, fmt.Errorf("token expired, log in again")
+			return nil, err
 		}
 	}
+
+	log.Println(userId)
 
 	// check if user exist
 	user, err := s.GetUserByID(userId)
 	if err != nil {
-		return nil, err
+		delErr := s.DeleteToken(accessDetails.UserID)
+		if delErr != nil {
+			return nil, fmt.Errorf("delete error: %v", delErr)
+		}
+
+		return nil, fmt.Errorf("token expired, log in again")
+		// return nil, err
 	}
 
 	// if the account must be admin
-	if needAdmin {
-		if !user.Admin {
-			return nil, fmt.Errorf("unauthorized! not admin")
-		}
-	}
+	// if needAdmin {
+	// 	if !user.Admin {
+	// 		return nil, fmt.Errorf("unauthorized! not admin")
+	// 	}
+	// }
 
 	return user, nil
 }
