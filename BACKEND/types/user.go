@@ -14,14 +14,8 @@ type UserStore interface {
 	UpdateLastLoggedIn(int) error
 	ModifyUser(int, User) error
 	SaveToken(int, *TokenDetails) error
-	DeleteToken(string, int) error
+	DeleteToken(int) error
 	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
-}
-
-// initialize the very first admin account
-type InitAdminPayload struct {
-	Name     string `json:"name" validate:"required"`
-	Password string `json:"password" validate:"required,min=3,max=130"`
 }
 
 // register new user
