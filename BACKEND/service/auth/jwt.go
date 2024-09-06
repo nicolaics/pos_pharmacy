@@ -17,7 +17,7 @@ type contextKey string
 
 const UserKey contextKey = "userID"
 
-func CreateJWT(userId int) (*types.TokenDetails, error) {
+func CreateJWT(userId int, admin bool) (*types.TokenDetails, error) {
 	tokenDetails := new(types.TokenDetails)
 
 	tokenExp := time.Second * time.Duration(config.Envs.JWTExpirationInSeconds)
@@ -32,14 +32,14 @@ func CreateJWT(userId int) (*types.TokenDetails, error) {
 
 	//Creating Access Token
 	tokenSecret := []byte(config.Envs.JWTSecret)
-	tokenToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"authorized": true,
+		"admin":      admin,
 		"tokenUuid":  tokenDetails.UUID,
 		"userId":     userId,
-		// expired of the token
-		"expiredAt": tokenDetails.TokenExp,
+		"expiredAt":  tokenDetails.TokenExp, // expired of the token
 	})
-	tokenDetails.Token, err = tokenToken.SignedString(tokenSecret)
+	tokenDetails.Token, err = token.SignedString(tokenSecret)
 	if err != nil {
 		return nil, err
 	}
