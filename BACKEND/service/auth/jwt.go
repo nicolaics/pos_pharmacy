@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,6 +24,8 @@ func CreateJWT(userId int, admin bool) (*types.TokenDetails, error) {
 	tokenExp := time.Second * time.Duration(config.Envs.JWTExpirationInSeconds)
 
 	tokenDetails.TokenExp = time.Now().Add(tokenExp).Unix()
+	log.Println(tokenDetails.TokenExp)
+	// tokenDetails.TokenExp = time.Now().Add(tokenExp)
 
 	tempUUID, err := uuid.NewV7()
 	if err != nil {
@@ -50,6 +53,7 @@ func CreateJWT(userId int, admin bool) (*types.TokenDetails, error) {
 func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
 	token, err := verifyToken(r)
 	if err != nil {
+		log.Println("verify token error")
 		return nil, err
 	}
 
@@ -58,11 +62,13 @@ func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
 	if ok && token.Valid {
 		tokenUuid, ok := claims["tokenUuid"].(string)
 		if !ok {
+			log.Println("jwt token error")
 			return nil, err
 		}
 
 		userId, err := strconv.Atoi(fmt.Sprintf("%.f", claims["userId"]))
 		if err != nil {
+			log.Println("jwt user id error")
 			return nil, err
 		}
 
