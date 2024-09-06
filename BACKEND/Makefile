@@ -29,3 +29,9 @@ migrate-cmd:
 
 migrate-rm:
 	del .\cmd\migrate\migrations\*.sql
+
+init-admin:
+	@go run cmd/init/InitAdmin.go $(username)
+
+# deploy:
+# https://medium.com/nerd-for-tech/build-cross-platform-executables-in-go-94b84686fb44
