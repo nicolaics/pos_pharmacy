@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -107,11 +108,31 @@ func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
 		return err
 	}
 
+	data, err := s.GetCustomerByID(customer.ID)	
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "customer", uid, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) ModifyCustomer(id int, newName string) error {
-	_, err := s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
+func (s *Store) ModifyCustomer(id int, newName string, uid int) error {
+	data, err := s.GetCustomerByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("modify", "customer", uid, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
 
 	if err != nil {
 		return err

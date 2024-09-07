@@ -15,7 +15,7 @@ type InvoiceStore interface {
 	CreateInvoice(Invoice) error
 	CreateMedicineItems(MedicineItems) error
 	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)
-	DeleteMedicineItems(int) error
+	DeleteMedicineItems(*Invoice, int) error
 	DeleteInvoice(*Invoice, int) error
 	ModifyInvoice(int, Invoice) error
 }

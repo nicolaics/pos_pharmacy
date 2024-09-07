@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -114,22 +115,44 @@ func (s *Store) DeleteCompanyProfile(cpid int, userId int) error {
 		return err
 	}
 
+	data, err := s.GetCompanyProfileByID(cpid)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "company-profile", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
 func (s *Store) ModifyCompanyProfile(id int, userId int, newCompanyProfile types.CompanyProfile) error {
+	data, err := s.GetCompanyProfileByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("modify", "company-profile", userId, data.ID, map[string]interface{}{"previous_data": data})
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+	
 	query := `UPDATE self_company_profile SET 
 			name = ?, address = ?, business_number = ?, 
 			pharmacist = ?, pharmacist_license_number = ?, 
 			last_modified = ?, last_modified_by_user_id = ? WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		newCompanyProfile.Name, newCompanyProfile.Address, newCompanyProfile.BusinessNumber,
 		newCompanyProfile.Pharmacist, newCompanyProfile.PharmacistLicenseNumber, time.Now(),
 		userId, id)
 	if err != nil {
 		return err
 	}
+
+
 
 	return nil
 }

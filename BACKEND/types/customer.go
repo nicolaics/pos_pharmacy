@@ -10,7 +10,7 @@ type CustomerStore interface {
 	CreateCustomer(Customer) error
 	GetAllCustomers() ([]Customer, error)
 	DeleteCustomer(int, *Customer) error
-	ModifyCustomer(int, string) error
+	ModifyCustomer(int, string, int) error
 }
 
 type RegisterCustomerPayload struct {

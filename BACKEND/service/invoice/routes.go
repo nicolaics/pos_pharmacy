@@ -340,7 +340,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.invoiceStore.DeleteMedicineItems(invoice.ID)
+	err = h.invoiceStore.DeleteMedicineItems(invoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -386,7 +386,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the invoice exists
-	_, err = h.invoiceStore.GetInvoiceByID(payload.ID)
+	invoice, err := h.invoiceStore.GetInvoiceByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("invoice with id %d doesn't exists", payload.ID))
@@ -412,7 +412,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.invoiceStore.DeleteMedicineItems(payload.ID)
+	err = h.invoiceStore.DeleteMedicineItems(invoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

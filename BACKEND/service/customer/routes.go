@@ -165,7 +165,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name)
+	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

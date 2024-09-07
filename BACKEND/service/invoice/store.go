@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -219,11 +220,36 @@ func (s *Store) DeleteInvoice(invoice *types.Invoice, userId int) error {
 		return err
 	}
 
+	data, err := s.GetInvoiceByID(invoice.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "invoice", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) DeleteMedicineItems(invoiceId int) error {
-	_, err := s.db.Exec("DELETE FROM medicine_items WHERE invoice_id = ? ", invoiceId)
+func (s *Store) DeleteMedicineItems(invoice *types.Invoice, userId int) error {
+	data, err := s.GetMedicineItems(invoice.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"invoice": invoice,
+		"deleted_medicine_items": data,
+	}
+
+	err = logger.WriteLog("delete", "invoice", userId, invoice.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("DELETE FROM medicine_items WHERE invoice_id = ? ", invoice.ID)
 	if err != nil {
 		return err
 	}
@@ -231,7 +257,21 @@ func (s *Store) DeleteMedicineItems(invoiceId int) error {
 	return nil
 }
 
-func (s *Store) ModifyInvoice(id int, invoice types.Invoice) error {
+func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice) error {
+	data, err := s.GetInvoiceByID(invoiceId)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "invoice", invoice.LastModifiedByUserID, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE invoice SET 
 			number = ?, user_id = ?, customer_id = ?, subtotal = ?, discount = ?, 
 			tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, 
@@ -239,12 +279,12 @@ func (s *Store) ModifyInvoice(id int, invoice types.Invoice) error {
 			last_modified_by_user_id = ? 
 			WHERE id = ? AND deleted_at IS NULL`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		invoice.Number, invoice.UserID, invoice.CustomerID,
 		invoice.Subtotal, invoice.Discount, invoice.Tax,
 		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
 		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
-		time.Now(), invoice.LastModifiedByUserID, id)
+		time.Now(), invoice.LastModifiedByUserID, invoiceId)
 	if err != nil {
 		return err
 	}

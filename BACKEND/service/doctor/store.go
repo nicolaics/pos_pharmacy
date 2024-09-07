@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -99,9 +100,19 @@ func (s *Store) GetAllDoctors() ([]types.Doctor, error) {
 	return doctors, nil
 }
 
-func (s *Store) DeleteDoctor(doctor *types.Doctor) error {
+func (s *Store) DeleteDoctor(doctor *types.Doctor, uid int) error {
+	data, err := s.GetDoctorByID(doctor.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "doctor", uid, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := "DELETE FROM doctor WHERE id = ?"
-	_, err := s.db.Exec(query, doctor.ID)
+	_, err = s.db.Exec(query, doctor.ID)
 	if err != nil {
 		return err
 	}
@@ -109,8 +120,18 @@ func (s *Store) DeleteDoctor(doctor *types.Doctor) error {
 	return nil
 }
 
-func (s *Store) ModifyDoctor(id int, newName string) error {
-	_, err := s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
+func (s *Store) ModifyDoctor(id int, newName string, uid int) error {
+	data, err := s.GetDoctorByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("modify", "doctor", uid, data.ID, map[string]interface{}{"previous_data": data})
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
 
 	if err != nil {
 		return err
