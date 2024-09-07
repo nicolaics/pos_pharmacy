@@ -46,7 +46,7 @@ func main() {
 	if cnt != 0 {
 		log.Fatal("initial admin already exist!")
 	}
-	
+
 	password := utils.GenerateRandomCodeAlphanumeric(12)
 
 	// create new admin
@@ -61,7 +61,7 @@ func main() {
 	query := `INSERT INTO user (
 		name, password, admin, phone_number
 		) VALUES (?, ?, ?, ?)`
-	
+
 	_, err = db.Exec(query, args[1], hashedPassword, true, "000")
 	if err != nil {
 		log.Fatal(err)
