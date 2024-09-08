@@ -84,7 +84,7 @@ func ExtractTokenFromClient(r *http.Request) (*types.AccessDetails, error) {
 func verifyToken(r *http.Request) (*jwt.Token, error) {
 	tokenStr, err := extractToken(r)
 	if err != nil {
-		return nil, fmt.Errorf("unable to verify token")
+		return nil, fmt.Errorf("unable to verify token: %v", err)
 	}
 
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
