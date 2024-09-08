@@ -8,7 +8,7 @@ import (
 )
 
 /*
-logType = []"delete", "modify"]
+logType = ["delete", "modify"]
 logDataType = ["user", "invoice", "prescription", etc]
 */
 func WriteLog(logType string, logDataType string, userId int, dataId int, deletedData any) error {
