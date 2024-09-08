@@ -180,15 +180,30 @@ func (s *Store) DeleteToken(userId int) error {
 	return nil
 }
 
+// TODO: think about whether need to verify count or not
 func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.User, error) {
 	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println(time.Now().UTC().Format("2006-01-02 15:04:05"))
+	query := "SELECT COUNT(*) FROM verify_token WHERE user_id = ? AND expired_at >= ?"
+	row := s.db.QueryRow(query, accessDetails.UserID, time.Now().UTC().Format("2006-01-02 15:04:05"))
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
 
-	query := "SELECT user_id FROM verify_token WHERE uuid = ? AND user_id = ? AND expired_at >= ?"
+	var count int
+	err = row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	if count > 1 {
+		return nil, fmt.Errorf("logged in from other device")
+	}
+
+	query = "SELECT user_id FROM verify_token WHERE uuid = ? AND user_id = ? AND expired_at >= ?"
 	rows, err := s.db.Query(query, accessDetails.UUID, accessDetails.UserID, time.Now().UTC().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return nil, err
