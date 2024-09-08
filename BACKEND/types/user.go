@@ -8,11 +8,15 @@ import (
 type UserStore interface {
 	GetUserByName(string) (*User, error)
 	GetUserByID(int) (*User, error)
-	CreateUser(User) error
-	DeleteUser(*User) error
 	GetAllUsers() ([]User, error)
+
+	CreateUser(User) error
+	
+	DeleteUser(*User, int) error
+
 	UpdateLastLoggedIn(int) error
-	ModifyUser(int, User) error
+	ModifyUser(int, User, int) error
+	
 	SaveToken(int, *TokenDetails) error
 	DeleteToken(int) error
 	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)

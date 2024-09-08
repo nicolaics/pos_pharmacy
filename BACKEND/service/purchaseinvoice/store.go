@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -209,11 +210,36 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, us
 		return err
 	}
 
+	data, err := s.GetPurchaseInvoiceByID(purchaseInvoice.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "purchase-invoice", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
-	_, err := s.db.Exec("DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ? ", purchaseInvoiceId)
+func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoice, userId int) error {
+	data, err := s.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"purchase_invoice": purchaseInvoice,
+		"deleted_medicine_items": data,
+	}
+
+	err = logger.WriteLog("delete", "purchase-invoice", userId, purchaseInvoice.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ? ", purchaseInvoice.ID)
 	if err != nil {
 		return err
 	}
@@ -221,18 +247,32 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoiceId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPurchaseInvoice(id int, purchaseInvoice types.PurchaseInvoice) error {
+func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseInvoice, userId int) error {
+	data, err := s.GetPurchaseInvoiceByID(piid)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "purchase-invoice", userId, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE purchase_invoice SET 
 				number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, 
 				tax = ?, total_price = ?, description = ?, invoice_date = ?, last_modified = ?,
 				last_modified_by_user_id = ? 
 				 WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
 		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
 		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.InvoiceDate,
-		time.Now(), purchaseInvoice.LastModifiedByUserID, id)
+		time.Now(), purchaseInvoice.LastModifiedByUserID, piid)
 	if err != nil {
 		return err
 	}

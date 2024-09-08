@@ -16,8 +16,8 @@ type ProductionStore interface {
 
 	GetProductionMedicineItems(prescriptionId int) ([]ProductionMedicineItemRow, error)
 	DeleteProduction(*Production, int) error
-	DeleteProductionMedicineItems(int) error
-	ModifyProduction(int, Production) error
+	DeleteProductionMedicineItems(*Production, int) error
+	ModifyProduction(int, Production, int) error
 }
 
 type RegisterProductionPayload struct {

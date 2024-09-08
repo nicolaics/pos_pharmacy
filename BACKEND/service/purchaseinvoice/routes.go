@@ -343,7 +343,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice.ID)
+	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -382,7 +382,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the purchase invoice exists
-	_, err = h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
+	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("purchase invoice with id %d doesn't exists", payload.ID))
@@ -400,13 +400,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Description:          payload.NewData.Description,
 		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(payload.ID)
+	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

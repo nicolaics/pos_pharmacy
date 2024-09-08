@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -202,11 +203,37 @@ func (s *Store) DeletePurchaseOrderInvoice(purchaseOrderInvoice *types.PurchaseO
 		return err
 	}
 
+	data, err := s.GetPurchaseOrderInvoiceByID(purchaseOrderInvoice.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "purchase-order-invoice", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) DeletePurchaseOrderItems(purchaseOrderInvoiceId int) error {
-	_, err := s.db.Exec("DELETE FROM purchase_order_items WHERE purchase_order_invoice_id = ? ", purchaseOrderInvoiceId)
+func (s *Store) DeletePurchaseOrderItems(purchaseOrderInvoice *types.PurchaseOrderInvoice, userId int) error {
+	data, err := s.GetPurchaseOrderItems(purchaseOrderInvoice.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"purchase_order_invoice": purchaseOrderInvoice,
+		"deleted_medicine_items": data,
+	}
+
+	err = logger.WriteLog("delete", "purchase-order-invoice", userId, purchaseOrderInvoice.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+	
+	
+	_, err = s.db.Exec("DELETE FROM purchase_order_items WHERE purchase_order_invoice_id = ? ", purchaseOrderInvoice.ID)
 	if err != nil {
 		return err
 	}
@@ -214,13 +241,27 @@ func (s *Store) DeletePurchaseOrderItems(purchaseOrderInvoiceId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types.PurchaseOrderInvoice) error {
+func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types.PurchaseOrderInvoice, userId int) error {
+	data, err := s.GetPurchaseOrderInvoiceByID(poiid)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_dataa": data,
+	}
+
+	err = logger.WriteLog("modify", "purchase-order-invoice", userId, poiid, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE purchase_order_invoice 
 				SET number = ?, company_id = ?, supplier_id = ?, total_items = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
 		purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
 		time.Now(), purchaseOrderInvoice.LastModifiedByUserID, poiid)

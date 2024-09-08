@@ -118,7 +118,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.patientStore.DeletePatient(patient)
+	err = h.patientStore.DeletePatient(patient, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -165,7 +165,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.patientStore.ModifyPatient(patient.ID, payload.NewData.Name)
+	err = h.patientStore.ModifyPatient(patient.ID, payload.NewData.Name, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -8,13 +8,16 @@ type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByNumber(int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (int, error)
-	CreatePurchaseInvoice(PurchaseInvoice) error
-	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
 	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
 	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
+
+	CreatePurchaseInvoice(PurchaseInvoice) error
+	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
+
 	DeletePurchaseInvoice(*PurchaseInvoice, int) error
-	DeletePurchaseMedicineItems(int) error
-	ModifyPurchaseInvoice(int, PurchaseInvoice) error
+	DeletePurchaseMedicineItems(*PurchaseInvoice, int) error
+
+	ModifyPurchaseInvoice(int, PurchaseInvoice, int) error
 }
 
 type PurchaseInvoicePayload struct {

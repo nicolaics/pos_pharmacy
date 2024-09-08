@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -206,11 +207,36 @@ func (s *Store) DeletePrescription(prescription *types.Prescription, userId int)
 		return err
 	}
 
+	data, err := s.GetPrescriptionByID(prescription.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "prescription", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) DeletePrescriptionMedicineItems(prescriptionId int) error {
-	_, err := s.db.Exec("DELETE FROM prescription_medicine_items WHERE prescription_id = ? ", prescriptionId)
+func (s *Store) DeletePrescriptionMedicineItems(prescription *types.Prescription, userId int) error {
+	data, err := s.GetPrescriptionMedicineItems(prescription.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"prescription": prescription,
+		"deleted_medicine_items": data,
+	}
+
+	err = logger.WriteLog("delete", "prescription", userId, prescription.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("DELETE FROM prescription_medicine_items WHERE prescription_id = ? ", prescription.ID)
 	if err != nil {
 		return err
 	}
@@ -218,14 +244,28 @@ func (s *Store) DeletePrescriptionMedicineItems(prescriptionId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPrescription(id int, prescription types.Prescription) error {
+func (s *Store) ModifyPrescription(id int, prescription types.Prescription, userId int) error {
+	data, err := s.GetPrescriptionByID(prescription.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "prescription", userId, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE prescription SET 
 				number = ?, prescription_date = ?, patient_id = ?, doctor_id = ?, 
 				qty = ?, price = ?, total_price = ?, description = ?, 
 				last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 						prescription.Number, prescription.PrescriptionDate, 
 						prescription.PatientID, prescription.DoctorID,
 						prescription.Qty, prescription.Price,

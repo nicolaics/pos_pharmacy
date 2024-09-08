@@ -404,7 +404,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription.ID)
+	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -443,7 +443,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the prescription exists
-	_, err = h.prescriptionStore.GetPrescriptionByID(payload.ID)
+	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("prescription with id %d doesn't exists", payload.ID))
@@ -494,13 +494,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		TotalPrice:           payload.NewData.TotalPrice,
 		Description:          payload.NewData.Description,
 		LastModifiedByUserID: user.ID,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.prescriptionStore.DeletePrescriptionMedicineItems(payload.ID)
+	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

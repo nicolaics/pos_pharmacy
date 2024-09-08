@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -224,11 +225,36 @@ func (s *Store) DeleteProduction(production *types.Production, userId int) error
 		return err
 	}
 
+	data, err := s.GetProductionByID(production.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "production", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) DeleteProductionMedicineItems(productionId int) error {
-	_, err := s.db.Exec("DELETE FROM production_medicine_items WHERE production_id = ? ", productionId)
+func (s *Store) DeleteProductionMedicineItems(production *types.Production, userId int) error {
+	data, err := s.GetProductionMedicineItems(production.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"production": production,
+		"deleted_medicine_items": data,
+	}
+
+	err = logger.WriteLog("delete", "prescription", userId, production.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("DELETE FROM production_medicine_items WHERE production_id = ? ", production.ID)
 	if err != nil {
 		return err
 	}
@@ -236,14 +262,28 @@ func (s *Store) DeleteProductionMedicineItems(productionId int) error {
 	return nil
 }
 
-func (s *Store) ModifyProduction(id int, production types.Production) error {
+func (s *Store) ModifyProduction(id int, production types.Production, userId int) error {
+	data, err := s.GetProductionByID(production.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "production", userId, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE production SET 
 				batch_number = ?, produced_medicine_id = ?, produced_qty = ?, production_date = ?, 
 				description = ?, updated_to_stock = ?, updated_to_account = ?, total_cost = ?, 
 				last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		production.BatchNumber, production.ProducedMedicineID, production.ProducedQty,
 		production.ProductionDate, production.Description, production.UpdatedToStock,
 		production.UpdatedToAccount, production.TotalCost, time.Now(), production.LastModifiedByUserID, id)

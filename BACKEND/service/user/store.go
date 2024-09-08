@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/auth"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -78,8 +79,18 @@ func (s *Store) CreateUser(user types.User) error {
 	return nil
 }
 
-func (s *Store) DeleteUser(user *types.User) error {
-	_, err := s.db.Exec("DELETE FROM user WHERE id = ?", user.ID)
+func (s *Store) DeleteUser(user *types.User, deletedById int) error {
+	data, err := s.GetUserByID(user.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "user", deletedById, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	_, err = s.db.Exec("DELETE FROM user WHERE id = ?", user.ID)
 	if err != nil {
 		return err
 	}
@@ -120,10 +131,24 @@ func (s *Store) UpdateLastLoggedIn(id int) error {
 	return nil
 }
 
-func (s *Store) ModifyUser(id int, user types.User) error {
+func (s *Store) ModifyUser(id int, user types.User, deletedById int) error {
+	data, err := s.GetUserByID(user.ID)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("delete", "user", deletedById, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE user SET name = ?, password = ?, admin = ?, phone_number = ? 
 				WHERE id = ?`
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		user.Name, user.Password, user.Admin, user.PhoneNumber, id)
 
 	if err != nil {

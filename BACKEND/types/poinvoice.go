@@ -13,8 +13,8 @@ type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
 	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
-	DeletePurchaseOrderItems(int) error
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice) error
+	DeletePurchaseOrderItems(*PurchaseOrderInvoice, int) error
+	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, int) error
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -117,20 +118,44 @@ func (s *Store) DeleteSupplier(supplier *types.Supplier, userId int) error {
 		return err
 	}
 
+	data, err := s.GetSupplierByID(supplier.ID)
+	if err != nil {
+		return err
+	}
+
+	err = logger.WriteLog("delete", "supplier", userId, data.ID, data)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	return nil
 }
 
-func (s *Store) ModifySupplier(id int, newSupplierData types.Supplier) error {
+func (s *Store) ModifySupplier(sid int, newSupplierData types.Supplier, userId int) error {
+	data, err := s.GetSupplierByID(sid)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "purchase-invoice", userId, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE suppplier SET 
 				name = ?, address = ?, company_phone_number = ?, contact_person_name = ?, 
 				contact_person_number = ?, terms = ?, vendor_is_taxable = ?, 
 				last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		newSupplierData.Name, newSupplierData.Address, newSupplierData.CompanyPhoneNumber,
 		newSupplierData.ContactPersonName, newSupplierData.ContactPersonNumber,
 		newSupplierData.Terms, newSupplierData.VendorIsTaxable, time.Now(),
-		newSupplierData.LastModifiedByUserID, id)
+		newSupplierData.LastModifiedByUserID, sid)
 	if err != nil {
 		return err
 	}

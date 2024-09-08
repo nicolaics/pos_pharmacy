@@ -22,8 +22,8 @@ type PatientStore interface {
 	GetPatientByID(id int) (*Patient, error)
 	CreatePatient(Patient) error
 	GetAllPatients() ([]Patient, error)
-	DeletePatient(*Patient) error
-	ModifyPatient(int, string) error
+	DeletePatient(*Patient, int) error
+	ModifyPatient(int, string, int) error
 }
 
 type Patient struct {

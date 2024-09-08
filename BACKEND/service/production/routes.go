@@ -320,7 +320,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.productionStore.DeleteProductionMedicineItems(production.ID)
+	err = h.productionStore.DeleteProductionMedicineItems(production, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -359,7 +359,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the production exists
-	_, err = h.productionStore.GetProductionByID(payload.ID)
+	production, err := h.productionStore.GetProductionByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("production with id %d doesn't exists", payload.ID))
@@ -390,7 +390,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		UpdatedToAccount:     payload.NewData.UpdatedToAccount,
 		TotalCost:            payload.NewData.TotalCost,
 		LastModifiedByUserID: user.ID,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -404,7 +404,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.productionStore.DeleteProductionMedicineItems(payload.ID)
+	err = h.productionStore.DeleteProductionMedicineItems(production, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

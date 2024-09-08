@@ -15,8 +15,8 @@ type PrescriptionStore interface {
 
 	GetPrescriptionMedicineItems(prescriptionId int) ([]PrescriptionMedicineItemRow, error)
 	DeletePrescription(*Prescription, int) error
-	DeletePrescriptionMedicineItems(int) error
-	ModifyPrescription(int, Prescription) error
+	DeletePrescriptionMedicineItems(*Prescription, int) error
+	ModifyPrescription(int, Prescription, int) error
 }
 
 type RegisterPrescriptionPayload struct {

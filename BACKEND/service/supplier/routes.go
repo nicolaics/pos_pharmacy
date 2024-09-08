@@ -185,7 +185,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Terms:                payload.NewData.Terms,
 		VendorIsTaxable:      payload.NewData.VendorIsTaxable,
 		LastModifiedByUserID: user.ID,
-	})
+	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
