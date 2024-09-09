@@ -1,20 +1,12 @@
 import React, {
-  SyntheticEvent,
-  useEffect,
-  useLayoutEffect,
   useState,
 } from "react";
 
 import "./User.css";
-import { Navigate, NavigateFunction, useNavigate } from "react-router-dom";
-import {
-  ApplyMiddleware,
-  AuthMiddleware,
-  RequestContext,
-} from "../../Middleware";
+import { useNavigate } from "react-router-dom";
 import FormatDateTime from "../../DateTimeFormatter";
 
-// TODO: notify user if they have selected something
+// TODO: notify user if they have selected something (highlight or something in css)
 function fillTable(data: any, tableBody: Element | null, 
                 setUsername: React.Dispatch<React.SetStateAction<string>>,
                 setID: React.Dispatch<React.SetStateAction<number>>) {
@@ -73,30 +65,21 @@ const UserPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const logoutURL = "http://localhost:19230/api/v1/user";
+    const getAllUserURL = "http://localhost:19230/api/v1/user";
 
-    const requestContext: RequestContext = {
-      url: logoutURL,
-      options: {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+    fetch(getAllUserURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
       },
-    };
-
-    console.log("token ", token);
-
-    ApplyMiddleware(AuthMiddleware, requestContext).then((response) =>
-      response
-        .json()
-        .then((data) => {
+    })
+      .then((response) =>
+        response.json().then((data) => {
           if (!response.ok) {
-            alert("token invalid");
-            throw response;
+            throw new Error("Invalid credentials or network issue");
           }
-
+          
           const tableBody = document.querySelector("#dataTable tbody");
           if (!tableBody) {
             console.error("table body not found");
@@ -109,17 +92,19 @@ const UserPage: React.FC = () => {
             fillTable(data[i], tableBody, setUsername, setID);
           }
         })
-        .catch((error) => {
-          console.error("Error logging out:", error);
-        })
-    );
+      )
+      .catch((error) => {
+        console.error("Error loading user data:", error);
+        alert("Error loading user data");
+      });
   };
 
   const add = () => {
+    navigate("/user/add");
   };
 
   const remove = () => {
-    console.log(username);
+    console.log(username, id);
   };
 
   return (

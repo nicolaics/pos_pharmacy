@@ -1,0 +1,20 @@
+/* TODO: MODIFY THE STYLES */
+
+.add-user-page {
+  text-align: center;
+  padding: 20px;
+}
+
+.container {
+  display: inline-block;
+  gap: 20px;
+  margin: 0 auto;
+  border: black;
+  border-width: 20px;
+}
+
+.name {
+  display: inline-flex;
+  align-items: baseline;
+  margin: 10px;
+}
