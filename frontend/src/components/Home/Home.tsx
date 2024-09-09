@@ -1,9 +1,4 @@
-import React, {
-  SyntheticEvent,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React from "react";
 import {
   FaLock,
   FaShoppingCart,
@@ -17,12 +12,11 @@ import { IoIosLogOut } from "react-icons/io";
 import { MdSick } from "react-icons/md";
 
 import "./Home.css";
-import { Navigate, NavigateFunction, useNavigate } from "react-router-dom";
-import { ApplyMiddleware, AuthMiddleware, RequestContext } from "../../Middleware";
+import {useNavigate } from "react-router-dom";
 
-// TODO: think about back navigation
-// TODO: if the user goes back, reverify the token in the local storage
-// TODO: to the URL
+
+// use window.location.href if the files have been moved to the server
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -30,42 +24,32 @@ const LandingPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
     const logoutURL = "http://localhost:19230/api/v1/user/logout";
 
-    const requestContext: RequestContext = {
-      url: logoutURL,
-      options: {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token,
-        },
+    fetch(logoutURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
       },
-    };
-
-    console.log("token ", token);
-
-    ApplyMiddleware(AuthMiddleware, requestContext).then((response) =>
-      response
-        .json()
-        .then((data) => {
+    })
+      .then((response) =>
+        response.json().then((data) => {
           if (!response.ok) {
-            alert("token invalid");
-            throw response;
+            throw new Error("Invalid credentials or network issue");
           }
-
           console.log(data);
           sessionStorage.removeItem("token");
-          navigate("/", { replace: true });
+          navigate("/");
         })
-        .catch((error) => {
-          console.error("Error logging out:", error);
-        })
-    );
+      )
+      .catch((error) => {
+        console.error("Error during sign-in:", error);
+        alert('Wrong credentials. Please try again.'); // Show pop-up message
+      });
   };
 
   const user = () => {
-    navigate("/user")
+    navigate("/user");
   };
-
 
   return (
     <div className="landing-page">
