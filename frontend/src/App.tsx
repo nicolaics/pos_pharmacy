@@ -24,31 +24,44 @@ const App: React.FC = () => {
         <Route path="/customer" element={<ViewCustomerPage />} />
         <Route path="/customer/detail" element={<ModifyCustomerPage />} />
 
-
         {/* <Route
           path="/home"
           element={<ProtectedRoute children={<LandingPage />} admin={false} />}
         /> */}
 
+        {/* USER ROUTE */}
         {/* <Route
           path="/user"
           element={<ProtectedRoute children={<UserLandingPage />} admin={false} />}
-        /> */}
-
-        {/* <Route
+        />
+        <Route
           path="/user/view"
           element={<ProtectedRoute children={<ViewUserPage />} admin={true} />}
-        /> */}
-
-        {/* <Route
+        />
+        <Route
           path="/user/detail"
           element={<ProtectedRoute children={<ModifyUserPage />} admin={false} />}
-        /> */}
-
-        {/* <Route
+        />
+        <Route
           path="/user/create"
           element={<ProtectedRoute children={<ModifyUserPage />} admin={true} />}
         /> */}
+
+        {/* CUSTOMER ROUTE */}
+        {/* <Route
+          path="/customer"
+          element={
+            <ProtectedRoute children={<ViewCustomerPage />} admin={true} />
+          }
+        />
+        <Route
+          path="/customer/detail"
+          element={
+            <ProtectedRoute children={<ModifyCustomerPage />} admin={true} />
+          }
+        /> */}
+
+
       </Routes>
     </div>
   );
