@@ -4,6 +4,7 @@ import "./ViewUser.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import FormatDateTime from "../../../DateTimeFormatter";
 import { MdPersonSearch } from "react-icons/md";
+import { FaHome } from "react-icons/fa";
 
 // TODO: notify user if they have selected something (highlight or something in css)
 function fillTable(
@@ -102,6 +103,10 @@ const ViewUserPage: React.FC = () => {
       });
   };
 
+  const returnToHome = () => {
+    navigate("/home");
+  };
+
   return (
     <div className="view-user-page">
       <h1>User</h1>
@@ -127,6 +132,11 @@ const ViewUserPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <div className="view-user-grid-item" onClick={returnToHome}>
+          <FaHome size={50} />
+          <h2>Back to Home</h2>
+        </div>
     </div>
   );
 };

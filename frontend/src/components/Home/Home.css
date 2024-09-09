@@ -27,11 +27,11 @@
   transition: transform 0.5s;
 }
 
-.grid-item:hover {
+.home-grid-item:hover {
   transform: scale(1.05);
 }
 
-.grid-item h2 {
+.home-grid-item h2 {
   margin-top: 10px;
   font-size: 18px;
   color: #333;

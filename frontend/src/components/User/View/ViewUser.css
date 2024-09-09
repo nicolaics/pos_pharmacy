@@ -4,3 +4,27 @@
   text-align: center;
   padding: 20px;
 }
+
+.view-user-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 20px;
+  width: 150px;
+  height: 100px;
+  padding: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.5s;
+}
+
+.view-user-grid-item:hover {
+  transform: scale(1.05);
+}
+
+.view-user-grid-item h2 {
+  margin-top: 10px;
+  font-size: 18px;
+  color: #333;
+}
