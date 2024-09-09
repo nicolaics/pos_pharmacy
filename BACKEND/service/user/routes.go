@@ -23,8 +23,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/register", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/user/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
+	// TODO: add search function for user. in the query
 	router.HandleFunc("/user", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
+	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user/delete", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -172,6 +176,17 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, users)
+}
+
+func (h *Handler) handleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	// validate token
+	user, err := h.store.ValidateUserToken(w, r, true)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{"data": user})
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
