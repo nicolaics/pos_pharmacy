@@ -3,7 +3,7 @@
   padding: 20px;
 }
 
-.grid-container {
+.home-grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
@@ -13,7 +13,7 @@
   margin: 0 auto;
 }
 
-.grid-item {
+.home-grid-item {
   display: flex;
   flex-direction: column;
   align-items: center;

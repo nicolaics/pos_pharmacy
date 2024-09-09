@@ -103,7 +103,7 @@ const ViewUserPage: React.FC = () => {
   };
 
   return (
-    <div className="user-page">
+    <div className="view-user-page">
       <h1>User</h1>
 
       <div className="container">

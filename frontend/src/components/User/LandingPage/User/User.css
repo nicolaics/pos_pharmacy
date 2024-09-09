@@ -3,7 +3,7 @@
     padding: 20px;
   }
   
-  .grid-container {
+  .user-grid-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 50px 10px;
@@ -13,7 +13,7 @@
     margin: 0 auto;
   }
   
-  .grid-item {
+  .user-grid-item {
     display: flex;
     flex-direction: column;
     align-items: center;

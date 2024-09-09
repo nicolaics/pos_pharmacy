@@ -37,20 +37,20 @@ const UserLandingPage: React.FC = () => {
   return (
     <div className="user-landing-page">
       <h1>User</h1>
-      <div className="grid-container">
+      <div className="user-grid-container">
         <div className="grid-item" onClick={modifyMyData}>
           <BsPersonFillGear size={50} />
           <h2>Modify My Information</h2>
         </div>
-        <div className="grid-item" onClick={view}>
+        <div className="user-grid-item" onClick={view}>
           <FaSearch size={50} />
           <h2>View All Users</h2>
         </div>
-        <div className="grid-item" onClick={createUser}>
+        <div className="user-grid-item" onClick={createUser}>
           <BsPersonFillAdd size={50} />
           <h2>Create User</h2>
         </div>
-        <div className="grid-item" onClick={returnToHome}>
+        <div className="user-grid-item" onClick={returnToHome}>
           <FaHome size={50} />
           <h2>Back to Home</h2>
         </div>

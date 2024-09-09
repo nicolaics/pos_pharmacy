@@ -53,40 +53,40 @@ const LandingPage: React.FC = () => {
   return (
     <div className="landing-page">
       <h1>Welcome!</h1>
-      <div className="grid-container">
-        <div className="grid-item" onClick={user}>
+      <div className="home-grid-container">
+        <div className="home-grid-item" onClick={user}>
           <FaLock size={50} />
           <h2>User</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaUser size={50} />
           <h2>Customer</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaShoppingCart size={50} />
           <h2>Supplier</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <MdSick size={50} />
           <h2>Patient</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaUserDoctor size={50} />
           <h2>Doctor</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaPills size={50} />
           <h2>Inventory</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaReceipt size={50} />
           <h2>Invoice</h2>
         </div>
-        <div className="grid-item">
+        <div className="home-grid-item">
           <FaClock size={50} />
           <h2>Purchasing</h2>
         </div>
-        <div className="grid-item" onClick={logout}>
+        <div className="home-grid-item" onClick={logout}>
           <IoIosLogOut size={50} />
           <h2>Logout</h2>
         </div>
