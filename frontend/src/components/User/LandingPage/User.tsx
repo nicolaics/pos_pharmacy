@@ -1,15 +1,17 @@
-import React, {
-  useState,
-} from "react";
+import React, { useState } from "react";
 
 import "./User.css";
 import { useNavigate } from "react-router-dom";
-import FormatDateTime from "../../DateTimeFormatter";
+import FormatDateTime from "../../../DateTimeFormatter";
+import AdminPasswordPopup from "../../AdminPasswordPopup/AdminPasswordPopup";
 
 // TODO: notify user if they have selected something (highlight or something in css)
-function fillTable(data: any, tableBody: Element | null, 
-                setUsername: React.Dispatch<React.SetStateAction<string>>,
-                setID: React.Dispatch<React.SetStateAction<number>>) {
+function fillTable(
+  data: any,
+  tableBody: Element | null,
+  setName: React.Dispatch<React.SetStateAction<string>>,
+  setID: React.Dispatch<React.SetStateAction<number>>
+) {
   if (!tableBody) return;
 
   // Loop through each user and create a new row in the table
@@ -49,7 +51,7 @@ function fillTable(data: any, tableBody: Element | null,
   row.appendChild(createdAtCell);
 
   row.addEventListener("click", () => {
-    setUsername(data["name"]);
+    setName(data["name"]);
     setID(data["id"]);
   });
 
@@ -60,8 +62,25 @@ function fillTable(data: any, tableBody: Element | null,
 const UserPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [id, setID] = useState(-1);
+  const [adminPassword, setAdminPassword] = useState("");
+
+  const [isAdminPopupOpen, setAdminPopup] = useState(false);
+
+  const openPopup = (e: any) => {
+    e.preventDefault(); // Prevent form submission
+    setAdminPopup(true); // Open the popup
+  };
+
+  const closePopup = () => {
+    setAdminPopup(false);
+  };
+
+  const handlePopupSubmit = (adminPasswordRcv: string) => {
+    setAdminPassword(adminPasswordRcv); // Save the password received from the popup
+    setAdminPopup(false); // Close the popup
+  };
 
   const search = () => {
     const token = sessionStorage.getItem("token");
@@ -71,7 +90,7 @@ const UserPage: React.FC = () => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + token,
+        Authorization: "Bearer " + token,
       },
     })
       .then((response) =>
@@ -79,7 +98,7 @@ const UserPage: React.FC = () => {
           if (!response.ok) {
             throw new Error("Invalid credentials or network issue");
           }
-          
+
           const tableBody = document.querySelector("#dataTable tbody");
           if (!tableBody) {
             console.error("table body not found");
@@ -89,7 +108,7 @@ const UserPage: React.FC = () => {
           tableBody.innerHTML = "";
 
           for (let i = 0; i < data.length; i++) {
-            fillTable(data[i], tableBody, setUsername, setID);
+            fillTable(data[i], tableBody, setName, setID);
           }
         })
       )
@@ -103,8 +122,47 @@ const UserPage: React.FC = () => {
     navigate("/user/add");
   };
 
-  const remove = () => {
-    console.log(username, id);
+  // TODO: TEST, not yet tested
+  const remove = (e: any) => {
+    const confirmText =
+      "Are you sure you want to delete:\n" + "id: " + id + "\nname: " + name;
+    const confirm = window.confirm(confirmText);
+
+    if (confirm) {
+      e.preventDefault();
+      openPopup(e);
+
+      const token = sessionStorage.getItem("token");
+      const deleteURL = "http://localhost:19230/api/v1/user/delete";
+
+      fetch(deleteURL, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          id: id,
+          name: name,
+          adminPassword: adminPassword,
+        }),
+      })
+        .then((response) =>
+          response.json().then((data) => {
+            if (!response.ok) {
+              setAdminPassword("");
+              throw new Error("Invalid credentials or network issue");
+            }
+          })
+        )
+        .catch((error) => {
+          setAdminPassword("");
+          console.error("Error deleting user:", error);
+          alert("Error deleting user");
+        });
+    }
+
+    setAdminPassword("");
   };
 
   return (
@@ -140,6 +198,12 @@ const UserPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <AdminPasswordPopup
+        isOpen={isAdminPopupOpen}
+        onClose={closePopup}
+        onSubmit={handlePopupSubmit}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import "./AddUser.css";
 import { useNavigate } from "react-router-dom";
-import AdminPasswordPopup from "../AdminPasswordPopup/AdminPasswordPopup";
+import AdminPasswordPopup from "../../AdminPasswordPopup/AdminPasswordPopup";
 
 const AddUserPage: React.FC = () => {
   const navigate = useNavigate();
