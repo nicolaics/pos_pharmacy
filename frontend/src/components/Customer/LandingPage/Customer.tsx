@@ -89,7 +89,7 @@ const ViewCustomerPage: React.FC = () => {
   };
 
   const register = () => {
-    navigate("/customer/add");
+    navigate("/customer/detail");
   }
 
   return (
@@ -102,8 +102,8 @@ const ViewCustomerPage: React.FC = () => {
           <MdPersonSearch size={40} className="customer-search-btn" onClick={search} />
           <BsPersonFillAdd size={40} className="customer-add-btn" onClick={register} />
         </span>
-        <div className="table">
-          <table id="dataTable" border={1}>
+        <div className="customer-table">
+          <table id="customer-data-table" border={1}>
             <thead>
               <tr>
                 <th>ID</th>
@@ -116,7 +116,7 @@ const ViewCustomerPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="view-user-grid-item" onClick={returnToHome}>
+      <div className="customer-grid-item" onClick={returnToHome}>
           <FaHome size={50} />
           <h2>Back to Home</h2>
         </div>
