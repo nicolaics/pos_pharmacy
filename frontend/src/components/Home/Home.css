@@ -36,18 +36,3 @@
   font-size: 18px;
   color: #333;
 }
-
-/* .logout-item {
-  display: flex;
-  flex-direction: column;
-  grid-column: span 3;
-  align-items: center;
-  justify-content: center;
-  background-color: white;
-  border-radius: 20px;
-  width: 750px;
-  height: 200px;
-  padding: 10px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.5s;
-} */
