@@ -372,5 +372,5 @@ func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %s", user.Name, payload.Admin))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %t", user.Name, payload.Admin))
 }
