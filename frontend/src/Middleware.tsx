@@ -1,31 +1,37 @@
-export type Middleware = (
-  context: RequestContext,
-  next: () => Promise<Response>
-) => Promise<Response>;
+import { NavigateFunction, useNavigate } from "react-router-dom";
 
-export interface RequestContext {
-  url: string;
-  options: RequestInit;
-}
-
-export const AuthMiddleware: Middleware = async (context, next) => {
+export const AuthMiddleware = (navigate: NavigateFunction, admin: boolean) => {
   const token = sessionStorage.getItem("token");
-  console.log("auth token: ", token);
 
-  if (token) {
-    context.options.headers = {
-      ...context.options.headers,
-      Authorization: `Bearer ${token}`,
-    };
+  if (!token) {
+    // No token found, redirect to login
+    navigate("/");
   }
-  
-  return await next(); // Proceed to the next middleware
-};
+  else {
+    const url = "http://localhost:19230/api/v1/user/validate";
 
-export const ApplyMiddleware = async (
-  middleware: Middleware,
-  context: RequestContext
-): Promise<Response> => {
-  // Directly call the middleware with the fetch as the "next" function
-  return await middleware(context, () => fetch(context.url, context.options));
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+      },
+      body: JSON.stringify({
+        needAdmin: admin,
+      }),
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
+          
+          console.log("validated!");
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading user data:", error);
+        navigate("/home");
+      });
+  }
 };
