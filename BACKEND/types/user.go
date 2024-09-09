@@ -11,12 +11,12 @@ type UserStore interface {
 	GetAllUsers() ([]User, error)
 
 	CreateUser(User) error
-	
+
 	DeleteUser(*User, int) error
 
 	UpdateLastLoggedIn(int) error
 	ModifyUser(int, User, int) error
-	
+
 	SaveToken(int, *TokenDetails) error
 	DeleteToken(int) error
 	ValidateUserToken(http.ResponseWriter, *http.Request, bool) (*User, error)
@@ -44,10 +44,22 @@ type ModifyUserPayload struct {
 	NewData RegisterUserPayload `json:"newData" validate:"required"`
 }
 
+// to change a user admin status
+type ChangeAdminStatusPayload struct {
+	ID            int    `json:"id" validate:"required"`
+	AdminPassword string `json:"adminPassword" validate:"required"`
+	Admin         bool   `json:"admin" validate:"required"`
+}
+
 // normal log-in
 type LoginUserPayload struct {
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password" validate:"required"`
+}
+
+// validate token request from client
+type VerifyTokenRequestFromClientPayload struct {
+	NeedAdmin bool `json:"needAdmin" validate:"required"`
 }
 
 // basic user data info

@@ -34,6 +34,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/user/logout", h.handleLogout).Methods(http.MethodGet)
 	router.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/user/validate", h.handleValidateTokenRequest).Methods(http.MethodPost)
+	router.HandleFunc("/user/validate", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
+	router.HandleFunc("/user/admin", h.handleChangeAdminStatus).Methods(http.MethodPatch)
+	router.HandleFunc("/user/admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) RegisterUnprotectedRoutes(router *mux.Router) {
@@ -293,4 +299,78 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, "successfully logged out")
+}
+
+func (h *Handler) handleValidateTokenRequest(w http.ResponseWriter, r *http.Request) {
+	var payload types.VerifyTokenRequestFromClientPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token for admin or expired
+	_, err := h.store.ValidateUserToken(w, r, payload.NeedAdmin)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, nil)
+}
+
+func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request) {
+	var payload types.ChangeAdminStatusPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	admin, err := h.store.ValidateUserToken(w, r, true)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		return
+	}
+
+	// validate admin password
+	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"))
+		return
+	}
+
+	// check whether user exists or not
+	user, err := h.store.GetUserByID(payload.ID)
+	if user == nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.store.ModifyUser(user.ID, types.User{
+		Name:        user.Name,
+		Password:    user.Password,
+		Admin:       payload.Admin,
+		PhoneNumber: user.PhoneNumber,
+	}, admin.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %s", user.Name, payload.Admin))
 }

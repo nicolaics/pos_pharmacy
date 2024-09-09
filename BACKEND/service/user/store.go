@@ -131,7 +131,7 @@ func (s *Store) UpdateLastLoggedIn(id int) error {
 	return nil
 }
 
-func (s *Store) ModifyUser(id int, user types.User, deletedById int) error {
+func (s *Store) ModifyUser(id int, user types.User, modifiedBy int) error {
 	data, err := s.GetUserByID(user.ID)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (s *Store) ModifyUser(id int, user types.User, deletedById int) error {
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("delete", "user", deletedById, data.ID, writeData)
+	err = logger.WriteLog("modify", "user", modifiedBy, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -230,15 +230,14 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 		}
 
 		return nil, fmt.Errorf("token expired, log in again")
-		// return nil, err
 	}
 
 	// if the account must be admin
-	// if needAdmin {
-	// 	if !user.Admin {
-	// 		return nil, fmt.Errorf("unauthorized! not admin")
-	// 	}
-	// }
+	if needAdmin {
+		if !user.Admin {
+			return nil, fmt.Errorf("unauthorized! not admin")
+		}
+	}
 
 	return user, nil
 }
