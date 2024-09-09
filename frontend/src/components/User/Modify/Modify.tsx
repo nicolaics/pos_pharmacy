@@ -19,6 +19,8 @@ const ModifyUserPage: React.FC = () => {
 
   const [okBtnLabel, setOkBtnLabel] = useState("Modify");
   const [showAdminOption, setShowAdminOption] = useState(false);
+  const [showDeleteButton, setShowDeleteButton] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   const reqType = state.reqType;
 
@@ -30,14 +32,11 @@ const ModifyUserPage: React.FC = () => {
 
     if (state.reqType === "modify") {
       setOkBtnLabel("Modify");
+      setShowAdminOption(false);
+      setIsReadOnly(false);
+      setShowDeleteButton(false);
 
-      if (state.admin) {
-        setShowAdminOption(true);
-      } else {
-        setShowAdminOption(false);
-      }
-
-      const currentUserURL ="http://localhost:19230/api/v1/user/current"; // Set the URL or handle this logic
+      const currentUserURL = "http://localhost:19230/api/v1/user/current"; // Set the URL or handle this logic
       fetch(currentUserURL, {
         method: "GET",
         headers: {
@@ -63,10 +62,17 @@ const ModifyUserPage: React.FC = () => {
           console.error("Error load current user:", error);
           alert("Error load current user");
         });
-
     } else if (state.reqType === "add") {
       setOkBtnLabel("Add");
       setShowAdminOption(true);
+      setShowDeleteButton(false);
+    } else if (state.reqType === "modify-admin") {
+      setIsReadOnly(true);
+      setShowAdminOption(true);
+      setShowDeleteButton(true);
+
+      setId(state.id);
+      setName(state.name);
     }
   }, [state.reqType]); // Dependency array ensures this effect only runs when reqType changes
 
@@ -134,8 +140,8 @@ const ModifyUserPage: React.FC = () => {
             password: password,
             phoneNumber: phoneNumber,
             admin: admin,
-            adminPassword: adminPassword
-          }
+            adminPassword: adminPassword,
+          },
         }),
       })
         .then((response) =>
@@ -193,6 +199,44 @@ const ModifyUserPage: React.FC = () => {
     navigate("/user");
   };
 
+  const handleDelete = (e: any) => {
+    e.preventDefault();
+    handleRequestAdminPassword(e);
+
+    const token = sessionStorage.getItem("token");
+    const url = "http://localhost:19230/api/v1/user/delete";
+
+    fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify({
+        id: Number(id),
+        name: name,
+        adminPassword: adminPassword,
+      }),
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Unable to delete user data");
+          }
+
+          console.log(data);
+          setAdminPassword("");
+          navigate("/user");
+        })
+      )
+      .catch((error) => {
+        console.error("Error delete user:", error);
+        alert("Error delete user");
+      });
+
+      setAdminPassword("");
+  };
+
   return (
     <div className="modify-user-page">
       <h1>Add User</h1>
@@ -200,11 +244,16 @@ const ModifyUserPage: React.FC = () => {
       <div className="user-data">
         <div className="id-number">
           <h3>ID: </h3>
-          <label>{id}</label>
+          <input type="text" value={id} readOnly />
         </div>
         <div className="name">
           <h3>Name: </h3>
-          <input type="text" value={name} onChange={handleNameChange} />
+          <input
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+            readOnly={isReadOnly}
+          />
         </div>
 
         <div className="password">
@@ -213,6 +262,7 @@ const ModifyUserPage: React.FC = () => {
             type="password"
             value={password}
             onChange={handlePasswordChange}
+            readOnly={isReadOnly}
           />
         </div>
 
@@ -222,6 +272,7 @@ const ModifyUserPage: React.FC = () => {
             type="text"
             value={phoneNumber}
             onChange={handlePhoneNumberChange}
+            readOnly={isReadOnly}
           />
         </div>
 
@@ -258,6 +309,12 @@ const ModifyUserPage: React.FC = () => {
           <button type="button" onClick={handleCancel}>
             Cancel
           </button>
+
+          {showDeleteButton && (
+            <button type="button" onClick={handleDelete}>
+              Delete User
+            </button>
+          )}
         </div>
 
         <div className="final-ok-btn">
