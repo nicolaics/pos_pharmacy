@@ -38,7 +38,7 @@ const UserLandingPage: React.FC = () => {
     <div className="user-landing-page">
       <h1>User</h1>
       <div className="user-grid-container">
-        <div className="grid-item" onClick={modifyMyData}>
+        <div className="user-grid-item" onClick={modifyMyData}>
           <BsPersonFillGear size={50} />
           <h2>Modify My Information</h2>
         </div>
