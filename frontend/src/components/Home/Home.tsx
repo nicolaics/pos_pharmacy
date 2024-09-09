@@ -42,8 +42,7 @@ const LandingPage: React.FC = () => {
         })
       )
       .catch((error) => {
-        console.error("Error during sign-in:", error);
-        alert('Wrong credentials. Please try again.'); // Show pop-up message
+        console.error("Error during logout:", error);
       });
   };
 
