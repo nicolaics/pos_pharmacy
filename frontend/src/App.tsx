@@ -6,6 +6,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import UserLandingPage from "./components/User/LandingPage/User/User";
 import ViewUserPage from "./components/User/View/ViewUser";
 import ModifyUserPage from "./components/User/Modify/Modify";
+import ViewCustomerPage from "./components/Customer/LandingPage/Customer";
+import ModifyCustomerPage from "./components/Customer/Modify/Modify";
 
 const App: React.FC = () => {
   return (
@@ -18,6 +20,9 @@ const App: React.FC = () => {
         <Route path="/user" element={<UserLandingPage />} />
         <Route path="/user/view" element={<ViewUserPage />} />
         <Route path="/user/detail" element={<ModifyUserPage />} />
+
+        <Route path="/customer" element={<ViewCustomerPage />} />
+        <Route path="/customer/detail" element={<ModifyCustomerPage />} />
 
 
         {/* <Route
