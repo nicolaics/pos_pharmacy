@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 
 import "./ViewUser.css";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import FormatDateTime from "../../../DateTimeFormatter";
-import AdminPasswordPopup from "../../AdminPasswordPopup/AdminPasswordPopup";
+import { MdPersonSearch } from "react-icons/md";
 
 // TODO: notify user if they have selected something (highlight or something in css)
 function fillTable(
   data: any,
   tableBody: Element | null,
-  setName: React.Dispatch<React.SetStateAction<string>>,
-  setID: React.Dispatch<React.SetStateAction<number>>
+  navigate: NavigateFunction
 ) {
   if (!tableBody) return;
 
@@ -51,8 +50,13 @@ function fillTable(
   row.appendChild(createdAtCell);
 
   row.addEventListener("click", () => {
-    setName(data["name"]);
-    setID(data["id"]);
+    navigate("/user/detail", {
+      state: {
+        reqType: "modify-admin",
+        id: data["id"],
+        name: data["name"],
+      },
+    });
   });
 
   // Append the row to the table body
@@ -61,26 +65,6 @@ function fillTable(
 
 const ViewUserPage: React.FC = () => {
   const navigate = useNavigate();
-
-  const [name, setName] = useState("");
-  const [id, setID] = useState(-1);
-  const [adminPassword, setAdminPassword] = useState("");
-
-  const [isAdminPopupOpen, setAdminPopup] = useState(false);
-
-  const openPopup = (e: any) => {
-    e.preventDefault(); // Prevent form submission
-    setAdminPopup(true); // Open the popup
-  };
-
-  const closePopup = () => {
-    setAdminPopup(false);
-  };
-
-  const handlePopupSubmit = (adminPasswordRcv: string) => {
-    setAdminPassword(adminPasswordRcv); // Save the password received from the popup
-    setAdminPopup(false); // Close the popup
-  };
 
   const search = () => {
     const token = sessionStorage.getItem("token");
@@ -108,7 +92,7 @@ const ViewUserPage: React.FC = () => {
           tableBody.innerHTML = "";
 
           for (let i = 0; i < data.length; i++) {
-            fillTable(data[i], tableBody, setName, setID);
+            fillTable(data[i], tableBody, navigate);
           }
         })
       )
@@ -118,50 +102,6 @@ const ViewUserPage: React.FC = () => {
       });
   };
 
-
-  // TODO: TEST, not yet tested
-  const remove = (e: any) => {
-    const confirmText =
-      "Are you sure you want to delete:\n" + "id: " + id + "\nname: " + name;
-    const confirm = window.confirm(confirmText);
-
-    if (confirm) {
-      e.preventDefault();
-      openPopup(e);
-
-      const token = sessionStorage.getItem("token");
-      const deleteURL = "http://localhost:19230/api/v1/user/delete";
-
-      fetch(deleteURL, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          id: id,
-          name: name,
-          adminPassword: adminPassword,
-        }),
-      })
-        .then((response) =>
-          response.json().then((data) => {
-            if (!response.ok) {
-              setAdminPassword("");
-              throw new Error("Invalid credentials or network issue");
-            }
-          })
-        )
-        .catch((error) => {
-          setAdminPassword("");
-          console.error("Error deleting user:", error);
-          alert("Error deleting user");
-        });
-    }
-
-    setAdminPassword("");
-  };
-
   return (
     <div className="user-page">
       <h1>User</h1>
@@ -169,9 +109,7 @@ const ViewUserPage: React.FC = () => {
       <div className="container">
         <span className="search">
           <input type="text" className="search-item" />
-          <button className="search-item" onClick={search}>
-            Search
-          </button>
+          <MdPersonSearch size={40} className="search-icon" onClick={search} />
         </span>
         <div className="table">
           <table id="dataTable" border={1}>
