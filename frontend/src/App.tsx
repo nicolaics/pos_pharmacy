@@ -41,17 +41,7 @@ const App: React.FC = () => {
         <Route path="/user" element={<UserLandingPage />} />
         <Route path="/user/view" element={<ViewUserPage />} />
         <Route path="/user/detail" element={<ModifyUserPage />} />
-
-        {/* <Route
-          path="/user/add"
-          element={<ProtectedRoute children={<AddUserPage />} admin={true} />}
-        /> */}
-
-        {/* FOR TESTING */}
-        {/* <Route
-          path="/user/add"
-          element={<AddUserPage />}
-        /> */}
+        
       </Routes>
     </div>
   );
