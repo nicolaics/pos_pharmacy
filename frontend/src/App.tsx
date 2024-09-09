@@ -13,10 +13,17 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<LoginPage />} />
 
-        <Route
+        {/* FOR TESTING PURPOSE ONLY */}
+        <Route path="/home" element={<LandingPage />} />
+        <Route path="/user" element={<UserLandingPage />} />
+        <Route path="/user/view" element={<ViewUserPage />} />
+        <Route path="/user/detail" element={<ModifyUserPage />} />
+
+
+        {/* <Route
           path="/home"
           element={<ProtectedRoute children={<LandingPage />} admin={false} />}
-        />
+        /> */}
 
         {/* <Route
           path="/user"
@@ -37,11 +44,6 @@ const App: React.FC = () => {
           path="/user/create"
           element={<ProtectedRoute children={<ModifyUserPage />} admin={true} />}
         /> */}
-
-        <Route path="/user" element={<UserLandingPage />} />
-        <Route path="/user/view" element={<ViewUserPage />} />
-        <Route path="/user/detail" element={<ModifyUserPage />} />
-        
       </Routes>
     </div>
   );
