@@ -1,6 +1,5 @@
 package auth
 
-// TODO: CHECK SESSION WARE IS WORKING OR NOT
 import (
 	"log"
 	"net/http"

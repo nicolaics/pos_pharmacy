@@ -2,7 +2,6 @@ package prescription
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -220,11 +219,6 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-
-		// TODO: CHECK HERE
-		log.Println("not allowed, redirecting")
-		http.Redirect(w, r, "/user/login", http.StatusFound)
-		return
 	}
 
 	// validate token
