@@ -42,3 +42,8 @@ func initStorage(db *sql.DB) {
 
 	log.Println("DB: Successfully connected!")
 }
+
+// TODO: add static routes if the frontend is in the server already
+// func setupStaticRoutes() {
+	
+// }
