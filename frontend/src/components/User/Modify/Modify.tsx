@@ -134,7 +134,7 @@ const ModifyUserPage: React.FC = () => {
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          id: state.id,
+          id: Number(id),
           newData: {
             name: name,
             password: password,
@@ -186,6 +186,34 @@ const ModifyUserPage: React.FC = () => {
         .catch((error) => {
           console.error("Error adding new user:", error);
           alert("Error adding new user");
+        });
+    } else if (reqType === "modify-admin") {
+      const url = "http://localhost:19230/api/v1/user/admin";
+
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          id: Number(id),
+          admin: admin,
+          adminPassword: adminPassword,
+        }),
+      })
+        .then((response) =>
+          response.json().then((data) => {
+            if (!response.ok) {
+              throw new Error("Unable to modify user data");
+            }
+
+            console.log(data);
+          })
+        )
+        .catch((error) => {
+          console.error("Error modify user:", error);
+          alert("Error modify user");
         });
     }
 
