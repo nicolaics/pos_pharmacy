@@ -54,6 +54,18 @@ const LandingPage: React.FC = () => {
     navigate("/customer");
   };
 
+  const supplier = () => {
+    navigate("/supplier");
+  }
+
+  const patient = () => {
+    navigate("/patient");
+  }
+
+  const doctor = () => {
+    navigate("/doctor");
+  }
+
   return (
     <div className="landing-page">
       <h1>Welcome!</h1>
@@ -66,15 +78,15 @@ const LandingPage: React.FC = () => {
           <FaUser size={50} />
           <h2>Customer</h2>
         </div>
-        <div className="home-grid-item">
+        <div className="home-grid-item" onClick={supplier}>
           <FaShoppingCart size={50} />
           <h2>Supplier</h2>
         </div>
-        <div className="home-grid-item">
+        <div className="home-grid-item" onClick={patient}>
           <MdSick size={50} />
           <h2>Patient</h2>
         </div>
-        <div className="home-grid-item">
+        <div className="home-grid-item" onClick={doctor}>
           <FaUserDoctor size={50} />
           <h2>Doctor</h2>
         </div>
