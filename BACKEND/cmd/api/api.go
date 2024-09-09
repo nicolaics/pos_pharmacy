@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	// "github.com/gorilla/sessions"
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/auth"
 	"github.com/nicolaics/pos_pharmacy/service/companyprofile"
