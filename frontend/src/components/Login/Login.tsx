@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import {
-  ApplyMiddleware,
-  AuthMiddleware,
-  RequestContext,
-} from "../../Middleware";
 
 // so we will define our constants here
 const url = "http://localhost:19230/api/v1/user/login";
@@ -13,38 +8,35 @@ const url = "http://localhost:19230/api/v1/user/login";
 // const username = 'admin1';
 // const password = 'dnP9K5RMjV1l';
 
-function login(username: string, password: string, navigate: NavigateFunction) {
-  const requestContext: RequestContext = {
-    url: url,
-    options: {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: username,
-        password: password,
-      }),
+function login(
+  username: string,
+  password: string,
+  navigate: NavigateFunction
+) {
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  };
-
-  ApplyMiddleware(AuthMiddleware, requestContext).then((response) =>
-    response
-      .json()
-      .then((data) => {
+    body: JSON.stringify({
+      name: username,
+      password: password,
+    }),
+  })
+    .then((response) =>
+      response.json().then((data) => {
         if (!response.ok) {
-          alert("wrong credentials");
-          throw response;
+          throw new Error("Invalid credentials or network issue");
         }
-
         console.log(data);
         sessionStorage.setItem("token", data["token"]);
         navigate("/home");
       })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-      })
-  );
+    )
+    .catch((error) => {
+      console.error("Error during sign-in:", error);
+      alert("Invalid credentials"); // Show pop-up message
+    });
 }
 
 const LoginPage: React.FC = () => {
@@ -61,7 +53,6 @@ const LoginPage: React.FC = () => {
     setPassword(event.target.value);
   };
 
-  // TODO: fetch from API
   const handleSubmit = (event: any) => {
     event.preventDefault();
 
@@ -79,7 +70,8 @@ const LoginPage: React.FC = () => {
   return (
     <div className="login-grid">
       <h1>Login</h1>
-      <span className="login-form">
+      
+      <div className="login-form">
         <form onSubmit={handleSubmit}>
           <label id="username">Username: </label>
           <input
@@ -101,7 +93,7 @@ const LoginPage: React.FC = () => {
 
           <input type="submit" value={"Login"} />
         </form>
-      </span>
+      </div>
     </div>
   );
 };
