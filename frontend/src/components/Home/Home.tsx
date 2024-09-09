@@ -50,6 +50,10 @@ const LandingPage: React.FC = () => {
     navigate("/user");
   };
 
+  const customer = () => {
+    navigate("/customer");
+  };
+
   return (
     <div className="landing-page">
       <h1>Welcome!</h1>
@@ -58,7 +62,7 @@ const LandingPage: React.FC = () => {
           <FaLock size={50} />
           <h2>User</h2>
         </div>
-        <div className="home-grid-item">
+        <div className="home-grid-item" onClick={customer}>
           <FaUser size={50} />
           <h2>Customer</h2>
         </div>
