@@ -9,6 +9,8 @@ import ModifyCustomerPage from "./components/Customer/Modify/Modify";
 import HomePage from "./components/Home/Home";
 import LandingPage from "./components/LandingPage/LandingPage";
 import LoginPage from "./components/Login/Login";
+import ViewSupplierPage from "./components/Supplier/LandingPage/Supplier";
+import ModifySupplierPage from "./components/Supplier/Modify/Modify";
 
 export const BACKEND_BASE_URL = "localhost:19230/api/v1";
 
@@ -27,6 +29,9 @@ const App: React.FC = () => {
 
         <Route path="/customer" element={<ViewCustomerPage />} />
         <Route path="/customer/detail" element={<ModifyCustomerPage />} />
+
+        <Route path="/supplier" element={<ViewSupplierPage />} />
+        <Route path="supplier/detail" element={<ModifySupplierPage />} />
 
         {/* <Route
           path="/home"
