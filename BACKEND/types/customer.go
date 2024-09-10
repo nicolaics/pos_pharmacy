@@ -26,6 +26,10 @@ type DeleteCustomerPayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
+type GetOneCustomerPayload struct {
+	ID   int    `json:"id" validate:"required"`
+}
+
 type Customer struct {
 	ID              int       `json:"id"`
 	Name            string    `json:"name"`

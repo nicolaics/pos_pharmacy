@@ -53,8 +53,7 @@ type ChangeAdminStatusPayload struct {
 
 // get one user data
 type GetOneUserPayload struct {
-	ID   int    `json:"id" validate:"required"`
-	Name string `json:"name" validate:"required"`
+	ID int `json:"id" validate:"required"`
 }
 
 // normal log-in

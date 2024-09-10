@@ -28,6 +28,10 @@ type DeleteMedicinePayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
+type GetOneMedicinePayload struct {
+	ID   int    `json:"id" validate:"required"`
+}
+
 type ModifyMedicinePayload struct {
 	ID      int                     `json:"id" validate:"required"`
 	NewData RegisterMedicinePayload `json:"newData" validate:"required"`

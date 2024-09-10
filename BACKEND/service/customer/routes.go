@@ -3,6 +3,7 @@ package customer
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -21,11 +22,14 @@ func NewHandler(custStore types.CustomerStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/customer", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/customer", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/customer?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/customer/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/customer", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/customer", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/customer", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/customer?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/customer/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -78,13 +82,80 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customers, err := h.custStore.GetAllCustomers()
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var customers []types.Customer
+
+	if params == "all" && val == "all" {
+		customers, err = h.custStore.GetAllCustomers()
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, err)
+			return
+		}
+	} else if params == "name" {
+		customer, err := h.custStore.GetCustomerByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val))
+			return
+		}
+
+		customers = append(customers, *customer)
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		customer, err := h.custStore.GetCustomerByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id))
+			return
+		}
+
+		customers = append(customers, *customer)
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, customers)
+}
+
+func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.GetOneCustomerPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// get customer data
+	customer, err := h.custStore.GetCustomerByID(payload.ID)
+	if customer == nil || err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("customer id %d doesn't exist", payload.ID))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, customer)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {

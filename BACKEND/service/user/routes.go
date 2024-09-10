@@ -255,7 +255,7 @@ func (h *Handler) handleGetOneUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.store.GetUserByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("user %s doesn't exist", payload.Name))
+			fmt.Errorf("user id %d doesn't exist", payload.ID))
 		return
 	}
 

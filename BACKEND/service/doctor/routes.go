@@ -3,6 +3,7 @@ package doctor
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -21,11 +22,14 @@ func NewHandler(doctorStore types.DoctorStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/doctor", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/doctor", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/doctor?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/doctor/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/doctor", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/doctor", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/doctor", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/doctor?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/doctor/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -78,13 +82,80 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	doctors, err := h.doctorStore.GetAllDoctors()
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var doctors []types.Doctor
+
+	if params == "all" && val == "all" {
+		doctors, err = h.doctorStore.GetAllDoctors()
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, err)
+			return
+		}
+	} else if params == "name" {
+		doctor, err := h.doctorStore.GetDoctorByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", val))
+			return
+		}
+
+		doctors = append(doctors, *doctor)
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		doctor, err := h.doctorStore.GetDoctorByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", id))
+			return
+		}
+
+		doctors = append(doctors, *doctor)
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, doctors)
+}
+
+func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.GetOneDoctorPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// get doctor data
+	doctor, err := h.doctorStore.GetDoctorByID(payload.ID)
+	if doctor == nil || err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("doctor id %d doesn't exist", payload.ID))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, doctor)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {

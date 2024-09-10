@@ -159,7 +159,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s doesn't exists", payload.Name))
+			fmt.Errorf("supplier id %d doesn't exists", payload.ID))
 		return
 	}
 

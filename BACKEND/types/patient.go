@@ -17,6 +17,10 @@ type DeletePatientPayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
+type GetOnePatientPayload struct {
+	ID   int    `json:"id" validate:"required"`
+}
+
 type PatientStore interface {
 	GetPatientByName(name string) (*Patient, error)
 	GetPatientByID(id int) (*Patient, error)
