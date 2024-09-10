@@ -31,7 +31,6 @@ type CompanyProfileStore interface {
 	ModifyCompanyProfile(int, int, CompanyProfile) error
 }
 
-// TODO: made some changes with the DB, check the store.go as well
 type CompanyProfile struct {
 	ID                      int       `json:"id"`
 	Name                    string    `json:"name"`
