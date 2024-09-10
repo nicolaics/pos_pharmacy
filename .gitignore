@@ -7,6 +7,8 @@ bin
 *.sh
 *.bat
 test_token.json
+*.txt
+*.log
 
 # FRONTEND
 frontend/node_modules
