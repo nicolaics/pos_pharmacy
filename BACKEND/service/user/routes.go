@@ -30,6 +30,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
 	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
+	router.HandleFunc("/user/detail", h.handleGetOneUser).Methods(http.MethodPost)
+	router.HandleFunc("/user/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+
 	router.HandleFunc("/user/delete", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
@@ -98,7 +101,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens := map[string]string{
-		"token":  tokenDetails.Token,
+		"token": tokenDetails.Token,
 	}
 
 	utils.WriteJSON(w, http.StatusOK, tokens)
@@ -187,6 +190,41 @@ func (h *Handler) handleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{"data": user})
+}
+
+// get one user other than the current user
+func (h *Handler) handleGetOneUser(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.GetOneUserPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.store.ValidateUserToken(w, r, true)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		return
+	}
+
+	// check if the newly created user exists
+	user, err := h.store.GetUserByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("user %s doesn't exist", payload.Name))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, user)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -300,7 +338,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", http.StatusAccepted))
 		return
 	}
-	
+
 	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
