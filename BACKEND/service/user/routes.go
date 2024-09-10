@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -24,8 +25,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	// TODO: add search function for user. in the query
-	router.HandleFunc("/user", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user?{params}={searchVal}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/user?{params}={searchVal}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
 	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -172,10 +173,41 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := h.store.GetAllUsers()
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
+	vars := mux.Vars(r)
+
+	params := vars["params"]
+	searchVal := vars["searchVal"]
+
+	var users []types.User
+
+	if params == "all" && searchVal == "all" {
+		users, err = h.store.GetAllUsers()
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "name" {
+		user, err := h.store.GetUserByName(searchVal)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user %s not found", searchVal))
+			return
+		}
+
+		users = append(users, *user)
+	} else if params == "id" {
+		id, err := strconv.Atoi(searchVal)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		user, err := h.store.GetUserByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %s not found", searchVal))
+			return
+		}
+
+		users = append(users, *user)
 	}
 
 	utils.WriteJSON(w, http.StatusOK, users)
