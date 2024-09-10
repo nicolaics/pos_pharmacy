@@ -12,12 +12,20 @@ const ModifyCustomerPage: React.FC = () => {
 
   const [okBtnLabel, setOkBtnLabel] = useState("Modify");
 
+  var heading = "";
+  if (state) {
+    heading = "Modify";
+  } else {
+    heading = "Add";
+  }
+
+  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
 
     if (state) {
       setOkBtnLabel("Modify");
-      
+
       // TODO: add query for searching customers
       const customerURL = "http://localhost:19230/api/v1/customer?id="; // Set the URL or handle this logic
       fetch(customerURL, {
@@ -47,6 +55,7 @@ const ModifyCustomerPage: React.FC = () => {
       setOkBtnLabel("Add");
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
+  */
 
   const handleNameChange = (event: any) => {
     setName(event.target.value);
@@ -105,7 +114,7 @@ const ModifyCustomerPage: React.FC = () => {
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Invalid credentials or network issue");
+              throw new Error("Invalid c redentials or network issue");
             }
 
             console.log(data);
@@ -160,32 +169,50 @@ const ModifyCustomerPage: React.FC = () => {
 
   return (
     <div className="modify-customer-page">
-      <h1>Add User</h1>
+      <h1>{heading} Customer</h1>
 
-      <div className="customer-data">
-        <div className="id-number">
-          <h3>ID: </h3>
-          <input type="text" value={id} readOnly />
+      <div className="customer-data-container">
+        <div className="customer-data-form-group">
+          <label htmlFor="id">ID:</label>
+          <input type="text" id="modify-customer-id" value={id} readOnly />
         </div>
-
-        <div className="customer-name">
-          <h3>Name: </h3>
-          <input type="text" value={name} onChange={handleNameChange} />
+        <div className="customer-data-form-group">
+          <label htmlFor="name">Name:</label>
+          <input
+            type="text"
+            id="modify-customer-name"
+            value={name}
+            onChange={handleNameChange}
+          />
         </div>
       </div>
 
-      <div className="customer-ok-cancel-delete-btn">
-        <button type="button" onClick={handleSendRequest}>
-          {okBtnLabel}
-        </button>
+      <div className="modify-customer-buttons">
+        <div className="modify-customer-btns-grp">
+          <button
+            type="button"
+            className="modify-customer-ok-btn"
+            onClick={handleSendRequest}
+          >
+            {okBtnLabel}
+          </button>
 
-        <button type="button" onClick={handleCancel}>
-          Cancel
-        </button>
+          <button
+            type="button"
+            className="modify-customer-cancel-btn"
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
 
-        <button type="button" onClick={handleDelete}>
-          Delete User
-        </button>
+          <button
+            type="button"
+            className="modify-customer-delete-btn"
+            onClick={handleDelete}
+          >
+            Delete Customer
+          </button>
+        </div>
       </div>
     </div>
   );

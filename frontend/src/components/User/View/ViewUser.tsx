@@ -93,7 +93,7 @@ const ViewUserPage: React.FC = () => {
 
 
     // TEST DATA
-    const tableBody = document.querySelector("#data-table tbody");
+    const tableBody = document.querySelector("#user-data-table tbody");
     if (!tableBody) {
       console.error("table body not found");
       return;
@@ -116,7 +116,7 @@ const ViewUserPage: React.FC = () => {
     //         throw new Error("Invalid credentials or network issue");
     //       }
 
-    //       const tableBody = document.querySelector("#data-table tbody");
+    //       const tableBody = document.querySelector("#user-data-table tbody");
     //       if (!tableBody) {
     //         console.error("table body not found");
     //         return;
@@ -143,15 +143,15 @@ const ViewUserPage: React.FC = () => {
     <div className="view-user-page">
       <h1>User</h1>
 
-      <div className="search-container">
-        <input type="text" className="search-input" placeholder="Search" />
-        <button onClick={search} className="search-button">
-          <MdPersonSearch size={30} id="view-user-search-icon" />
+      <div className="user-search-container">
+        <input type="text" className="user-search-input" placeholder="Search" />
+        <button onClick={search} className="user-search-button">
+          <MdPersonSearch size={30} id="user-search-icon" />
           Search
         </button>
       </div>
-      <div className="table-container">
-        <table id="data-table" border={1}>
+      <div className="user-table-container">
+        <table id="user-data-table" border={1}>
           <thead>
             <tr>
               <th>ID</th>
@@ -163,34 +163,6 @@ const ViewUserPage: React.FC = () => {
             </tr>
           </thead>
           <tbody></tbody>
-          {/* <tbody>
-            <tr
-              className="view-user-data-row"
-              onClick={() => {
-                alert("select 001");
-              }}
-            >
-              <td>001</td>
-              <td>John Doe</td>
-              <td>Yes</td>
-              <td>123-456-7890</td>
-              <td>2023-03-15 14:30</td>
-              <td>2023-01-01 09:00</td>
-            </tr>
-            <tr
-              className="view-user-data-row"
-              onClick={() => {
-                alert("select 002");
-              }}
-            >
-              <td>002</td>
-              <td>Jane Smith</td>
-              <td>No</td>
-              <td>987-654-3210</td>
-              <td>2023-03-14 10:15</td>
-              <td>2023-01-02 11:30</td>
-            </tr>
-          </tbody> */}
         </table>
       </div>
 
