@@ -5,8 +5,8 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import FormatDateTime from "../../../DateTimeFormatter";
 import { MdPersonSearch } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
+import { BACKEND_BASE_URL } from "../../../App";
 
-// TODO: notify user if they have selected something (highlight or something in css)
 function fillTable(
   data: any,
   tableBody: Element | null,
@@ -16,6 +16,7 @@ function fillTable(
 
   // Loop through each user and create a new row in the table
   const row = document.createElement("tr");
+  row.className = "view-user-data-row";
 
   // Create and append cells for each column
   const idCell = document.createElement("td");
@@ -50,7 +51,7 @@ function fillTable(
   createdAtCell.textContent = FormatDateTime(createdAt);
   row.appendChild(createdAtCell);
 
-  row.addEventListener("click", () => {
+  row.addEventListener("dblclick", () => {
     navigate("/user/detail", {
       state: {
         reqType: "modify-admin",
@@ -67,40 +68,71 @@ function fillTable(
 const ViewUserPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const testData = [
+    {
+      id: 1,
+      name: "John Doe 1",
+      admin: true,
+      phoneNumber: "010-4444-1111",
+      lastLoggedIn: "2024-08-03 15:30",
+      createdAt: "2024-08-01 12.10",
+    },
+    {
+      id: 2,
+      name: "John Doe 2",
+      admin: true,
+      phoneNumber: "010-4444-1111",
+      lastLoggedIn: "2024-08-03 15:30",
+      createdAt: "2024-08-01 12.10",
+    },
+  ];
+
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllUserURL = "http://localhost:19230/api/v1/user";
+    const getAllUserURL = `http://${BACKEND_BASE_URL}/user`;
 
-    fetch(getAllUserURL, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-    })
-      .then((response) =>
-        response.json().then((data) => {
-          if (!response.ok) {
-            throw new Error("Invalid credentials or network issue");
-          }
 
-          const tableBody = document.querySelector("#dataTable tbody");
-          if (!tableBody) {
-            console.error("table body not found");
-            return;
-          }
+    // TEST DATA
+    const tableBody = document.querySelector("#data-table tbody");
+    if (!tableBody) {
+      console.error("table body not found");
+      return;
+    }
+    tableBody.innerHTML = "";
+    for (let i = 0; i < testData.length; i++) {
+      fillTable(testData[i], tableBody, navigate);
+    }
 
-          tableBody.innerHTML = "";
+    // fetch(getAllUserURL, {
+    //   method: "GET",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: "Bearer " + token,
+    //   },
+    // })
+    //   .then((response) =>
+    //     response.json().then((data) => {
+    //       if (!response.ok) {
+    //         throw new Error("Invalid credentials or network issue");
+    //       }
 
-          for (let i = 0; i < data.length; i++) {
-            fillTable(data[i], tableBody, navigate);
-          }
-        })
-      )
-      .catch((error) => {
-        console.error("Error loading user data:", error);
-        alert("Error loading user data");
-      });
+    //       const tableBody = document.querySelector("#data-table tbody");
+    //       if (!tableBody) {
+    //         console.error("table body not found");
+    //         return;
+    //       }
+
+    //       tableBody.innerHTML = "";
+
+    //       for (let i = 0; i < data.length; i++) {
+    //         fillTable(data[i], tableBody, navigate);
+    //       }
+    //     })
+    //   )
+    //   .catch((error) => {
+    //     console.error("Error loading user data:", error);
+    //     alert("Error loading user data");
+    //   });
   };
 
   const returnToHome = () => {
@@ -111,32 +143,61 @@ const ViewUserPage: React.FC = () => {
     <div className="view-user-page">
       <h1>User</h1>
 
-      <div className="container">
-        <span className="search">
-          <input type="text" className="search-item" />
-          <MdPersonSearch size={40} className="search-icon" onClick={search} />
-        </span>
-        <div className="table">
-          <table id="dataTable" border={1}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Admin</th>
-                <th>Phone Number</th>
-                <th>Last Logged In</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+      <div className="search-container">
+        <input type="text" className="search-input" placeholder="Search" />
+        <button onClick={search} className="search-button">
+          <MdPersonSearch size={30} id="view-user-search-icon" />
+          Search
+        </button>
+      </div>
+      <div className="table-container">
+        <table id="data-table" border={1}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Admin</th>
+              <th>Phone Number</th>
+              <th>Last Logged In</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          {/* <tbody>
+            <tr
+              className="view-user-data-row"
+              onClick={() => {
+                alert("select 001");
+              }}
+            >
+              <td>001</td>
+              <td>John Doe</td>
+              <td>Yes</td>
+              <td>123-456-7890</td>
+              <td>2023-03-15 14:30</td>
+              <td>2023-01-01 09:00</td>
+            </tr>
+            <tr
+              className="view-user-data-row"
+              onClick={() => {
+                alert("select 002");
+              }}
+            >
+              <td>002</td>
+              <td>Jane Smith</td>
+              <td>No</td>
+              <td>987-654-3210</td>
+              <td>2023-03-14 10:15</td>
+              <td>2023-01-02 11:30</td>
+            </tr>
+          </tbody> */}
+        </table>
       </div>
 
-      <div className="view-user-grid-item" onClick={returnToHome}>
-          <FaHome size={50} />
-          <h2>Back to Home</h2>
-        </div>
+      <button onClick={returnToHome} className="view-user-home-button">
+        <FaHome size={30} id="view-user-home-icon" />
+        Back to Home
+      </button>
     </div>
   );
 };

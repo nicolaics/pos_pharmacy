@@ -1,30 +1,102 @@
-/* TODO: MODIFY STYLES */
-
 .view-user-page {
-  text-align: center;
-  padding: 20px;
-}
-
-.view-user-grid-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  background-color: white;
-  border-radius: 20px;
-  width: 150px;
-  height: 100px;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.search-container {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex-grow: 1;
   padding: 10px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.5s;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
 }
 
-.view-user-grid-item:hover {
-  transform: scale(1.05);
+#view-user-search-icon {
+  margin-right: 10px;
 }
 
-.view-user-grid-item h2 {
-  margin-top: 10px;
+.search-button {
+  display: flex;
+  align-items: center;
+  justify-items: baseline;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  
+}
+
+.search-button:hover {
+  background-color: #45a049;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+#data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
   font-size: 18px;
-  color: #333;
+}
+
+#data-table tbody {
+  font-size: 16px;
+}
+
+.view-user-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-user-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.view-user-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 50px auto;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-user-home-icon {
+  margin-right: 10px;
+}
+
+.view-user-home-button:hover {
+  background-color: #007B9A;
 }
