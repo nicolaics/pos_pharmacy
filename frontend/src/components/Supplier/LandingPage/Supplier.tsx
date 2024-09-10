@@ -5,6 +5,7 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import FormatDateTime from "../../../DateTimeFormatter";
 import { FaHome, FaSearch } from "react-icons/fa";
 import { BsBuildingFillAdd } from "react-icons/bs";
+import { BACKEND_BASE_URL } from "../../../App";
 
 function fillTable(
   data: any,
@@ -92,7 +93,7 @@ const ViewSupplierPage: React.FC = () => {
       vendorIsTaxable: true,
       createdAt: "2024-08-01 12.10",
       lastModified: "2024-08-10 12.10",
-      lastModifiedByUserId: 1
+      lastModifiedByUserId: 1,
     },
     {
       id: 2,
@@ -105,13 +106,13 @@ const ViewSupplierPage: React.FC = () => {
       vendorIsTaxable: false,
       createdAt: "2024-08-01 12.10",
       lastModified: "2024-08-10 12.10",
-      lastModifiedByUserId: 1
+      lastModifiedByUserId: 1,
     },
   ];
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllSupplierURL = "http://localhost:19230/api/v1/supplier";
+    const getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier`;
 
     // TEST DATA
     const tableBody = document.querySelector("#supplier-data-table tbody");

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import "./Modify.css";
 import { useLocation, useNavigate } from "react-router-dom";
+import { BACKEND_BASE_URL } from "../../../App";
 
 const ModifyCustomerPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const ModifyCustomerPage: React.FC = () => {
       setOkBtnLabel("Modify");
 
       // TODO: add query for searching customers
-      const customerURL = "http://localhost:19230/api/v1/customer?id="; // Set the URL or handle this logic
+      const customerURL = `http://${BACKEND_BASE_URL}/customer?all=all`; // Set the URL or handle this logic
       fetch(customerURL, {
         method: "GET",
         headers: {
@@ -70,7 +71,7 @@ const ModifyCustomerPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
 
     if (state) {
-      const url = "http://localhost:19230/api/v1/customer";
+      const url = `http://${BACKEND_BASE_URL}/customer`;
 
       fetch(url, {
         method: "POST",
@@ -96,7 +97,7 @@ const ModifyCustomerPage: React.FC = () => {
           alert("Error modify customer");
         });
     } else {
-      const url = "http://localhost:19230/api/v1/customer";
+      const url = `http://${BACKEND_BASE_URL}/customer`;
 
       fetch(url, {
         method: "PATCH",
@@ -138,7 +139,7 @@ const ModifyCustomerPage: React.FC = () => {
     e.preventDefault();
 
     const token = sessionStorage.getItem("token");
-    const url = "http://localhost:19230/api/v1/customer";
+    const url = `http://${BACKEND_BASE_URL}/customer`;
 
     fetch(url, {
       method: "DELETE",

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./Modify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminPasswordPopup from "../../AdminPasswordPopup/AdminPasswordPopup";
+import { BACKEND_BASE_URL } from "../../../App";
 
 // use window.location.href if the files have been moved to the server
 
@@ -43,7 +44,7 @@ const ModifyUserPage: React.FC = () => {
       setIsReadOnly(false);
       setShowDeleteButton(false);
 
-      const currentUserURL = "http://localhost:19230/api/v1/user/current"; // Set the URL or handle this logic
+      const currentUserURL = `http://${BACKEND_BASE_URL}/user/current`; // Set the URL or handle this logic
       fetch(currentUserURL, {
         method: "GET",
         headers: {
@@ -82,7 +83,6 @@ const ModifyUserPage: React.FC = () => {
       setName(state.name);
     }
   }, [state.reqType]); // Dependency array ensures this effect only runs when reqType changes
-
 
   const openPopup = (e: any) => {
     e.preventDefault(); // Prevent form submission
@@ -133,7 +133,7 @@ const ModifyUserPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
 
     if (reqType === "modify") {
-      const url = "http://localhost:19230/api/v1/user/modify";
+      const url = `http://${BACKEND_BASE_URL}/user/modify`;
 
       fetch(url, {
         method: "PATCH",
@@ -166,7 +166,7 @@ const ModifyUserPage: React.FC = () => {
           alert("Error modify user");
         });
     } else if (reqType === "add") {
-      const url = "http://localhost:19230/api/v1/user/register";
+      const url = `http://${BACKEND_BASE_URL}/user/register`;
 
       fetch(url, {
         method: "POST",
@@ -196,7 +196,7 @@ const ModifyUserPage: React.FC = () => {
           alert("Error adding new user");
         });
     } else if (reqType === "modify-admin") {
-      const url = "http://localhost:19230/api/v1/user/admin";
+      const url = `http://${BACKEND_BASE_URL}/user/admin`;
 
       fetch(url, {
         method: "PATCH",
@@ -240,7 +240,7 @@ const ModifyUserPage: React.FC = () => {
     handleRequestAdminPassword(e);
 
     const token = sessionStorage.getItem("token");
-    const url = "http://localhost:19230/api/v1/user/delete";
+    const url = `http://${BACKEND_BASE_URL}/user/delete`;
 
     fetch(url, {
       method: "DELETE",

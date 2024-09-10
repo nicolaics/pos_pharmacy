@@ -6,6 +6,7 @@ import FormatDateTime from "../../../DateTimeFormatter";
 import { MdPersonSearch } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
 import { BsPersonFillAdd } from "react-icons/bs";
+import { BACKEND_BASE_URL } from "../../../App";
 
 function fillTable(
   data: any,
@@ -63,7 +64,7 @@ const ViewCustomerPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllCustomerURL = "http://localhost:19230/api/v1/customer";
+    const getAllCustomerURL = `http://${BACKEND_BASE_URL}/customer`;
 
     // TEST DATA
     const tableBody = document.querySelector("#customer-data-table tbody");

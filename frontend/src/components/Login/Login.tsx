@@ -1,18 +1,15 @@
 import React, { useState } from "react";
 import "./Login.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
+import { BACKEND_BASE_URL } from "../../App";
 
-// so we will define our constants here
-const url = "http://localhost:19230/api/v1/user/login";
 
 // const name = 'admin1';
 // const password = 'dnP9K5RMjV1l';
 
-function login(
-  name: string,
-  password: string,
-  navigate: NavigateFunction
-) {
+function login(name: string, password: string, navigate: NavigateFunction) {
+  const url = `http://${BACKEND_BASE_URL}/user/login`;
+  
   fetch(url, {
     method: "POST",
     headers: {
@@ -85,12 +82,14 @@ const LoginPage: React.FC = () => {
           onChange={handlePasswordChange}
           className="login-input"
         />
-        <button type="submit" className="login-btn">Login</button>
+        <button type="submit" className="login-btn">
+          Login
+        </button>
       </form>
     </div>
     // <div className="login-grid">
     //   <h1>Login</h1>
-      
+
     //   <div className="login-form">
     //     <form onSubmit={handleSubmit}>
     //       <label id="name">Name: </label>

@@ -12,8 +12,8 @@ import { IoIosLogOut } from "react-icons/io";
 import { MdSick } from "react-icons/md";
 
 import "./Home.css";
-import {useNavigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import { BACKEND_BASE_URL } from "../../App";
 
 // use window.location.href if the files have been moved to the server
 
@@ -22,13 +22,13 @@ const HomePage: React.FC = () => {
 
   const logout = () => {
     const token = sessionStorage.getItem("token");
-    const logoutURL = "http://localhost:19230/api/v1/user/logout";
+    const logoutURL = `http://${BACKEND_BASE_URL}/user/logout`;
 
     fetch(logoutURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + token,
+        Authorization: "Bearer " + token,
       },
     })
       .then((response) =>
@@ -56,15 +56,15 @@ const HomePage: React.FC = () => {
 
   const supplier = () => {
     navigate("/supplier");
-  }
+  };
 
   const patient = () => {
     navigate("/patient");
-  }
+  };
 
   const doctor = () => {
     navigate("/doctor");
-  }
+  };
 
   return (
     <div className="home-page">

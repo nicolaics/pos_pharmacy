@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import "./Modify.css";
 import { useLocation, useNavigate } from "react-router-dom";
+import { BACKEND_BASE_URL } from "../../../App";
 
 const ModifySupplierPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const ModifySupplierPage: React.FC = () => {
       setOkBtnLabel("Modify");
 
       // TODO: add query for searching suppliers
-      const supplierURL = "http://localhost:19230/api/v1/supplier?id="; // Set the URL or handle this logic
+      const supplierURL = `http://${BACKEND_BASE_URL}/supplier?id=`; // Set the URL or handle this logic
       fetch(supplierURL, {
         method: "GET",
         headers: {
@@ -69,32 +70,31 @@ const ModifySupplierPage: React.FC = () => {
 
   const handleAddressChange = (event: any) => {
     setAddress(event.target.value);
-  }
+  };
 
   const handleCompanyPhoneNumberChange = (event: any) => {
     setCompanyPhoneNumber(event.target.value);
-  }
+  };
 
   const handleContactPersonNameChange = (event: any) => {
     setContactPersonName(event.target.value);
-  }
+  };
 
   const handleContactPersonNumberChange = (event: any) => {
     setContactPersonNumber(event.target.value);
-  }
+  };
 
   const handleTermsChange = (event: any) => {
     setTerms(event.target.value);
-  }
+  };
 
   const handleVendorIsTaxableChange = (event: any) => {
     if (event.target.value == "yes") {
       setVendorIsTaxable(true);
-    }
-    else {
+    } else {
       setVendorIsTaxable(false);
     }
-  }
+  };
 
   const handleSendRequest = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -105,7 +105,7 @@ const ModifySupplierPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
 
     if (state) {
-      const url = "http://localhost:19230/api/v1/supplier";
+      const url = `http://${BACKEND_BASE_URL}/supplier`;
 
       fetch(url, {
         method: "POST",
@@ -131,7 +131,7 @@ const ModifySupplierPage: React.FC = () => {
           alert("Error modify supplier");
         });
     } else {
-      const url = "http://localhost:19230/api/v1/supplier";
+      const url = `http://${BACKEND_BASE_URL}/supplier`;
 
       fetch(url, {
         method: "PATCH",
@@ -173,7 +173,7 @@ const ModifySupplierPage: React.FC = () => {
     e.preventDefault();
 
     const token = sessionStorage.getItem("token");
-    const url = "http://localhost:19230/api/v1/supplier";
+    const url = `http://${BACKEND_BASE_URL}/supplier`;
 
     fetch(url, {
       method: "DELETE",
@@ -207,12 +207,11 @@ const ModifySupplierPage: React.FC = () => {
       <h1>{heading} Supplier</h1>
 
       <div className="supplier-data-container">
-        
         <div className="supplier-data-form-group">
           <label htmlFor="id">ID:</label>
           <input type="text" id="modify-supplier-id" value={id} readOnly />
         </div>
-        
+
         <div className="supplier-data-form-group">
           <label htmlFor="name">Name:</label>
           <input
@@ -273,28 +272,28 @@ const ModifySupplierPage: React.FC = () => {
         </div>
 
         <div className="supplier-data-form-group">
-            <label>Vendor is Taxable:</label>
-            <div className="supplier-data-radio-grp">
-              <input
-                type="radio"
-                id="modify-supplier-radio-yes"
-                checked={vendorIsTaxable === true}
-                name="vendorIsTaxable"
-                value={"yes"}
-                onChange={handleVendorIsTaxableChange}
-              />
-              <label htmlFor="radio-yes">Yes</label>
-              <input
-                type="radio"
-                checked={vendorIsTaxable === false}
-                id="modify-supplier-radio-no"
-                name="vendorIsTaxable"
-                value={"no"}
-                onChange={handleVendorIsTaxableChange}
-              />
-              <label htmlFor="radio-no">No</label>
-            </div>
+          <label>Vendor is Taxable:</label>
+          <div className="supplier-data-radio-grp">
+            <input
+              type="radio"
+              id="modify-supplier-radio-yes"
+              checked={vendorIsTaxable === true}
+              name="vendorIsTaxable"
+              value={"yes"}
+              onChange={handleVendorIsTaxableChange}
+            />
+            <label htmlFor="radio-yes">Yes</label>
+            <input
+              type="radio"
+              checked={vendorIsTaxable === false}
+              id="modify-supplier-radio-no"
+              name="vendorIsTaxable"
+              value={"no"}
+              onChange={handleVendorIsTaxableChange}
+            />
+            <label htmlFor="radio-no">No</label>
           </div>
+        </div>
       </div>
 
       <div className="modify-supplier-buttons">
