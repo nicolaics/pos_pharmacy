@@ -17,7 +17,7 @@ import {useNavigate } from "react-router-dom";
 
 // use window.location.href if the files have been moved to the server
 
-const LandingPage: React.FC = () => {
+const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -67,7 +67,7 @@ const LandingPage: React.FC = () => {
   }
 
   return (
-    <div className="landing-page">
+    <div className="home-page">
       <h1>Welcome!</h1>
       <div className="home-grid-container">
         <div className="home-grid-item" onClick={user}>
@@ -111,4 +111,4 @@ const LandingPage: React.FC = () => {
   );
 };
 
-export default LandingPage;
+export default HomePage;
