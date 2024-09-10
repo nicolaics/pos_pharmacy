@@ -38,23 +38,6 @@ input[type="password"] {
   font-size: 22px;
 }
 
-.customer-data-radio-grp {
-  display: inline-flex;
-  width: 50%;
-  align-items: first baseline;
-}
-
-.customer-data-radio-grp input[type="radio"] {
-  margin-right: 5px;
-}
-
-.customer-data-radio-grp label {
-  margin-right: 15px;
-  font-size: 22px;
-  text-align: left;
-  font-weight: normal;
-}
-
 .modify-customer-buttons {
   margin-top: 30px;
 }
