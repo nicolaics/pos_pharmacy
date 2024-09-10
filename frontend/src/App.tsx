@@ -12,7 +12,7 @@ import LoginPage from "./components/Login/Login";
 import ViewSupplierPage from "./components/Supplier/LandingPage/Supplier";
 import ModifySupplierPage from "./components/Supplier/Modify/Modify";
 
-export const BACKEND_BASE_URL = "localhost:19230/api/v1";
+export const BACKEND_BASE_URL = "localhost:90808/api/v1";
 
 const App: React.FC = () => {
   return (
