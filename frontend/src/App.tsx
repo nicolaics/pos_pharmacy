@@ -1,6 +1,4 @@
 import React from "react";
-import LandingPage from "./components/Home/Home";
-import LoginPage from "./components/Login/Login";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import UserLandingPage from "./components/User/LandingPage/User/User";
@@ -8,15 +6,21 @@ import ViewUserPage from "./components/User/View/ViewUser";
 import ModifyUserPage from "./components/User/Modify/Modify";
 import ViewCustomerPage from "./components/Customer/LandingPage/Customer";
 import ModifyCustomerPage from "./components/Customer/Modify/Modify";
+import HomePage from "./components/Home/Home";
+import LandingPage from "./components/LandingPage/LandingPage";
+import LoginPage from "./components/Login/Login";
+
+export const BACKEND_BASE_URL = "localhost:19230/api/v1";
 
 const App: React.FC = () => {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         {/* FOR TESTING PURPOSE ONLY */}
-        <Route path="/home" element={<LandingPage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/user" element={<UserLandingPage />} />
         <Route path="/user/view" element={<ViewUserPage />} />
         <Route path="/user/detail" element={<ModifyUserPage />} />
@@ -26,7 +30,7 @@ const App: React.FC = () => {
 
         {/* <Route
           path="/home"
-          element={<ProtectedRoute children={<LandingPage />} admin={false} />}
+          element={<ProtectedRoute children={<HomePage />} admin={false} />}
         /> */}
 
         {/* USER ROUTE */}
