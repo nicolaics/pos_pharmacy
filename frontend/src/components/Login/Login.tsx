@@ -5,11 +5,11 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 // so we will define our constants here
 const url = "http://localhost:19230/api/v1/user/login";
 
-// const username = 'admin1';
+// const name = 'admin1';
 // const password = 'dnP9K5RMjV1l';
 
 function login(
-  username: string,
+  name: string,
   password: string,
   navigate: NavigateFunction
 ) {
@@ -19,7 +19,7 @@ function login(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: username,
+      name: name,
       password: password,
     }),
   })
@@ -40,13 +40,13 @@ function login(
 }
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
 
-  const handleUsernameChange = (event: any) => {
-    setUsername(event.target.value);
+  const handleNameChange = (event: any) => {
+    setName(event.target.value);
   };
 
   const handlePasswordChange = (event: any) => {
@@ -56,45 +56,65 @@ const LoginPage: React.FC = () => {
   const handleSubmit = (event: any) => {
     event.preventDefault();
 
-    if (username === "" || password === "") {
-      alert(`username and password cannot be empty`);
+    if (name === "" || password === "") {
+      alert(`name and password cannot be empty`);
       return;
     }
 
-    login(username, password, navigate);
+    login(name, password, navigate);
 
-    setUsername("");
+    setName("");
     setPassword("");
   };
 
   return (
-    <div className="login-grid">
-      <h1>Login</h1>
-      
-      <div className="login-form">
-        <form onSubmit={handleSubmit}>
-          <label id="username">Username: </label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={handleUsernameChange}
-          />
-          <br />
-
-          <label id="password">Password: </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={handlePasswordChange}
-          />
-          <br />
-
-          <input type="submit" value={"Login"} />
-        </form>
-      </div>
+    <div className="login-card">
+      <h1>Login to POS System</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={handleNameChange}
+          className="login-input"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={handlePasswordChange}
+          className="login-input"
+        />
+        <button type="submit" className="login-btn">Login</button>
+      </form>
     </div>
+    // <div className="login-grid">
+    //   <h1>Login</h1>
+      
+    //   <div className="login-form">
+    //     <form onSubmit={handleSubmit}>
+    //       <label id="name">Name: </label>
+    //       <input
+    //         type="text"
+    //         id="name"
+    //         value={name}
+    //         onChange={handleNameChange}
+    //       />
+    //       <br />
+
+    //       <label id="password">Password: </label>
+    //       <input
+    //         type="password"
+    //         id="password"
+    //         value={password}
+    //         onChange={handlePasswordChange}
+    //       />
+    //       <br />
+
+    //       <input type="submit" value={"Login"} />
+    //     </form>
+    //   </div>
+    // </div>
   );
 };
 
