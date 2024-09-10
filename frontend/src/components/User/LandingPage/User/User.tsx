@@ -25,7 +25,7 @@ const UserLandingPage: React.FC = () => {
   };
 
   const createUser = () => {
-    navigate("/user/create", {state: 
+    navigate("/user/detail", {state: 
       {reqType: "add"}
     });
   }
