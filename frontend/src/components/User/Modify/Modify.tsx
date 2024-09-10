@@ -22,10 +22,17 @@ const ModifyUserPage: React.FC = () => {
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-  const reqType = state.reqType;
-
   const [isAdminPopupOpen, setAdminPopup] = useState(false);
   const [showAddBtn, setshowAddBtn] = useState(false);
+
+  const reqType = state.reqType;
+
+  var heading = "";
+  if (reqType == "add") {
+    heading = "Add";
+  } else {
+    heading = "Modify";
+  }
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
@@ -75,6 +82,7 @@ const ModifyUserPage: React.FC = () => {
       setName(state.name);
     }
   }, [state.reqType]); // Dependency array ensures this effect only runs when reqType changes
+
 
   const openPopup = (e: any) => {
     e.preventDefault(); // Prevent form submission
@@ -262,42 +270,45 @@ const ModifyUserPage: React.FC = () => {
         alert("Error delete user");
       });
 
-      setAdminPassword("");
+    setAdminPassword("");
   };
 
   return (
     <div className="modify-user-page">
-      <h1>Add User</h1>
+      <h1>{heading} User</h1>
 
-      <div className="user-data">
-        <div className="id-number">
-          <h3>ID: </h3>
-          <input type="text" value={id} readOnly />
+      <div className="user-data-container">
+        <div className="user-data-form-group">
+          <label htmlFor="id">ID:</label>
+          <input type="text" id="modify-user-id" value={id} readOnly />
         </div>
-        <div className="name">
-          <h3>Name: </h3>
+        <div className="user-data-form-group">
+          <label htmlFor="name">Name:</label>
           <input
             type="text"
+            id="modify-user-name"
             value={name}
             onChange={handleNameChange}
             readOnly={isReadOnly}
           />
         </div>
 
-        <div className="password">
-          <h3>Password: </h3>
+        <div className="user-data-form-group">
+          <label htmlFor="password">Password:</label>
           <input
             type="password"
+            id="modify-user-password"
             value={password}
             onChange={handlePasswordChange}
             readOnly={isReadOnly}
           />
         </div>
 
-        <div className="phone-number">
-          <h3>Phone Number: </h3>
+        <div className="user-data-form-group">
+          <label htmlFor="phoneNumber">Phone Number:</label>
           <input
             type="text"
+            id="modify-user-phone-number"
             value={phoneNumber}
             onChange={handlePhoneNumberChange}
             readOnly={isReadOnly}
@@ -305,50 +316,68 @@ const ModifyUserPage: React.FC = () => {
         </div>
 
         {showAdminOption && (
-          <div className="admin">
-            <h3>Admin: </h3>
-            <input
-              type="radio"
-              id="radio-yes"
-              checked={admin == true ? true : false}
-              name="admin"
-              value={"yes"}
-              onChange={handleAdminChange}
-            />
-            <label htmlFor="radio-yes">Yes</label>
-            <input
-              type="radio"
-              checked={admin == false ? true : false}
-              id="radio-no"
-              name="admin"
-              value={"no"}
-              onChange={handleAdminChange}
-            />
-            <label htmlFor="radio-no">No</label>
+          <div className="user-data-form-group">
+            <label>Admin:</label>
+            <div className="user-data-radio-grp">
+              <input
+                type="radio"
+                id="modify-user-radio-yes"
+                checked={admin === true}
+                name="admin"
+                value={"yes"}
+                onChange={handleAdminChange}
+              />
+              <label htmlFor="radio-yes">Yes</label>
+              <input
+                type="radio"
+                checked={admin === false}
+                id="modify-user-radio-no"
+                name="admin"
+                value={"no"}
+                onChange={handleAdminChange}
+              />
+              <label htmlFor="radio-no">No</label>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="buttons">
-        <div className="ok-cancel-btn">
-          <button type="submit" onSubmit={handleRequestAdminPassword}>
+      <div className="modify-user-buttons">
+        <div className="modify-user-btns-grp">
+          <button
+            type="submit"
+            className="modify-user-ok-btn"
+            onSubmit={handleRequestAdminPassword}
+          >
             {okBtnLabel}
           </button>
-          <button type="button" onClick={handleCancel}>
+          <button
+            type="button"
+            className="modify-user-cancel-btn"
+            onClick={handleCancel}
+          >
             Cancel
           </button>
 
           {showDeleteButton && (
-            <button type="button" onClick={handleDelete}>
+            <button
+              type="button"
+              className="modify-user-delete-btn"
+              onClick={handleDelete}
+            >
               Delete User
             </button>
           )}
         </div>
 
-        <div className="final-ok-btn">
+        <div className="modify-user-btns-grp">
           {/* Final submit button, shown only after popup is closed */}
           {showAddBtn && (
-            <button type="button" onClick={handleSendRequest}>
+            <button
+              type="button"
+              className="modify-user-send-btn"
+              onClick={handleSendRequest}
+            >
               Send Request
             </button>
           )}
