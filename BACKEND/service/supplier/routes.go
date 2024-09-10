@@ -3,6 +3,7 @@ package supplier
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -21,11 +22,14 @@ func NewHandler(supplierStore types.SupplierStore, userStore types.UserStore) *H
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/supplier", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/supplier", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/supplier?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/supplier/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/supplier", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/supplier", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/supplier", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/supplier/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/supplier?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -86,14 +90,80 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the supplier exists
-	suppliers, err := h.supplierStore.GetAllSuppliers()
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var suppliers []types.Supplier
+
+	if params == "all" && val == "all" {
+		suppliers, err = h.supplierStore.GetAllSuppliers()
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, err)
+			return
+		}
+	} else if params == "name" {
+		supplier, err := h.supplierStore.GetSupplierByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not found", val))
+			return
+		}
+
+		suppliers = append(suppliers, *supplier)
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		supplier, err := h.supplierStore.GetSupplierByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", id))
+			return
+		}
+
+		suppliers = append(suppliers, *supplier)
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, suppliers)
+}
+
+func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.GetOneSupplierPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate user token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err))
+		return
+	}
+
+	// get supplier data
+	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
+	if err != nil || supplier == nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("supplier with name %s doesn't exists", payload.Name))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, supplier)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {

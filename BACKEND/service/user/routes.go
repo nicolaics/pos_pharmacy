@@ -25,8 +25,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	// TODO: add search function for user. in the query
-	router.HandleFunc("/user?{params}={searchVal}", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/user?{params}={searchVal}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/user?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
 	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -176,26 +176,26 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	params := vars["params"]
-	searchVal := vars["searchVal"]
+	val := vars["val"]
 
 	var users []types.User
 
-	if params == "all" && searchVal == "all" {
+	if params == "all" && val == "all" {
 		users, err = h.store.GetAllUsers()
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 	} else if params == "name" {
-		user, err := h.store.GetUserByName(searchVal)
+		user, err := h.store.GetUserByName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user %s not found", searchVal))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val))
 			return
 		}
 
 		users = append(users, *user)
 	} else if params == "id" {
-		id, err := strconv.Atoi(searchVal)
+		id, err := strconv.Atoi(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -203,11 +203,14 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 		user, err := h.store.GetUserByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %s not found", searchVal))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %s not found", val))
 			return
 		}
 
 		users = append(users, *user)
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, users)
@@ -221,7 +224,7 @@ func (h *Handler) handleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{"data": user})
+	utils.WriteJSON(w, http.StatusOK, user)
 }
 
 // get one user other than the current user
