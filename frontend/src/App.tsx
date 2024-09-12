@@ -13,6 +13,8 @@ import ViewSupplierPage from "./components/Supplier/LandingPage/Supplier";
 import ModifySupplierPage from "./components/Supplier/Modify/Modify";
 import ViewPatientPage from "./components/Patient/LandingPage/Patient";
 import ModifyPatientPage from "./components/Patient/Modify/Modify";
+import ViewDoctorPage from "./components/Doctor/LandingPage/Doctor";
+import ModifyDoctorPage from "./components/Doctor/Modify/Modify";
 
 export const BACKEND_BASE_URL = "localhost:90808/api/v1";
 
@@ -38,6 +40,9 @@ const App: React.FC = () => {
 
         <Route path="/patient" element={<ViewPatientPage />} />
         <Route path="/patient/detail" element={<ModifyPatientPage />} />
+
+        <Route path="/doctor" element={<ViewDoctorPage />} />
+        <Route path="/doctor/detail" element={<ModifyDoctorPage />} />
         { /* ----------------------------------------------------------------- */ }
 
         {/* <Route
@@ -102,6 +107,20 @@ const App: React.FC = () => {
           path="/patient/detail"
           element={
             <ProtectedRoute children={<ModifyPatientPage />} admin={false} />
+          }
+        /> */}
+
+        {/* Doctor ROUTE */}
+        {/* <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute children={<ViewDoctorPage />} admin={false} />
+          }
+        />
+        <Route
+          path="/doctor/detail"
+          element={
+            <ProtectedRoute children={<ModifyDoctorPage />} admin={false} />
           }
         /> */}
 
