@@ -2,6 +2,7 @@ package customer
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -22,13 +23,13 @@ func NewHandler(custStore types.CustomerStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/customer", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/customer?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/customer/{params}", h.handleGetAll).Methods(http.MethodGet).Name("getCustomer")
 	router.HandleFunc("/customer/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/customer", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/customer", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/customer", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/customer?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/customer/{params}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/customer/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -81,44 +82,39 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
-
+	
 	vars := mux.Vars(r)
 	params := vars["params"]
-	val := vars["val"]
+	// val := vars["val"]
+
+	log.Println(params)
 
 	var customers []types.Customer
 
-	if params == "all" && val == "all" {
+	if params == "all" {
+		log.Println("in")
 		customers, err = h.custStore.GetAllCustomers()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
-	} else if params == "name" {
-		customer, err := h.custStore.GetCustomerByName(val)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val))
-			return
-		}
-
-		customers = append(customers, *customer)
-	} else if params == "id" {
-		id, err := strconv.Atoi(val)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		customer, err := h.custStore.GetCustomerByID(id)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id))
-			return
-		}
-
-		customers = append(customers, *customer)
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
-		return
+		id, err := strconv.Atoi(params)
+		if err != nil {
+			customers, err = h.custStore.GetCustomersBySimilarName(params)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", params))
+				return
+			}
+		} else {
+			customer, err := h.custStore.GetCustomerByID(id)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id))
+				return
+			}
+
+			customers = append(customers, *customer)
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusOK, customers)

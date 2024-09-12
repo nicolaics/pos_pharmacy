@@ -3,6 +3,7 @@ package customer
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -41,6 +42,39 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	}
 
 	return customer, nil
+}
+
+func (s *Store) GetCustomersBySimilarName(name string) ([]types.Customer, error) {
+	query := "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL"
+	searchVal := "%"
+
+	for _, val := range(strings.ToUpper(name)) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+
+	log.Println("search val customer: ", searchVal)
+	
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	customers := make([]types.Customer, 0)
+
+	for rows.Next() {
+		customer, err := scanRowIntoCustomer(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		customers = append(customers, *customer)
+	}
+
+	return customers, nil
 }
 
 func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
