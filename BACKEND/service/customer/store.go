@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
@@ -21,7 +20,7 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
-	rows, err := s.db.Query(query, strings.ToUpper(name))
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +47,7 @@ func (s *Store) GetCustomersBySimilarName(name string) ([]types.Customer, error)
 	query := "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL"
 	searchVal := "%"
 
-	for _, val := range(strings.ToUpper(name)) {
+	for _, val := range(name) {
 		if string(val) != " " {
 			searchVal += (string(val) + "%")
 		}
@@ -104,7 +103,7 @@ func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 
 func (s *Store) CreateCustomer(customer types.Customer) error {
 	_, err := s.db.Exec("INSERT INTO customer (name) VALUES (?)",
-						strings.ToUpper(customer.Name))
+						customer.Name)
 
 	if err != nil {
 		return err
@@ -166,7 +165,7 @@ func (s *Store) ModifyCustomer(id int, newName string, uid int) error {
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
+	_, err = s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", newName, id)
 
 	if err != nil {
 		return err

@@ -85,14 +85,12 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	
 	vars := mux.Vars(r)
 	params := vars["params"]
-	// val := vars["val"]
 
 	log.Println(params)
 
 	var customers []types.Customer
 
 	if params == "all" {
-		log.Println("in")
 		customers, err = h.custStore.GetAllCustomers()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
