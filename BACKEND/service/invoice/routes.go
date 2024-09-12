@@ -3,6 +3,7 @@ package invoice
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -35,13 +36,13 @@ func NewHandler(invoiceStore types.InvoiceStore, userStore types.UserStore,
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/invoice", h.handleGetInvoiceNumberForToday).Methods(http.MethodGet)
-	router.HandleFunc("/invoice/all", h.handleGetInvoices).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/{params}/{val}", h.handleGetInvoices).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/detail", h.handleGetInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/invoice/all", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -191,9 +192,82 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoices, err := h.invoiceStore.GetInvoicesByDate(payload.StartDate, payload.EndDate)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var invoices []types.Invoice
+
+	if val == "all" {
+		invoices, err = h.invoiceStore.GetInvoicesByDate(payload.StartDate, payload.EndDate)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		invoice, err := h.invoiceStore.GetInvoiceByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d not exist", id))
+			return
+		}
+
+		invoices = append(invoices, *invoice)
+	} else if params == "number" {
+		number, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "user" {
+		user, err := h.userStore.GetUserByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
+			return
+		}
+
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
+			return
+		}
+	} else if params == "customer" {
+		customer, err := h.custStore.GetCustomerByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not exists", val))
+			return
+		}
+
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, customer.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s doesn't have any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
+			return
+		}
+	} else if params == "payment-method" {
+		paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s not found between %s and %s", val, payload.StartDate, payload.EndDate))
+			return			
+		}
+
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, paymentMethod.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s doesn't have any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
+			return
+		}
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
 		return
 	}
 

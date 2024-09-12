@@ -70,8 +70,14 @@ func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice 
 }
 
 func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
-	query := "SELECT * FROM invoice WHERE number = ? AND deleted_at IS NULL"
-	rows, err := s.db.Query(query, number)
+	query := "SELECT * FROM invoice WHERE number LIKE ? AND deleted_at IS NULL"
+
+	searchVal := "%"
+	for _, val := range(string(number)) {
+		searchVal += (string(val) + "%")
+	}
+
+	rows, err := s.db.Query(query, searchVal)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +103,118 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 					AND deleted_at IS NULL 
 				ORDER BY invoice_date DESC`
 	rows, err := s.db.Query(query, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invoices := make([]types.Invoice, 0)
+
+	for rows.Next() {
+		invoice, err := scanRowIntoInvoice(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		invoices = append(invoices, *invoice)
+	}
+
+	return invoices, nil
+}
+
+func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.Invoice, error) {
+	query := `SELECT * FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND number LIKE ? 
+					AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+	searchVal := "%"
+	for _, val := range(string(number)) {
+		searchVal += (string(val) + "%")
+	}
+
+	rows, err := s.db.Query(query, startDate, endDate, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invoices := make([]types.Invoice, 0)
+
+	for rows.Next() {
+		invoice, err := scanRowIntoInvoice(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		invoices = append(invoices, *invoice)
+	}
+
+	return invoices, nil
+}
+
+func (s *Store) GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.Invoice, error) {
+	query := `SELECT * FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND user_id = ? 
+					AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+
+	rows, err := s.db.Query(query, startDate, endDate, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invoices := make([]types.Invoice, 0)
+
+	for rows.Next() {
+		invoice, err := scanRowIntoInvoice(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		invoices = append(invoices, *invoice)
+	}
+
+	return invoices, nil
+}
+
+func (s *Store) GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]types.Invoice, error) {
+	query := `SELECT * FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND customer_id = ? 
+					AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+
+	rows, err := s.db.Query(query, startDate, endDate, cid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invoices := make([]types.Invoice, 0)
+
+	for rows.Next() {
+		invoice, err := scanRowIntoInvoice(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		invoices = append(invoices, *invoice)
+	}
+
+	return invoices, nil
+}
+
+func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]types.Invoice, error) {
+	query := `SELECT * FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND payment_method_id = ? 
+					AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+
+	rows, err := s.db.Query(query, startDate, endDate, pmid)
 	if err != nil {
 		return nil, err
 	}

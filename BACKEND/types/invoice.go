@@ -9,6 +9,10 @@ type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
 	GetInvoicesByNumber(int) ([]Invoice, error)
 	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
+	GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]Invoice, error)
+	GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]Invoice, error)
+	GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]Invoice, error)
+	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]Invoice, error)
 
 	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetNumberOfInvoices() (int, error)
