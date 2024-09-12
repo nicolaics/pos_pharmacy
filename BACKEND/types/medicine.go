@@ -5,6 +5,23 @@ import (
 	"time"
 )
 
+type MedicineStore interface {
+	GetMedicineByName(string) (*Medicine, error)
+	GetMedicinesBySimilarName(string) ([]Medicine, error)
+	GetMedicineByID(int) (*Medicine, error)
+	GetMedicineByBarcode(string) (*Medicine, error)
+	GetMedicinesBySimilarBarcode(string) ([]Medicine, error)
+	GetMedicinesByDescription(string) ([]Medicine, error)
+
+	CreateMedicine(Medicine, int) error
+
+	GetAllMedicines() ([]Medicine, error)
+
+	DeleteMedicine(*Medicine, int) error
+
+	ModifyMedicine(int, Medicine, int) error
+}
+
 type RegisterMedicinePayload struct {
 	Barcode        string  `json:"barcode" validate:"required"`
 	Name           string  `json:"name" validate:"required"`
@@ -36,16 +53,6 @@ type GetOneMedicinePayload struct {
 type ModifyMedicinePayload struct {
 	ID      int                     `json:"id" validate:"required"`
 	NewData RegisterMedicinePayload `json:"newData" validate:"required"`
-}
-
-type MedicineStore interface {
-	GetMedicineByName(string) (*Medicine, error)
-	GetMedicineByID(int) (*Medicine, error)
-	GetMedicineByBarcode(string) (*Medicine, error)
-	CreateMedicine(Medicine, int) error
-	GetAllMedicines() ([]Medicine, error)
-	DeleteMedicine(*Medicine, int) error
-	ModifyMedicine(int, Medicine, int) error
 }
 
 type Medicine struct {

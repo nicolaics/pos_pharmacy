@@ -4,6 +4,21 @@ import (
 	"time"
 )
 
+type PatientStore interface {
+	GetPatientByName(name string) (*Patient, error)
+	GetPatientsBySimilarName(name string) ([]Patient, error)
+	GetPatientByID(id int) (*Patient, error)
+
+	CreatePatient(Patient) error
+
+	GetAllPatients() ([]Patient, error)
+
+	DeletePatient(*Patient, int) error
+
+	ModifyPatient(int, string, int) error
+}
+
+
 type RegisterPatientPayload struct {
 	Name string `json:"name" validate:"required"`
 }
@@ -19,15 +34,6 @@ type DeletePatientPayload struct {
 
 type GetOnePatientPayload struct {
 	ID   int    `json:"id" validate:"required"`
-}
-
-type PatientStore interface {
-	GetPatientByName(name string) (*Patient, error)
-	GetPatientByID(id int) (*Patient, error)
-	CreatePatient(Patient) error
-	GetAllPatients() ([]Patient, error)
-	DeletePatient(*Patient, int) error
-	ModifyPatient(int, string, int) error
 }
 
 type Patient struct {

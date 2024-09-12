@@ -84,24 +84,24 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	params := vars["val"]
+	val := vars["val"]
 
-	log.Println(params)
+	log.Println(val)
 
 	var customers []types.Customer
 
-	if params == "all" {
+	if val == "all" {
 		customers, err = h.custStore.GetAllCustomers()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
 	} else {
-		id, err := strconv.Atoi(params)
+		id, err := strconv.Atoi(val)
 		if err != nil {
-			customers, err = h.custStore.GetCustomersBySimilarName(params)
+			customers, err = h.custStore.GetCustomersBySimilarName(val)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", params))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val))
 				return
 			}
 		} else {

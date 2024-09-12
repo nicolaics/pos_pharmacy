@@ -41,6 +41,37 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 	return medicine, nil
 }
 
+func (s *Store) GetMedicinesBySimilarName(name string) ([]types.Medicine, error) {
+	query := "SELECT * FROM medicine WHERE name LIKE ? AND deleted_at IS NULL"
+
+	searchVal := "%"
+	for _, val := range(name) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	medicines := make([]types.Medicine, 0)
+
+	for rows.Next() {
+		medicine, err := scanRowIntoMedicine(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		medicines = append(medicines, *medicine)
+	}
+
+	return medicines, nil
+}
+
 func (s *Store) GetMedicineByID(id int) (*types.Medicine, error) {
 	query := "SELECT * FROM medicine WHERE id = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, id)
@@ -89,6 +120,68 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 	}
 
 	return medicine, nil
+}
+
+func (s *Store) GetMedicinesBySimilarBarcode(barcode string) ([]types.Medicine, error) {
+	query := "SELECT * FROM medicine WHERE barcode LIKE ? AND deleted_at IS NULL"
+
+	searchVal := "%"
+	for _, val := range(barcode) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	medicines := make([]types.Medicine, 0)
+
+	for rows.Next() {
+		medicine, err := scanRowIntoMedicine(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		medicines = append(medicines, *medicine)
+	}
+
+	return medicines, nil
+}
+
+func (s *Store) GetMedicinesByDescription(description string) ([]types.Medicine, error) {
+	query := "SELECT * FROM medicine WHERE description LIKE ? AND deleted_at IS NULL"
+
+	searchVal := "%"
+	for _, val := range(description) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	medicines := make([]types.Medicine, 0)
+
+	for rows.Next() {
+		medicine, err := scanRowIntoMedicine(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		medicines = append(medicines, *medicine)
+	}
+
+	return medicines, nil
 }
 
 func (s *Store) CreateMedicine(med types.Medicine, userId int) error {

@@ -23,13 +23,13 @@ func NewHandler(medStore types.MedicineStore, userStore types.UserStore, unitSto
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/medicine?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/medicine/{params}/{val}", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/medicine/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/medicine", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/medicine", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/medicine", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/medicine?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -68,7 +68,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	secondUnitStr := payload.SecondUnit
 	thirdUnitStr := payload.ThirdUnit
 
-	if payload.FirstUnit == ""  {
+	if payload.FirstUnit == "" {
 		firstUnitStr = "None"
 	}
 	if payload.SecondUnit == "" {
@@ -163,20 +163,18 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 	var medicines []types.Medicine
 
-	if params == "all" && val == "all" {
+	if val == "all" {
 		medicines, err = h.medStore.GetAllMedicines()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
 	} else if params == "name" {
-		medicine, err := h.medStore.GetMedicineByName(val)
+		medicines, err = h.medStore.GetMedicinesBySimilarName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not found", val))
 			return
 		}
-
-		medicines = append(medicines, *medicine)
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
@@ -191,6 +189,18 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 
 		medicines = append(medicines, *medicine)
+	} else if params == "barcode" {
+		medicines, err = h.medStore.GetMedicinesBySimilarBarcode(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val))
+			return
+		}
+	} else if params == "description" {
+		medicines, err = h.medStore.GetMedicinesBySimilarBarcode(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val))
+			return
+		}
 	} else {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return
@@ -326,7 +336,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	secondUnitStr := payload.NewData.SecondUnit
 	thirdUnitStr := payload.NewData.ThirdUnit
 
-	if payload.NewData.FirstUnit == ""  {
+	if payload.NewData.FirstUnit == "" {
 		firstUnitStr = "None"
 	}
 	if payload.NewData.SecondUnit == "" {

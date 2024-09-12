@@ -83,22 +83,22 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	params := vars["val"]
+	val := vars["val"]
 
 	var doctors []types.Doctor
 
-	if params == "all" {
+	if val == "all" {
 		doctors, err = h.doctorStore.GetAllDoctors()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
 	} else {
-		id, err := strconv.Atoi(params)
+		id, err := strconv.Atoi(val)
 		if err != nil {
-			doctors, err = h.doctorStore.GetDoctorsBySimilarName(params)
+			doctors, err = h.doctorStore.GetDoctorsBySimilarName(val)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", params))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", val))
 				return
 			}
 		} else {

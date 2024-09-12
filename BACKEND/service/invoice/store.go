@@ -3,6 +3,7 @@ package invoice
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
@@ -73,8 +74,10 @@ func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
 	query := "SELECT * FROM invoice WHERE number LIKE ? AND deleted_at IS NULL"
 
 	searchVal := "%"
-	for _, val := range(string(number)) {
-		searchVal += (string(val) + "%")
+	for _, val := range(strconv.Itoa(number)) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
 	}
 
 	rows, err := s.db.Query(query, searchVal)
@@ -129,8 +132,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 				ORDER BY invoice_date DESC`
 
 	searchVal := "%"
-	for _, val := range(string(number)) {
-		searchVal += (string(val) + "%")
+	for _, val := range(strconv.Itoa(number)) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
 	}
 
 	rows, err := s.db.Query(query, startDate, endDate, searchVal)

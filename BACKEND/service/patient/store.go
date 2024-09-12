@@ -3,7 +3,6 @@ package patient
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
@@ -19,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetPatientByName(name string) (*types.Patient, error) {
 	query := "SELECT * FROM patient WHERE name = ?"
-	rows, err := s.db.Query(query, strings.ToUpper(name))
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +39,37 @@ func (s *Store) GetPatientByName(name string) (*types.Patient, error) {
 	}
 
 	return patient, nil
+}
+
+func (s *Store) GetPatientsBySimilarName(name string) ([]types.Patient, error) {
+	query := "SELECT * FROM patient WHERE name LIKE ?"
+
+	searchVal := "%"
+	for _, val := range(name) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	patients := make([]types.Patient, 0)
+
+	for rows.Next() {
+		patient, err := scanRowIntoPatient(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		patients = append(patients, *patient)
+	}
+
+	return patients, nil
 }
 
 func (s *Store) GetPatientByID(id int) (*types.Patient, error) {
@@ -69,7 +99,7 @@ func (s *Store) GetPatientByID(id int) (*types.Patient, error) {
 
 func (s *Store) CreatePatient(patient types.Patient) error {
 	_, err := s.db.Exec("INSERT INTO patient (name) VALUES (?)",
-						strings.ToUpper(patient.Name))
+						patient.Name)
 
 	if err != nil {
 		return err
@@ -135,7 +165,7 @@ func (s *Store) ModifyPatient(id int, newName string, userId int) error {
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("UPDATE patient SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
+	_, err = s.db.Exec("UPDATE patient SET name = ? WHERE id = ? ", newName, id)
 
 	if err != nil {
 		return err

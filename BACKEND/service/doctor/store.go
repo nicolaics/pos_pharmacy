@@ -46,7 +46,9 @@ func (s *Store) GetDoctorsBySimilarName(name string) ([]types.Doctor, error) {
 
 	searchVal := "%"
 	for _, val := range(name) {
-		searchVal += (string(val) + "%")
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
 	}
 
 	rows, err := s.db.Query(query, searchVal)
