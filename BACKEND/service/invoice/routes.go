@@ -196,8 +196,8 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 	params := vars["params"]
 	val := vars["val"]
 
-	var invoices []types.Invoice
-
+	var invoices []types.InvoiceListsReturnPayload
+	
 	if val == "all" {
 		invoices, err = h.invoiceStore.GetInvoicesByDate(payload.StartDate, payload.EndDate)
 		if err != nil {
@@ -216,8 +216,38 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d not exist", id))
 			return
 		}
+		
+		user, err := h.userStore.GetUserByID(invoice.UserID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user %d not exist", invoice.UserID))
+			return
+		}
 
-		invoices = append(invoices, *invoice)
+		customer, err := h.custStore.GetCustomerByID(invoice.CustomerID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("customer %d not exist", invoice.CustomerID))
+			return
+		}
+
+		paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByID(invoice.PaymentMethodID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("payment method %d not exist", invoice.PaymentMethodID))
+			return
+		}
+		
+		invoices = append(invoices, types.InvoiceListsReturnPayload{
+			ID: invoice.ID,
+			Number: invoice.Number,
+			UserName: user.Name,
+			CustomerName: customer.Name,
+			Subtotal: invoice.Subtotal,
+			Discount: invoice.Discount,
+			Tax: invoice.Tax,
+			TotalPrice: invoice.TotalPrice,
+			PaymentMethodName: paymentMethod.Name,
+			Description: invoice.Description,
+			InvoiceDate: invoice.InvoiceDate,
+		})
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
 		if err != nil {

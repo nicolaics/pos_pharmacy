@@ -7,12 +7,14 @@ import (
 
 type InvoiceStore interface {
 	GetInvoiceByID(id int) (*Invoice, error)
+
 	GetInvoicesByNumber(int) ([]Invoice, error)
-	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]Invoice, error)
-	GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]Invoice, error)
-	GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]Invoice, error)
-	GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]Invoice, error)
-	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]Invoice, error)
+
+	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]InvoiceListsReturnPayload, error)
 
 	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetNumberOfInvoices() (int, error)
@@ -74,6 +76,21 @@ type MedicineItemReturnPayload struct {
 	Price           float64 `json:"price"`
 	Discount        float64 `json:"discount"`
 	Subtotal        float64 `json:"subtotal"`
+}
+
+// viewing the invoice lists only
+type InvoiceListsReturnPayload struct {
+	ID                int       `json:"id"`
+	Number            int       `json:"number"`
+	UserName          string    `json:"userName"`
+	CustomerName      string    `json:"customerName"`
+	Subtotal          float64   `json:"subtotal"`
+	Discount          float64   `json:"discount"`
+	Tax               float64   `json:"tax"`
+	TotalPrice        float64   `json:"totalPrice"`
+	PaymentMethodName string    `json:"paymentMethodName"`
+	Description       string    `json:"description"`
+	InvoiceDate       time.Time `json:"invoiceDate"`
 }
 
 type InvoiceDetailPayload struct {
