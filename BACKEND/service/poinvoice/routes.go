@@ -3,6 +3,7 @@ package poinvoice
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -34,14 +35,15 @@ func NewHandler(poInvoiceStore types.PurchaseOrderInvoiceStore, userStore types.
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/purchase-order", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/invoice/purchase-order/all", h.handleGetPurchaseOrderInvoices).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/purchase-order", h.handleGetPOInvoiceNumberForToday).Methods(http.MethodGet)
+	router.HandleFunc("/invoice/purchase-order/{params}/{val}", h.handleGetPurchaseOrderInvoices).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order/detail", h.handleGetPurchaseOrderInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice/purchase-order", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/invoice/purchase-order", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/purchase-order/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/invoice/purchase-order/all", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/purchase-order/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +144,24 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase order invoice %d successfully created by %s", payload.Number, user.Name))
 }
 
+// beginning of po invoice page, will request here
+func (h *Handler) handleGetPOInvoiceNumberForToday(w http.ResponseWriter, r *http.Request) {
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	numberOfInvoices, err := h.poInvoiceStore.GetNumberOfPurchaseOrderInvoices()
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]int{"nextNumber": (numberOfInvoices + 1)})
+}
+
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
@@ -166,9 +186,70 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 		return
 	}
 
-	purchaseOrderInvoices, err := h.poInvoiceStore.GetPurchaseOrderInvoices(payload.StartDate, payload.EndDate)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var purchaseOrderInvoices []types.PurchaseOrderInvoice
+
+	if val == "all" {
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoices(payload.StartDate, payload.EndDate)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoiceByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order id %d not exist", id))
+			return
+		}
+
+		purchaseOrderInvoices = append(purchaseOrderInvoices, *purchaseOrderInvoice)
+	} else if params == "number" {
+		number, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "user" {
+		user, err := h.userStore.GetUserByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
+			return
+		}
+
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+			return
+		}
+	} else if params == "supplier" {
+		supplier, err := h.supplierStore.GetSupplierByName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not exists", val))
+			return
+		}
+
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndSupplierID(payload.StartDate, payload.EndDate, supplier.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+			return
+		}
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
 		return
 	}
 

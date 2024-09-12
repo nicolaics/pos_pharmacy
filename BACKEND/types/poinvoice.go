@@ -9,12 +9,20 @@ type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error)
+	GetNumberOfPurchaseOrderInvoices() (int, error)
+
 	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
 	CreatePurchaseOrderItems(PurchaseOrderItem) error
+
 	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseOrderInvoice, error)
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
+
 	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
 	DeletePurchaseOrderItems(*PurchaseOrderInvoice, int) error
+
 	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, int) error
 }
 
