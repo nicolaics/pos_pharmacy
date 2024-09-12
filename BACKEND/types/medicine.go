@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -29,7 +30,7 @@ type DeleteMedicinePayload struct {
 }
 
 type GetOneMedicinePayload struct {
-	ID   int    `json:"id" validate:"required"`
+	ID int `json:"id" validate:"required"`
 }
 
 type ModifyMedicinePayload struct {
@@ -48,26 +49,26 @@ type MedicineStore interface {
 }
 
 type Medicine struct {
-	ID                   int       `json:"id"`
-	Barcode              string    `json:"barcode"`
-	Name                 string    `json:"name"`
-	Qty                  float64   `json:"qty"`
-	FirstUnitID          int       `json:"firstUnitId"`
-	FirstSubtotal        float64   `json:"firstSubtotal"`
-	FirstDiscount        float64   `json:"firstDiscount"`
-	FirstPrice           float64   `json:"firstPrice"`
-	SecondUnitID         int       `json:"secondUnitId"`
-	SecondSubtotal       float64   `json:"secondSubtotal"`
-	SecondDiscount       float64   `json:"secondDiscount"`
-	SecondPrice          float64   `json:"secondPrice"`
-	ThirdUnitID          int       `json:"thirdUnitId"`
-	ThirdSubtotal        float64   `json:"thirdSubtotal"`
-	ThirdDiscount        float64   `json:"thirdDiscount"`
-	ThirdPrice           float64   `json:"thirdPrice"`
-	Description          string    `json:"description"`
-	CreatedAt            time.Time `json:"createdAt"`
-	LastModified         time.Time `json:"lastModified"`
-	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
-	DeletedAt            time.Time `json:"deletedAt"`
-	DeletedByUserID      int       `json:"deletedByUserId"`
+	ID                   int           `json:"id"`
+	Barcode              string        `json:"barcode"`
+	Name                 string        `json:"name"`
+	Qty                  float64       `json:"qty"`
+	FirstUnitID          int           `json:"firstUnitId"`
+	FirstSubtotal        float64       `json:"firstSubtotal"`
+	FirstDiscount        float64       `json:"firstDiscount"`
+	FirstPrice           float64       `json:"firstPrice"`
+	SecondUnitID         int           `json:"secondUnitId"`
+	SecondSubtotal       float64       `json:"secondSubtotal"`
+	SecondDiscount       float64       `json:"secondDiscount"`
+	SecondPrice          float64       `json:"secondPrice"`
+	ThirdUnitID          int           `json:"thirdUnitId"`
+	ThirdSubtotal        float64       `json:"thirdSubtotal"`
+	ThirdDiscount        float64       `json:"thirdDiscount"`
+	ThirdPrice           float64       `json:"thirdPrice"`
+	Description          string        `json:"description"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	LastModified         time.Time     `json:"lastModified"`
+	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	DeletedAt            sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }

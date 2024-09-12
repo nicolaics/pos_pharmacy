@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -105,18 +106,18 @@ type DeletePurchaseOrderInvoice struct {
 }
 
 type PurchaseOrderInvoice struct {
-	ID                   int       `json:"id"`
-	Number               int       `json:"number"`
-	CompanyID            int       `json:"companyId"`
-	SupplierID           int       `json:"supplierId"`
-	UserID               int       `json:"userId"`
-	TotalItems           int       `json:"totalItems"`
-	InvoiceDate          time.Time `json:"invoiceDate"`
-	CreatedAt            time.Time `json:"createdAt"`
-	LastModified         time.Time `json:"lastModified"`
-	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
-	DeletedAt            time.Time `json:"deletedAt"`
-	DeletedByUserID      int       `json:"deletedByUserId"`
+	ID                   int           `json:"id"`
+	Number               int           `json:"number"`
+	CompanyID            int           `json:"companyId"`
+	SupplierID           int           `json:"supplierId"`
+	UserID               int           `json:"userId"`
+	TotalItems           int           `json:"totalItems"`
+	InvoiceDate          time.Time     `json:"invoiceDate"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	LastModified         time.Time     `json:"lastModified"`
+	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	DeletedAt            sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
 
 type PurchaseOrderItem struct {

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -111,19 +112,19 @@ type ProductionMedicineItems struct {
 }
 
 type Production struct {
-	ID                   int       `json:"id"`
-	BatchNumber          int       `json:"batchNumber"`
-	ProducedMedicineID   int       `json:"producedMedicineId"`
-	ProducedQty          int       `json:"producedQty"`
-	ProductionDate       time.Time `json:"productionDate"`
-	Description          string    `json:"description"`
-	UpdatedToStock       bool      `json:"updatedToStock"`
-	UpdatedToAccount     bool      `json:"updatedToAccount"`
-	TotalCost            float64   `json:"totalCost"`
-	UserID               int       `json:"userId"`
-	CreatedAt            time.Time `json:"createdAt"`
-	LastModified         time.Time `json:"lastModified"`
-	LastModifiedByUserID int       `json:"lastLastModifiedByUserId"`
-	DeletedAt            time.Time `json:"deletedAt"`
-	DeletedByUserID      int       `json:"deletedByUserId"`
+	ID                   int           `json:"id"`
+	BatchNumber          int           `json:"batchNumber"`
+	ProducedMedicineID   int           `json:"producedMedicineId"`
+	ProducedQty          int           `json:"producedQty"`
+	ProductionDate       time.Time     `json:"productionDate"`
+	Description          string        `json:"description"`
+	UpdatedToStock       bool          `json:"updatedToStock"`
+	UpdatedToAccount     bool          `json:"updatedToAccount"`
+	TotalCost            float64       `json:"totalCost"`
+	UserID               int           `json:"userId"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	LastModified         time.Time     `json:"lastModified"`
+	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
+	DeletedAt            sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }

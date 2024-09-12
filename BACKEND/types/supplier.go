@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -49,6 +50,6 @@ type Supplier struct {
 	CreatedAt            time.Time `json:"createdAt"`
 	LastModified         time.Time `json:"lastModified"`
 	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
-	DeletedAt            time.Time `json:"deletedAt"`
-	DeletedByUserID      int       `json:"deletedByUserId"`
+	DeletedAt            sql.NullTime `json:"deletedAt"`
+	DeletedByUserID      sql.NullInt64       `json:"deletedByUserId"`
 }

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -27,13 +28,13 @@ type DeleteCustomerPayload struct {
 }
 
 type GetOneCustomerPayload struct {
-	ID   int    `json:"id" validate:"required"`
+	ID int `json:"id" validate:"required"`
 }
 
 type Customer struct {
-	ID              int       `json:"id"`
-	Name            string    `json:"name"`
-	CreatedAt       time.Time `json:"createdAt"`
-	DeletedAt       time.Time `json:"deletedAt"`
-	DeletedByUserID int       `json:"deletedByUserId"`
+	ID              int           `json:"id"`
+	Name            string        `json:"name"`
+	CreatedAt       time.Time     `json:"createdAt"`
+	DeletedAt       sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID sql.NullInt64 `json:"deletedByUserId"`
 }

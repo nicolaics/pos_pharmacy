@@ -1,6 +1,7 @@
 package types
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -41,7 +42,7 @@ type RegisterInvoicePayload struct {
 }
 
 type ModifyInvoicePayload struct {
-	ID      int               `json:"id" validate:"required"`
+	ID      int                    `json:"id" validate:"required"`
 	NewData RegisterInvoicePayload `json:"newData" validate:"required"`
 }
 
@@ -119,22 +120,22 @@ type MedicineItems struct {
 }
 
 type Invoice struct {
-	ID                   int       `json:"id"`
-	Number               int       `json:"number"`
-	UserID               int       `json:"userId"`
-	CustomerID           int       `json:"customerId"`
-	Subtotal             float64   `json:"subtotal"`
-	Discount             float64   `json:"discount"`
-	Tax                  float64   `json:"tax"`
-	TotalPrice           float64   `json:"totalPrice"`
-	PaidAmount           float64   `json:"paidAmount"`
-	ChangeAmount         float64   `json:"changeAmount"`
-	PaymentMethodID      int       `json:"paymentMethodId"`
-	Description          string    `json:"description"`
-	InvoiceDate          time.Time `json:"invoiceDate"`
-	CreatedAt            time.Time `json:"createdAt"`
-	LastModified         time.Time `json:"lastModified"`
-	LastModifiedByUserID int       `json:"lastModifiedByUserId"`
-	DeletedAt            time.Time `json:"deletedAt"`
-	DeletedByUserID      int       `json:"deletedByUserId"`
+	ID                   int           `json:"id"`
+	Number               int           `json:"number"`
+	UserID               int           `json:"userId"`
+	CustomerID           int           `json:"customerId"`
+	Subtotal             float64       `json:"subtotal"`
+	Discount             float64       `json:"discount"`
+	Tax                  float64       `json:"tax"`
+	TotalPrice           float64       `json:"totalPrice"`
+	PaidAmount           float64       `json:"paidAmount"`
+	ChangeAmount         float64       `json:"changeAmount"`
+	PaymentMethodID      int           `json:"paymentMethodId"`
+	Description          string        `json:"description"`
+	InvoiceDate          time.Time     `json:"invoiceDate"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	LastModified         time.Time     `json:"lastModified"`
+	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	DeletedAt            sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
