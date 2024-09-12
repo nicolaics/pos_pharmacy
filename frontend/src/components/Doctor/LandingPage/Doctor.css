@@ -1,0 +1,130 @@
+.view-patient-page {
+  justify-content: center;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.patient-search-container {
+  display: inline-flex;
+}
+
+.patient-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
+  margin-bottom: 50px;
+  width: 50%;
+}
+
+#patient-search-icon {
+  margin-right: 10px;
+}
+
+.patient-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #828A95;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+  margin-right: 20px;
+}
+
+.patient-search-button:hover {
+  background-color: #60666e;
+}
+
+#patient-add-icon {
+  margin-right: 10px;
+}
+
+.patient-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+
+}
+
+.patient-add-button:hover {
+  background-color: #45a049;
+}
+
+.patient-table-container {
+  overflow-x: auto;
+}
+
+#patient-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#patient-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#patient-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#patient-data-table tbody {
+  font-size: 16px;
+}
+
+.view-patient-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-patient-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.view-patient-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 50px auto;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-patient-home-icon {
+  margin-right: 10px;
+}
+
+.view-patient-home-button:hover {
+  background-color: #007B9A;
+}
