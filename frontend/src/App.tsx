@@ -11,6 +11,8 @@ import LandingPage from "./components/LandingPage/LandingPage";
 import LoginPage from "./components/Login/Login";
 import ViewSupplierPage from "./components/Supplier/LandingPage/Supplier";
 import ModifySupplierPage from "./components/Supplier/Modify/Modify";
+import ViewPatientPage from "./components/Patient/LandingPage/Patient";
+import ModifyPatientPage from "./components/Patient/Modify/Modify";
 
 export const BACKEND_BASE_URL = "localhost:90808/api/v1";
 
@@ -18,10 +20,11 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <Routes>
+        { /* NOT PROTECTED */ }
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        {/* FOR TESTING PURPOSE ONLY */}
+        { /* ----------------FOR TESTING PURPOSE ONLY------------------------ */ }
         <Route path="/home" element={<HomePage />} />
         <Route path="/user" element={<UserLandingPage />} />
         <Route path="/user/view" element={<ViewUserPage />} />
@@ -31,7 +34,11 @@ const App: React.FC = () => {
         <Route path="/customer/detail" element={<ModifyCustomerPage />} />
 
         <Route path="/supplier" element={<ViewSupplierPage />} />
-        <Route path="supplier/detail" element={<ModifySupplierPage />} />
+        <Route path="/supplier/detail" element={<ModifySupplierPage />} />
+
+        <Route path="/patient" element={<ViewPatientPage />} />
+        <Route path="/patient/detail" element={<ModifyPatientPage />} />
+        { /* ----------------------------------------------------------------- */ }
 
         {/* <Route
           path="/home"
@@ -60,16 +67,43 @@ const App: React.FC = () => {
         {/* <Route
           path="/customer"
           element={
-            <ProtectedRoute children={<ViewCustomerPage />} admin={true} />
+            <ProtectedRoute children={<ViewCustomerPage />} admin={false} />
           }
         />
         <Route
           path="/customer/detail"
           element={
-            <ProtectedRoute children={<ModifyCustomerPage />} admin={true} />
+            <ProtectedRoute children={<ModifyCustomerPage />} admin={false} />
           }
         /> */}
 
+        {/* SUPPLIER ROUTE */}
+        {/* <Route
+          path="/supplier"
+          element={
+            <ProtectedRoute children={<ViewSupplierPage />} admin={false} />
+          }
+        />
+        <Route
+          path="/supplier/detail"
+          element={
+            <ProtectedRoute children={<ModifySupplierPage />} admin={false} />
+          }
+        /> */}
+
+        {/* PATIENT ROUTE */}
+        {/* <Route
+          path="/patient"
+          element={
+            <ProtectedRoute children={<ViewPatientPage />} admin={false} />
+          }
+        />
+        <Route
+          path="/patient/detail"
+          element={
+            <ProtectedRoute children={<ModifyPatientPage />} admin={false} />
+          }
+        /> */}
 
       </Routes>
     </div>
