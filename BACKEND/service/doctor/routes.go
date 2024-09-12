@@ -22,13 +22,13 @@ func NewHandler(doctorStore types.DoctorStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/doctor", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/doctor?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/doctor/{params}", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/doctor/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/doctor", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/doctor", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/doctor", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/doctor?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/doctor/{params}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/doctor/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -84,41 +84,32 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	params := vars["params"]
-	val := vars["val"]
 
 	var doctors []types.Doctor
 
-	if params == "all" && val == "all" {
+	if params == "all" {
 		doctors, err = h.doctorStore.GetAllDoctors()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
-	} else if params == "name" {
-		doctor, err := h.doctorStore.GetDoctorByName(val)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", val))
-			return
-		}
-
-		doctors = append(doctors, *doctor)
-	} else if params == "id" {
-		id, err := strconv.Atoi(val)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		doctor, err := h.doctorStore.GetDoctorByID(id)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", id))
-			return
-		}
-
-		doctors = append(doctors, *doctor)
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
-		return
+		id, err := strconv.Atoi(params)
+		if err != nil {
+			doctors, err = h.doctorStore.GetDoctorsBySimilarName(params)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", params))
+				return
+			}
+		} else {
+			doctor, err := h.doctorStore.GetDoctorByID(id)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", id))
+				return
+			}
+
+			doctors = append(doctors, *doctor)
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusOK, doctors)

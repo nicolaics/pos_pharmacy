@@ -3,7 +3,6 @@ package doctor
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
@@ -19,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) GetDoctorByName(name string) (*types.Doctor, error) {
 	query := "SELECT * FROM doctor WHERE name = ?"
-	rows, err := s.db.Query(query, strings.ToUpper(name))
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +39,35 @@ func (s *Store) GetDoctorByName(name string) (*types.Doctor, error) {
 	}
 
 	return doctor, nil
+}
+
+func (s *Store) GetDoctorsBySimilarName(name string) ([]types.Doctor, error) {
+	query := "SELECT * FROM doctor WHERE name = ?"
+
+	searchVal := "%"
+	for _, val := range(name) {
+		searchVal += (string(val) + "%")
+	}
+
+	rows, err := s.db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	doctors := make([]types.Doctor, 0)
+
+	for rows.Next() {
+		doctor, err := scanRowIntoDoctor(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		doctors = append(doctors, *doctor)
+	}
+
+	return doctors, nil
 }
 
 func (s *Store) GetDoctorByID(id int) (*types.Doctor, error) {
@@ -69,7 +97,7 @@ func (s *Store) GetDoctorByID(id int) (*types.Doctor, error) {
 
 func (s *Store) CreateDoctor(doctor types.Doctor) error {
 	_, err := s.db.Exec("INSERT INTO doctor (name) VALUES (?)",
-						strings.ToUpper(doctor.Name))
+						doctor.Name)
 
 	if err != nil {
 		return err
@@ -131,8 +159,7 @@ func (s *Store) ModifyDoctor(id int, newName string, uid int) error {
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", strings.ToUpper(newName), id)
-
+	_, err = s.db.Exec("UPDATE doctor SET name = ? WHERE id = ? ", newName, id)
 	if err != nil {
 		return err
 	}
