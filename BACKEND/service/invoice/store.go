@@ -235,8 +235,7 @@ func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate
 }
 
 func (s *Store) GetNumberOfInvoices() (int, error) {
-	query := `SELECT COUNT(*) FROM invoice 
-				WHERE deleted_at IS NULL`
+	query := `SELECT COUNT(*) FROM invoice`
 	row := s.db.QueryRow(query)
 	if row.Err() != nil {
 		return -1, row.Err()
