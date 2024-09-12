@@ -4,7 +4,7 @@ import "./Modify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../../../App";
 
-const ModifyCustomerPage: React.FC = () => {
+const ModifyPatientPage: React.FC = () => {
   const navigate = useNavigate();
   const state = useLocation().state;
 
@@ -29,9 +29,9 @@ const ModifyCustomerPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      // TODO: add query for searching customers
-      const customerURL = `http://${BACKEND_BASE_URL}/customer?all=all`; // Set the URL or handle this logic
-      fetch(customerURL, {
+      // TODO: add query for searching patients
+      const patientURL = `http://${BACKEND_BASE_URL}/patient?all=all`; // Set the URL or handle this logic
+      fetch(patientURL, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -41,7 +41,7 @@ const ModifyCustomerPage: React.FC = () => {
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Unable to modify customer data");
+              throw new Error("Unable to modify patient data");
             }
 
             console.log(data["data"]);
@@ -51,8 +51,8 @@ const ModifyCustomerPage: React.FC = () => {
           })
         )
         .catch((error) => {
-          console.error("Error load selected customer:", error);
-          alert("Error load selected customer");
+          console.error("Error load selected patient:", error);
+          alert("Error load selected patient");
         });
     } else {
       setOkBtnLabel("Add");
@@ -60,6 +60,7 @@ const ModifyCustomerPage: React.FC = () => {
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
   */
+
 
   const handleNameChange = (event: any) => {
     setName(event.target.value);
@@ -74,7 +75,7 @@ const ModifyCustomerPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
 
     if (state) {
-      const url = `http://${BACKEND_BASE_URL}/customer`;
+      const url = `http://${BACKEND_BASE_URL}/patient`;
 
       fetch(url, {
         method: "POST",
@@ -89,18 +90,18 @@ const ModifyCustomerPage: React.FC = () => {
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Unable to modify customer data");
+              throw new Error("Unable to modify patient data");
             }
 
             console.log(data);
           })
         )
         .catch((error) => {
-          console.error("Error modify customer:", error);
-          alert("Error modify customer");
+          console.error("Error modify patient:", error);
+          alert("Error modify patient");
         });
     } else {
-      const url = `http://${BACKEND_BASE_URL}/customer`;
+      const url = `http://${BACKEND_BASE_URL}/patient`;
 
       fetch(url, {
         method: "PATCH",
@@ -125,24 +126,24 @@ const ModifyCustomerPage: React.FC = () => {
           })
         )
         .catch((error) => {
-          console.error("Error adding new customer:", error);
-          alert("Error adding new customer");
+          console.error("Error adding new patient:", error);
+          alert("Error adding new patient");
         });
     }
 
     // Reset the state
-    navigate("/customer");
+    navigate("/patient");
   };
 
   const handleCancel = (e: any) => {
-    navigate("/customer");
+    navigate("/patient");
   };
 
   const handleDelete = (e: any) => {
     e.preventDefault();
 
     const token = sessionStorage.getItem("token");
-    const url = `http://${BACKEND_BASE_URL}/customer`;
+    const url = `http://${BACKEND_BASE_URL}/patient`;
 
     fetch(url, {
       method: "DELETE",
@@ -158,46 +159,46 @@ const ModifyCustomerPage: React.FC = () => {
       .then((response) =>
         response.json().then((data) => {
           if (!response.ok) {
-            throw new Error("Unable to delete customer data");
+            throw new Error("Unable to delete patient data");
           }
 
           console.log(data);
-          navigate("/customer");
+          navigate("/patient");
         })
       )
       .catch((error) => {
-        console.error("Error delete customer:", error);
-        alert("Error delete customer");
+        console.error("Error delete patient:", error);
+        alert("Error delete patient");
       });
   };
 
   return (
-    <div className="modify-customer-page">
-      <h1>{heading} Customer</h1>
+    <div className="modify-patient-page">
+      <h1>{heading} Patient</h1>
 
-      <div className="customer-data-container">
-        {showIdField && (
-        <div className="customer-data-form-group">
+      <div className="patient-data-container">
+        { showIdField && (
+        <div className="patient-data-form-group">
           <label htmlFor="id">ID:</label>
-          <input type="text" id="modify-customer-id" value={id} readOnly />
+          <input type="text" id="modify-patient-id" value={id} readOnly />
         </div>
         )}
-        <div className="customer-data-form-group">
+        <div className="patient-data-form-group">
           <label htmlFor="name">Name:</label>
           <input
             type="text"
-            id="modify-customer-name"
+            id="modify-patient-name"
             value={name}
             onChange={handleNameChange}
           />
         </div>
       </div>
 
-      <div className="modify-customer-buttons">
-        <div className="modify-customer-btns-grp">
+      <div className="modify-patient-buttons">
+        <div className="modify-patient-btns-grp">
           <button
             type="button"
-            className="modify-customer-ok-btn"
+            className="modify-patient-ok-btn"
             onClick={handleSendRequest}
           >
             {okBtnLabel}
@@ -205,7 +206,7 @@ const ModifyCustomerPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-customer-cancel-btn"
+            className="modify-patient-cancel-btn"
             onClick={handleCancel}
           >
             Cancel
@@ -213,10 +214,10 @@ const ModifyCustomerPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-customer-delete-btn"
+            className="modify-patient-delete-btn"
             onClick={handleDelete}
           >
-            Delete Customer
+            Delete Patient
           </button>
         </div>
       </div>
@@ -224,4 +225,4 @@ const ModifyCustomerPage: React.FC = () => {
   );
 };
 
-export default ModifyCustomerPage;
+export default ModifyPatientPage;

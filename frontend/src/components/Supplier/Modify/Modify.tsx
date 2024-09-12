@@ -18,6 +18,7 @@ const ModifySupplierPage: React.FC = () => {
   const [vendorIsTaxable, setVendorIsTaxable] = useState(true);
 
   const [okBtnLabel, setOkBtnLabel] = useState("Modify");
+  const [showIdField, setShowIdField] = useState(false);
 
   var heading = "";
   if (state) {
@@ -32,6 +33,7 @@ const ModifySupplierPage: React.FC = () => {
 
     if (state) {
       setOkBtnLabel("Modify");
+      setShowIdField(true);
 
       // TODO: add query for searching suppliers
       const supplierURL = `http://${BACKEND_BASE_URL}/supplier?id=`; // Set the URL or handle this logic
@@ -60,6 +62,7 @@ const ModifySupplierPage: React.FC = () => {
         });
     } else {
       setOkBtnLabel("Add");
+      setShowIdField(false);
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
   */
@@ -207,10 +210,12 @@ const ModifySupplierPage: React.FC = () => {
       <h1>{heading} Supplier</h1>
 
       <div className="supplier-data-container">
+        {showIdField && (
         <div className="supplier-data-form-group">
           <label htmlFor="id">ID:</label>
           <input type="text" id="modify-supplier-id" value={id} readOnly />
         </div>
+        )}
 
         <div className="supplier-data-form-group">
           <label htmlFor="name">Name:</label>

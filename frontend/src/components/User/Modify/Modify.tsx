@@ -25,6 +25,7 @@ const ModifyUserPage: React.FC = () => {
 
   const [isAdminPopupOpen, setAdminPopup] = useState(false);
   const [showAddBtn, setshowAddBtn] = useState(false);
+  const [showIdField, setShowIdField] = useState(false);
 
   const reqType = state.reqType;
 
@@ -43,6 +44,7 @@ const ModifyUserPage: React.FC = () => {
       setShowAdminOption(false);
       setIsReadOnly(false);
       setShowDeleteButton(false);
+      setShowIdField(true);
 
       const currentUserURL = `http://${BACKEND_BASE_URL}/user/current`; // Set the URL or handle this logic
       fetch(currentUserURL, {
@@ -74,10 +76,12 @@ const ModifyUserPage: React.FC = () => {
       setOkBtnLabel("Add");
       setShowAdminOption(true);
       setShowDeleteButton(false);
+      setShowIdField(false);
     } else if (state.reqType === "modify-admin") {
       setIsReadOnly(true);
       setShowAdminOption(true);
       setShowDeleteButton(true);
+      setShowIdField(true);
 
       setId(state.id);
       setName(state.name);
@@ -278,10 +282,12 @@ const ModifyUserPage: React.FC = () => {
       <h1>{heading} User</h1>
 
       <div className="user-data-container">
-        <div className="user-data-form-group">
-          <label htmlFor="id">ID:</label>
-          <input type="text" id="modify-user-id" value={id} readOnly />
-        </div>
+        {showIdField && (
+          <div className="user-data-form-group">
+            <label htmlFor="id">ID:</label>
+            <input type="text" id="modify-user-id" value={id} readOnly />
+          </div>
+        )}
         <div className="user-data-form-group">
           <label htmlFor="name">Name:</label>
           <input
