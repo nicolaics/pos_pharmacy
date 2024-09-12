@@ -13,7 +13,7 @@ import (
 
 type Handler struct {
 	doctorStore types.DoctorStore
-	userStore types.UserStore
+	userStore   types.UserStore
 }
 
 func NewHandler(doctorStore types.DoctorStore, userStore types.UserStore) *Handler {
@@ -22,13 +22,13 @@ func NewHandler(doctorStore types.DoctorStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/doctor", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/doctor/{params}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/doctor/{val}", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/doctor/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/doctor", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/doctor", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/doctor", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/doctor/{params}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/doctor/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/doctor/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -83,7 +83,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	params := vars["params"]
+	params := vars["val"]
 
 	var doctors []types.Doctor
 

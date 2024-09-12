@@ -23,13 +23,13 @@ func NewHandler(custStore types.CustomerStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/customer", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/customer/{params}", h.handleGetAll).Methods(http.MethodGet).Name("getCustomer")
+	router.HandleFunc("/customer/{val}", h.handleGetAll).Methods(http.MethodGet).Name("getCustomer")
 	router.HandleFunc("/customer/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/customer", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/customer", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/customer", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/customer/{params}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/customer/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/customer/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -82,9 +82,9 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
 		return
 	}
-	
+
 	vars := mux.Vars(r)
-	params := vars["params"]
+	params := vars["val"]
 
 	log.Println(params)
 
