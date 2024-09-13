@@ -233,7 +233,6 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	params := vars["params"]
 	val := vars["val"]
 
-	// TODO: RECHECK
 	var prescriptions []types.PrescriptionListsReturnPayload
 
 	if val == "all" {
@@ -346,7 +345,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 		for _, patient := range patients {
 			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndPatientID(payload.StartDate, payload.EndDate, patient.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
 			}
 
@@ -355,14 +354,14 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	} else if params == "doctor" {
 		doctors, err := h.doctorStore.GetDoctorsBySimilarName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not exists", val))
 			return
 		}
 
 		for _, doctor := range doctors {
 			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndDoctorID(payload.StartDate, payload.EndDate, doctor.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
 			}
 

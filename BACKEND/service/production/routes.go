@@ -2,8 +2,8 @@ package production
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -34,13 +34,13 @@ func NewHandler(productionStore types.ProductionStore,
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/production", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/production", h.handleGetNumberOfProductions).Methods(http.MethodGet)
-	router.HandleFunc("/production/all/date", h.handleGetProductions).Methods(http.MethodPost)
+	router.HandleFunc("/production/{params}/{val}", h.handleGetProductions).Methods(http.MethodPost)
 	router.HandleFunc("/production/detail", h.handleGetProductionDetail).Methods(http.MethodPost)
 	router.HandleFunc("/production", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/production", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/production", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/production/all/date", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/production/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/production/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
@@ -138,7 +138,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production batch number %d successfully created by %s", payload.BatchNumber, user.Name))
 }
 
-// beginning of invoice page, will request here
+// beginning of production page, will request here
 func (h *Handler) handleGetNumberOfProductions(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
@@ -170,10 +170,6 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-
-		// TODO: CHECK HERE
-		log.Println("not allowed, redirecting")
-		http.Redirect(w, r, "/user/login", http.StatusFound)
 		return
 	}
 
@@ -184,13 +180,133 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	productions, err := h.productionStore.GetProductionsByDate(payload.StartDate, payload.EndDate)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	var prods []types.ProductionListsReturnPayload
+
+	if val == "all" {
+		prods, err = h.productionStore.GetProductionsByDate(payload.StartDate, payload.EndDate)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		prod, err := h.productionStore.GetProductionByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prod id %d not exist", id))
+			return
+		}
+
+		user, err := h.userStore.GetUserByID(prod.UserID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", prod.UserID))
+			return
+		}
+
+		med, err := h.medStore.GetMedicineByID(prod.ProducedMedicineID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("medicine id %d not found", prod.ProducedMedicineID))
+			return
+		}
+
+		prods = append(prods, types.ProductionListsReturnPayload{
+			ID:               prod.ID,
+			BatchNumber:           prod.BatchNumber,
+			ProducedMedicineName: med.Name,
+			ProducedQty: prod.ProducedQty,
+			ProductionDate: prod.ProductionDate,
+			Description:      prod.Description,
+			UpdatedToStock: prod.UpdatedToStock,
+			UpdatedToAccount: prod.UpdatedToAccount,
+			TotalCost: prod.TotalCost,
+			UserName:         user.Name,
+		})
+	} else if params == "batch-number" {
+		batchNumber, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		prods, err = h.productionStore.GetProductionsByDateAndBatchNumber(payload.StartDate, payload.EndDate, batchNumber)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "user" {
+		users, err := h.userStore.GetUserBySimilarName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
+			return
+		}
+
+		for _, user := range users {
+			temp, err := h.productionStore.GetProductionsByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any prod between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			prods = append(prods, temp...)
+		}
+	} else if params == "produced-medicine-name" {
+		medicines, err := h.medStore.GetMedicinesBySimilarName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not exists", val))
+			return
+		}
+
+		for _, medicine := range medicines {
+			temp, err := h.productionStore.GetProductionsByDateAndMedicineID(payload.StartDate, payload.EndDate, medicine.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't have any production between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			prods = append(prods, temp...)
+		}
+	} else if params == "updated-to-stock" {
+		var uts bool
+
+		if val == "true" {
+			uts = true
+		} else {
+			uts = false
+		}
+
+		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToStock(payload.StartDate, payload.EndDate, uts)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "updated-to-account" {
+		var uta bool
+
+		if val == "true" {
+			uta = true
+		} else {
+			uta = false
+		}
+
+		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToAccount(payload.StartDate, payload.EndDate, uta)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, productions)
+	utils.WriteJSON(w, http.StatusOK, prods)
 }
 
 // view 1 production with its medicine lists

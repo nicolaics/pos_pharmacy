@@ -8,9 +8,15 @@ import (
 type ProductionStore interface {
 	GetProductionByBatchNumber(int) (*Production, error)
 	GetProductionByID(int) (*Production, error)
-	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]Production, error)
 	GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64, userId int) (int, error)
 	GetNumberOfProductions() (int, error)
+
+	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndBatchNumber(startDate time.Time, endDate time.Time, bn int) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndMedicineID(startDate time.Time, endDate time.Time, mid int) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDate time.Time, uts bool) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndUpdatedToAccount(startDate time.Time, endDate time.Time, uta bool) ([]ProductionListsReturnPayload, error)
 
 	CreateProduction(Production) error
 	CreateProductionMedicineItems(ProductionMedicineItems) error
@@ -96,6 +102,20 @@ type ProductionDetailPayload struct {
 	LastModifiedByUserName string    `json:"lastLastModifiedByUserName"`
 
 	MedicineLists []ProductionMedicineItemRow `json:"medicineLists"`
+}
+
+// return to the user when viewing the lists of production
+type ProductionListsReturnPayload struct {
+	ID                   int       `json:"id"`
+	BatchNumber          int       `json:"batchNumber"`
+	ProducedMedicineName string    `json:"producedMedicineName"`
+	ProducedQty          int       `json:"producedQty"`
+	ProductionDate       time.Time `json:"productionDate"`
+	Description          string    `json:"description"`
+	UpdatedToStock       bool      `json:"updatedToStock"`
+	UpdatedToAccount     bool      `json:"updatedToAccount"`
+	TotalCost            float64   `json:"totalCost"`
+	UserName             string    `json:"userName"`
 }
 
 type DeleteProduction struct {
