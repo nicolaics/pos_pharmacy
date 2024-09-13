@@ -27,7 +27,7 @@ type CompanyProfileStore interface {
 	GetCompanyProfileByID(int) (*CompanyProfile, error)
 	CreateCompanyProfile(CompanyProfile) error
 	GetCompanyProfile() (*CompanyProfileReturn, error)
-	ModifyCompanyProfile(int, int, CompanyProfile) error
+	ModifyCompanyProfile(int, *User, CompanyProfile) error
 }
 
 type CompanyProfileReturn struct {

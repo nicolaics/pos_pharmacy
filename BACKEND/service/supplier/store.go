@@ -241,9 +241,9 @@ func (s *Store) GetAllSuppliers() ([]types.Supplier, error) {
 	return suppliers, nil
 }
 
-func (s *Store) DeleteSupplier(supplier *types.Supplier, userId int) error {
+func (s *Store) DeleteSupplier(supplier *types.Supplier, user *types.User) error {
 	query := "UPDATE supplier SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, supplier.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, supplier.ID)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (s *Store) DeleteSupplier(supplier *types.Supplier, userId int) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "supplier", userId, data.ID, data)
+	err = logger.WriteLog("delete", "supplier", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -261,7 +261,7 @@ func (s *Store) DeleteSupplier(supplier *types.Supplier, userId int) error {
 	return nil
 }
 
-func (s *Store) ModifySupplier(sid int, newSupplierData types.Supplier, userId int) error {
+func (s *Store) ModifySupplier(sid int, newSupplierData types.Supplier, user *types.User) error {
 	data, err := s.GetSupplierByID(sid)
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func (s *Store) ModifySupplier(sid int, newSupplierData types.Supplier, userId i
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-invoice", userId, data.ID, writeData)
+	err = logger.WriteLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

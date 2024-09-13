@@ -414,9 +414,9 @@ func (s *Store) GetProductionMedicineItems(productionId int) ([]types.Production
 	return prescMedItems, nil
 }
 
-func (s *Store) DeleteProduction(production *types.Production, userId int) error {
+func (s *Store) DeleteProduction(production *types.Production, user *types.User) error {
 	query := "UPDATE production SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, production.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, production.ID)
 	if err != nil {
 		return err
 	}
@@ -426,7 +426,7 @@ func (s *Store) DeleteProduction(production *types.Production, userId int) error
 		return err
 	}
 
-	err = logger.WriteLog("delete", "production", userId, data.ID, data)
+	err = logger.WriteLog("delete", "production", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -434,7 +434,7 @@ func (s *Store) DeleteProduction(production *types.Production, userId int) error
 	return nil
 }
 
-func (s *Store) DeleteProductionMedicineItems(production *types.Production, userId int) error {
+func (s *Store) DeleteProductionMedicineItems(production *types.Production, user *types.User) error {
 	data, err := s.GetProductionMedicineItems(production.ID)
 	if err != nil {
 		return err
@@ -445,7 +445,7 @@ func (s *Store) DeleteProductionMedicineItems(production *types.Production, user
 		"deleted_medicine_items": data,
 	}
 
-	err = logger.WriteLog("delete", "prescription", userId, production.ID, writeData)
+	err = logger.WriteLog("delete", "prescription", user.Name, production.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -458,7 +458,7 @@ func (s *Store) DeleteProductionMedicineItems(production *types.Production, user
 	return nil
 }
 
-func (s *Store) ModifyProduction(id int, production types.Production, userId int) error {
+func (s *Store) ModifyProduction(id int, production types.Production, user *types.User) error {
 	data, err := s.GetProductionByID(production.ID)
 	if err != nil {
 		return err
@@ -468,7 +468,7 @@ func (s *Store) ModifyProduction(id int, production types.Production, userId int
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "production", userId, data.ID, writeData)
+	err = logger.WriteLog("modify", "production", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

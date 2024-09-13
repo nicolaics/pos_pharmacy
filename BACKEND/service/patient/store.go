@@ -164,7 +164,7 @@ func (s *Store) GetAllPatients() ([]types.Patient, error) {
 	return patients, nil
 }
 
-func (s *Store) DeletePatient(patient *types.Patient, userId int) error {
+func (s *Store) DeletePatient(patient *types.Patient, user *types.User) error {
 	query := "DELETE FROM patient WHERE id = ?"
 	_, err := s.db.Exec(query, patient.ID)
 	if err != nil {
@@ -176,7 +176,7 @@ func (s *Store) DeletePatient(patient *types.Patient, userId int) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "patient", userId, data.ID, data)
+	err = logger.WriteLog("delete", "patient", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -184,7 +184,7 @@ func (s *Store) DeletePatient(patient *types.Patient, userId int) error {
 	return nil
 }
 
-func (s *Store) ModifyPatient(id int, newName string, userId int) error {
+func (s *Store) ModifyPatient(id int, newName string, user *types.User) error {
 	data, err := s.GetPatientByID(id)
 	if err != nil {
 		return err
@@ -194,7 +194,7 @@ func (s *Store) ModifyPatient(id int, newName string, userId int) error {
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "patient", userId, data.ID, writeData)
+	err = logger.WriteLog("modify", "patient", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

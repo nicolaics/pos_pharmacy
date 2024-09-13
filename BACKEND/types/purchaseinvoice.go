@@ -19,10 +19,10 @@ type PurchaseInvoiceStore interface {
 	CreatePurchaseInvoice(PurchaseInvoice) error
 	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
 
-	DeletePurchaseInvoice(*PurchaseInvoice, int) error
-	DeletePurchaseMedicineItems(*PurchaseInvoice, int) error
+	DeletePurchaseInvoice(*PurchaseInvoice, *User) error
+	DeletePurchaseMedicineItems(*PurchaseInvoice, *User) error
 
-	ModifyPurchaseInvoice(int, PurchaseInvoice, int) error
+	ModifyPurchaseInvoice(int, PurchaseInvoice, *User) error
 }
 
 type PurchaseInvoicePayload struct {

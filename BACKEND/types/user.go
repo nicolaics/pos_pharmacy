@@ -15,10 +15,10 @@ type UserStore interface {
 
 	CreateUser(User) error
 
-	DeleteUser(*User, int) error
+	DeleteUser(*User, *User) error
 
 	UpdateLastLoggedIn(int) error
-	ModifyUser(int, User, int) error
+	ModifyUser(int, User, *User) error
 
 	SaveToken(int, *TokenDetails) error
 	DeleteToken(int) error

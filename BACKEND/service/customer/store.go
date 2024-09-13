@@ -168,9 +168,9 @@ func (s *Store) GetAllCustomers() ([]types.Customer, error) {
 	return customers, nil
 }
 
-func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
+func (s *Store) DeleteCustomer(user *types.User, customer *types.Customer) error {
 	query := "UPDATE customer SET deleted_at ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), uid, customer.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, customer.ID)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "customer", uid, data.ID, data)
+	err = logger.WriteLog("delete", "customer", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -188,13 +188,13 @@ func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
 	return nil
 }
 
-func (s *Store) ModifyCustomer(id int, newName string, uid int) error {
+func (s *Store) ModifyCustomer(id int, newName string, user *types.User) error {
 	data, err := s.GetCustomerByID(id)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteLog("modify", "customer", uid, data.ID, data)
+	err = logger.WriteLog("modify", "customer", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

@@ -201,7 +201,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.supplierStore.DeleteSupplier(supplier, user.ID)
+	err = h.supplierStore.DeleteSupplier(supplier, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -259,7 +259,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Terms:                payload.NewData.Terms,
 		VendorIsTaxable:      payload.NewData.VendorIsTaxable,
 		LastModifiedByUserID: user.ID,
-	}, user.ID)
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

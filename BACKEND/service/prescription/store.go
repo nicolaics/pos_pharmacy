@@ -470,9 +470,9 @@ func (s *Store) GetPrescriptionMedicineItems(prescriptionId int) ([]types.Prescr
 	return prescMedItems, nil
 }
 
-func (s *Store) DeletePrescription(prescription *types.Prescription, userId int) error {
+func (s *Store) DeletePrescription(prescription *types.Prescription, user *types.User) error {
 	query := "UPDATE prescription SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, prescription.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, prescription.ID)
 	if err != nil {
 		return err
 	}
@@ -482,7 +482,7 @@ func (s *Store) DeletePrescription(prescription *types.Prescription, userId int)
 		return err
 	}
 
-	err = logger.WriteLog("delete", "prescription", userId, data.ID, data)
+	err = logger.WriteLog("delete", "prescription", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -490,7 +490,7 @@ func (s *Store) DeletePrescription(prescription *types.Prescription, userId int)
 	return nil
 }
 
-func (s *Store) DeletePrescriptionMedicineItems(prescription *types.Prescription, userId int) error {
+func (s *Store) DeletePrescriptionMedicineItems(prescription *types.Prescription, user *types.User) error {
 	data, err := s.GetPrescriptionMedicineItems(prescription.ID)
 	if err != nil {
 		return err
@@ -501,7 +501,7 @@ func (s *Store) DeletePrescriptionMedicineItems(prescription *types.Prescription
 		"deleted_medicine_items": data,
 	}
 
-	err = logger.WriteLog("delete", "prescription", userId, prescription.ID, writeData)
+	err = logger.WriteLog("delete", "prescription", user.Name, prescription.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -514,7 +514,7 @@ func (s *Store) DeletePrescriptionMedicineItems(prescription *types.Prescription
 	return nil
 }
 
-func (s *Store) ModifyPrescription(id int, prescription types.Prescription, userId int) error {
+func (s *Store) ModifyPrescription(id int, prescription types.Prescription, user *types.User) error {
 	data, err := s.GetPrescriptionByID(prescription.ID)
 	if err != nil {
 		return err
@@ -524,7 +524,7 @@ func (s *Store) ModifyPrescription(id int, prescription types.Prescription, user
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "prescription", userId, data.ID, writeData)
+	err = logger.WriteLog("modify", "prescription", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

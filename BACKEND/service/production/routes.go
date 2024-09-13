@@ -436,13 +436,13 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.productionStore.DeleteProductionMedicineItems(production, user.ID)
+	err = h.productionStore.DeleteProductionMedicineItems(production, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.productionStore.DeleteProduction(production, user.ID)
+	err = h.productionStore.DeleteProduction(production, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -506,7 +506,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		UpdatedToAccount:     payload.NewData.UpdatedToAccount,
 		TotalCost:            payload.NewData.TotalCost,
 		LastModifiedByUserID: user.ID,
-	}, user.ID)
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -520,7 +520,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.productionStore.DeleteProductionMedicineItems(production, user.ID)
+	err = h.productionStore.DeleteProductionMedicineItems(production, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

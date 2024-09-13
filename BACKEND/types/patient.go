@@ -13,9 +13,9 @@ type PatientStore interface {
 
 	GetAllPatients() ([]Patient, error)
 
-	DeletePatient(*Patient, int) error
+	DeletePatient(*Patient, *User) error
 
-	ModifyPatient(int, string, int) error
+	ModifyPatient(int, string, *User) error
 }
 
 type RegisterPatientPayload struct {

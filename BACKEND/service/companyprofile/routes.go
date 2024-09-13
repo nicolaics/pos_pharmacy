@@ -164,7 +164,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.companyProfileStore.ModifyCompanyProfile(companyProfile.ID, user.ID, types.CompanyProfile{
+	err = h.companyProfileStore.ModifyCompanyProfile(companyProfile.ID, user, types.CompanyProfile{
 		Name:                    payload.NewData.Name,
 		Address:                 payload.NewData.Address,
 		BusinessNumber:          payload.NewData.Address,

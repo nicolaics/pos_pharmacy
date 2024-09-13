@@ -439,13 +439,13 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user.ID)
+	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderInvoice(purchaseOrderInvoice, user.ID)
+	err = h.poInvoiceStore.DeletePurchaseOrderInvoice(purchaseOrderInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -492,13 +492,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		TotalItems:           payload.NewData.TotalItems,
 		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
-	}, user.ID)
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user.ID)
+	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

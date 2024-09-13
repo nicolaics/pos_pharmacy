@@ -433,9 +433,9 @@ func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPaylo
 	return medicineItems, nil
 }
 
-func (s *Store) DeleteInvoice(invoice *types.Invoice, userId int) error {
+func (s *Store) DeleteInvoice(invoice *types.Invoice, user *types.User) error {
 	query := "UPDATE invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, invoice.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, invoice.ID)
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func (s *Store) DeleteInvoice(invoice *types.Invoice, userId int) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "invoice", userId, data.ID, data)
+	err = logger.WriteLog("delete", "invoice", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -453,7 +453,7 @@ func (s *Store) DeleteInvoice(invoice *types.Invoice, userId int) error {
 	return nil
 }
 
-func (s *Store) DeleteMedicineItems(invoice *types.Invoice, userId int) error {
+func (s *Store) DeleteMedicineItems(invoice *types.Invoice, user *types.User) error {
 	data, err := s.GetMedicineItems(invoice.ID)
 	if err != nil {
 		return err
@@ -464,7 +464,7 @@ func (s *Store) DeleteMedicineItems(invoice *types.Invoice, userId int) error {
 		"deleted_medicine_items": data,
 	}
 
-	err = logger.WriteLog("delete", "invoice", userId, invoice.ID, writeData)
+	err = logger.WriteLog("delete", "invoice", user.Name, invoice.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -477,7 +477,7 @@ func (s *Store) DeleteMedicineItems(invoice *types.Invoice, userId int) error {
 	return nil
 }
 
-func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice) error {
+func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice, user *types.User) error {
 	data, err := s.GetInvoiceByID(invoiceId)
 	if err != nil {
 		return err
@@ -487,7 +487,7 @@ func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice) error {
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "invoice", invoice.LastModifiedByUserID, data.ID, writeData)
+	err = logger.WriteLog("modify", "invoice", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

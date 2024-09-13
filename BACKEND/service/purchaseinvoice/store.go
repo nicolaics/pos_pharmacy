@@ -375,9 +375,9 @@ func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate 
 	return purchaseInvoices, nil
 }
 
-func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, userId int) error {
+func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, user *types.User) error {
 	query := "UPDATE purchase_invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, purchaseInvoice.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, purchaseInvoice.ID)
 	if err != nil {
 		return err
 	}
@@ -387,7 +387,7 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, us
 		return err
 	}
 
-	err = logger.WriteLog("delete", "purchase-invoice", userId, data.ID, data)
+	err = logger.WriteLog("delete", "purchase-invoice", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -395,7 +395,7 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, us
 	return nil
 }
 
-func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoice, userId int) error {
+func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoice, user *types.User) error {
 	data, err := s.GetPurchaseMedicineItems(purchaseInvoice.ID)
 	if err != nil {
 		return err
@@ -406,7 +406,7 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoi
 		"deleted_medicine_items": data,
 	}
 
-	err = logger.WriteLog("delete", "purchase-invoice", userId, purchaseInvoice.ID, writeData)
+	err = logger.WriteLog("delete", "purchase-invoice", user.Name, purchaseInvoice.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -419,7 +419,7 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoi
 	return nil
 }
 
-func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseInvoice, userId int) error {
+func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseInvoice, user *types.User) error {
 	data, err := s.GetPurchaseInvoiceByID(piid)
 	if err != nil {
 		return err
@@ -429,7 +429,7 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-invoice", userId, data.ID, writeData)
+	err = logger.WriteLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

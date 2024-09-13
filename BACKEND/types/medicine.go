@@ -18,9 +18,9 @@ type MedicineStore interface {
 
 	GetAllMedicines() ([]MedicineListsReturnPayload, error)
 
-	DeleteMedicine(*Medicine, int) error
+	DeleteMedicine(*Medicine, *User) error
 
-	ModifyMedicine(int, Medicine, int) error
+	ModifyMedicine(int, Medicine, *User) error
 }
 
 type RegisterMedicinePayload struct {

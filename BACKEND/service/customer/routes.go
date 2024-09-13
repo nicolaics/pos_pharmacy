@@ -183,7 +183,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.custStore.DeleteCustomer(user.ID, customer)
+	err = h.custStore.DeleteCustomer(user, customer)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -230,7 +230,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name, user.ID)
+	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

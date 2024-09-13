@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
 )
 
@@ -380,9 +381,9 @@ func (s *Store) GetAllMedicines() ([]types.MedicineListsReturnPayload, error) {
 	return medicines, nil
 }
 
-func (s *Store) DeleteMedicine(med *types.Medicine, userId int) error {
+func (s *Store) DeleteMedicine(med *types.Medicine, user *types.User) error {
 	query := "UPDATE medicine SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, med.ID)
+	_, err := s.db.Exec(query, time.Now(), user.ID, med.ID)
 	if err != nil {
 		return err
 	}
@@ -390,7 +391,21 @@ func (s *Store) DeleteMedicine(med *types.Medicine, userId int) error {
 	return nil
 }
 
-func (s *Store) ModifyMedicine(mid int, med types.Medicine, userId int) error {
+func (s *Store) ModifyMedicine(mid int, med types.Medicine, user *types.User) error {
+	data, err := s.GetMedicineByID(mid)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "medicine", user.Name, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
 	query := `UPDATE medicine SET (
 		barcode = ?, name = ?, qty = ?, 
 		first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, 
@@ -399,12 +414,12 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, userId int) error {
 		last_modified = ?, last_modified_by_user_id = ?
 	) WHERE id = ?`
 
-	_, err := s.db.Exec(query,
+	_, err = s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
 		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
 		med.SecondUnitID, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
 		med.ThirdUnitID, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
-		med.Description, time.Now(), userId, mid)
+		med.Description, time.Now(), user.ID, mid)
 	if err != nil {
 		return err
 	}

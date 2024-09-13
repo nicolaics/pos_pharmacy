@@ -164,13 +164,13 @@ func (s *Store) GetAllDoctors() ([]types.Doctor, error) {
 	return doctors, nil
 }
 
-func (s *Store) DeleteDoctor(doctor *types.Doctor, uid int) error {
+func (s *Store) DeleteDoctor(doctor *types.Doctor, user *types.User) error {
 	data, err := s.GetDoctorByID(doctor.ID)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "doctor", uid, data.ID, data)
+	err = logger.WriteLog("delete", "doctor", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -184,13 +184,13 @@ func (s *Store) DeleteDoctor(doctor *types.Doctor, uid int) error {
 	return nil
 }
 
-func (s *Store) ModifyDoctor(id int, newName string, uid int) error {
+func (s *Store) ModifyDoctor(id int, newName string, user *types.User) error {
 	data, err := s.GetDoctorByID(id)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteLog("modify", "doctor", uid, data.ID, map[string]interface{}{"previous_data": data})
+	err = logger.WriteLog("modify", "doctor", user.Name, data.ID, map[string]interface{}{"previous_data": data})
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

@@ -11,8 +11,8 @@ type CustomerStore interface {
 	GetCustomerByID(id int) (*Customer, error)
 	CreateCustomer(Customer) error
 	GetAllCustomers() ([]Customer, error)
-	DeleteCustomer(int, *Customer) error
-	ModifyCustomer(int, string, int) error
+	DeleteCustomer(*User, *Customer) error
+	ModifyCustomer(int, string, *User) error
 }
 
 type RegisterCustomerPayload struct {

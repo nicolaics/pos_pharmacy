@@ -22,9 +22,9 @@ type InvoiceStore interface {
 	CreateInvoice(Invoice) error
 	CreateMedicineItems(MedicineItems) error
 	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)
-	DeleteMedicineItems(*Invoice, int) error
-	DeleteInvoice(*Invoice, int) error
-	ModifyInvoice(int, Invoice) error
+	DeleteMedicineItems(*Invoice, *User) error
+	DeleteInvoice(*Invoice, *User) error
+	ModifyInvoice(int, Invoice, *User) error
 }
 
 type ViewInvoiceDetailPayload struct {

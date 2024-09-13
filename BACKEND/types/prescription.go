@@ -22,9 +22,9 @@ type PrescriptionStore interface {
 	CreatePrescriptionMedicineItems(PrescriptionMedicineItems) error
 
 	GetPrescriptionMedicineItems(prescriptionId int) ([]PrescriptionMedicineItemRow, error)
-	DeletePrescription(*Prescription, int) error
-	DeletePrescriptionMedicineItems(*Prescription, int) error
-	ModifyPrescription(int, Prescription, int) error
+	DeletePrescription(*Prescription, *User) error
+	DeletePrescriptionMedicineItems(*Prescription, *User) error
+	ModifyPrescription(int, Prescription, *User) error
 }
 
 type RegisterPrescriptionPayload struct {

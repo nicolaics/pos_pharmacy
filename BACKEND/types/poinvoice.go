@@ -21,10 +21,10 @@ type PurchaseOrderInvoiceStore interface {
 
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
 
-	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
-	DeletePurchaseOrderItems(*PurchaseOrderInvoice, int) error
+	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, *User) error
+	DeletePurchaseOrderItems(*PurchaseOrderInvoice, *User) error
 
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, int) error
+	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, *User) error
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END

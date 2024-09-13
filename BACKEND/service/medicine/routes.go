@@ -309,7 +309,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.medStore.DeleteMedicine(medicine, user.ID)
+	err = h.medStore.DeleteMedicine(medicine, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -443,7 +443,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		ThirdDiscount:  payload.NewData.ThirdDiscount,
 		ThirdPrice:     payload.NewData.ThirdPrice,
 		Description:    payload.NewData.Description,
-	}, user.ID)
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

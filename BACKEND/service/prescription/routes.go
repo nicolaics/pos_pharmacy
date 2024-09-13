@@ -548,13 +548,13 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user.ID)
+	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.prescriptionStore.DeletePrescription(prescription, user.ID)
+	err = h.prescriptionStore.DeletePrescription(prescription, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -638,13 +638,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		TotalPrice:           payload.NewData.TotalPrice,
 		Description:          payload.NewData.Description,
 		LastModifiedByUserID: user.ID,
-	}, user.ID)
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user.ID)
+	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -213,13 +213,13 @@ func (s *Store) CreateUser(user types.User) error {
 	return nil
 }
 
-func (s *Store) DeleteUser(user *types.User, deletedById int) error {
+func (s *Store) DeleteUser(user *types.User, deletedByUser *types.User) error {
 	data, err := s.GetUserByID(user.ID)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "user", deletedById, data.ID, data)
+	err = logger.WriteLog("delete", "user", deletedByUser.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -265,7 +265,7 @@ func (s *Store) UpdateLastLoggedIn(id int) error {
 	return nil
 }
 
-func (s *Store) ModifyUser(id int, user types.User, modifiedBy int) error {
+func (s *Store) ModifyUser(id int, user types.User, modifiedByUser *types.User) error {
 	data, err := s.GetUserByID(user.ID)
 	if err != nil {
 		return err
@@ -275,7 +275,7 @@ func (s *Store) ModifyUser(id int, user types.User, modifiedBy int) error {
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "user", modifiedBy, data.ID, writeData)
+	err = logger.WriteLog("modify", "user", modifiedByUser.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

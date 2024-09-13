@@ -129,13 +129,13 @@ func (s *Store) GetCompanyProfile() (*types.CompanyProfileReturn, error) {
 // 	return nil
 // }
 
-func (s *Store) ModifyCompanyProfile(id int, userId int, newCompanyProfile types.CompanyProfile) error {
+func (s *Store) ModifyCompanyProfile(id int, user *types.User, newCompanyProfile types.CompanyProfile) error {
 	data, err := s.GetCompanyProfileByID(id)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteLog("modify", "company-profile", userId, data.ID, map[string]interface{}{"previous_data": data})
+	err = logger.WriteLog("modify", "company-profile", user.Name, data.ID, map[string]interface{}{"previous_data": data})
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -148,7 +148,7 @@ func (s *Store) ModifyCompanyProfile(id int, userId int, newCompanyProfile types
 	_, err = s.db.Exec(query,
 		newCompanyProfile.Name, newCompanyProfile.Address, newCompanyProfile.BusinessNumber,
 		newCompanyProfile.Pharmacist, newCompanyProfile.PharmacistLicenseNumber, time.Now(),
-		userId, id)
+		user.ID, id)
 	if err != nil {
 		return err
 	}

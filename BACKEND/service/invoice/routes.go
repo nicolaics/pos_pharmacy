@@ -444,13 +444,13 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.invoiceStore.DeleteMedicineItems(invoice, user.ID)
+	err = h.invoiceStore.DeleteMedicineItems(invoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.invoiceStore.DeleteInvoice(invoice, user.ID)
+	err = h.invoiceStore.DeleteInvoice(invoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -510,13 +510,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Description:          payload.NewData.Description,
 		InvoiceDate:          payload.NewData.InvoiceDate,
 		LastModifiedByUserID: user.ID,
-	})
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = h.invoiceStore.DeleteMedicineItems(invoice, user.ID)
+	err = h.invoiceStore.DeleteMedicineItems(invoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -309,7 +309,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.DeleteUser(user, admin.ID)
+	err = h.store.DeleteUser(user, admin)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -364,7 +364,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Password:    payload.NewData.Password,
 		Admin:       payload.NewData.Admin,
 		PhoneNumber: payload.NewData.PhoneNumber,
-	}, admin.ID)
+	}, admin)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -467,7 +467,7 @@ func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request
 		Password:    user.Password,
 		Admin:       payload.Admin,
 		PhoneNumber: user.PhoneNumber,
-	}, admin.ID)
+	}, admin)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

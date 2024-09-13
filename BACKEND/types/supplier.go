@@ -16,9 +16,9 @@ type SupplierStore interface {
 
 	GetAllSuppliers() ([]Supplier, error)
 
-	DeleteSupplier(*Supplier, int) error
+	DeleteSupplier(*Supplier, *User) error
 
-	ModifySupplier(id int, newSupplierData Supplier, userId int) error
+	ModifySupplier(id int, newSupplierData Supplier, user *User) error
 }
 
 type RegisterSupplierPayload struct {

@@ -22,9 +22,9 @@ type ProductionStore interface {
 	CreateProductionMedicineItems(ProductionMedicineItems) error
 
 	GetProductionMedicineItems(prescriptionId int) ([]ProductionMedicineItemRow, error)
-	DeleteProduction(*Production, int) error
-	DeleteProductionMedicineItems(*Production, int) error
-	ModifyProduction(int, Production, int) error
+	DeleteProduction(*Production, *User) error
+	DeleteProductionMedicineItems(*Production, *User) error
+	ModifyProduction(int, Production, *User) error
 }
 
 type RegisterProductionPayload struct {

@@ -10,8 +10,8 @@ type DoctorStore interface {
 	GetDoctorByID(id int) (*Doctor, error)
 	CreateDoctor(Doctor) error
 	GetAllDoctors() ([]Doctor, error)
-	DeleteDoctor(*Doctor, int) error
-	ModifyDoctor(int, string, int) error
+	DeleteDoctor(*Doctor, *User) error
+	ModifyDoctor(int, string, *User) error
 }
 
 type RegisterDoctorPayload struct {
