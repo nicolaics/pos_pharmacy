@@ -14,10 +14,11 @@ type PurchaseOrderInvoiceStore interface {
 	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
 	CreatePurchaseOrderItems(PurchaseOrderItem) error
 
-	GetPurchaseOrderInvoices(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoiceListsReturnPayload, error)
+	GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
+	GetPurchaseOrderInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
+	GetPurchaseOrderInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
+
 	GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]PurchaseOrderItemsReturn, error)
 
 	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, int) error
@@ -70,6 +71,15 @@ type PurchaseOrderItemsReturn struct {
 	ReceivedQty     float64 `json:"receivedQty"`
 	Unit            string  `json:"unit"`
 	Remarks         string  `json:"remarks"`
+}
+
+type PurchaseOrderInvoiceListsReturnPayload struct {
+	ID           int       `json:"id"`
+	Number       int       `json:"number"`
+	SupplierName string    `json:"supplierName"`
+	UserName     string    `json:"userName"`
+	TotalItems   int       `json:"totalItems"`
+	InvoiceDate  time.Time `json:"invoiceDate"`
 }
 
 type PurchaseOrderInvoiceDetailPayload struct {

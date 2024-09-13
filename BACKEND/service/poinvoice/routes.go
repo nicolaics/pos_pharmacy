@@ -190,10 +190,11 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 	params := vars["params"]
 	val := vars["val"]
 
-	var purchaseOrderInvoices []types.PurchaseOrderInvoice
+	// TODO: recheck
+	var purchaseOrderInvoices []types.PurchaseOrderInvoiceListsReturnPayload
 
 	if val == "all" {
-		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoices(payload.StartDate, payload.EndDate)
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDate(payload.StartDate, payload.EndDate)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -211,7 +212,26 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 			return
 		}
 
-		purchaseOrderInvoices = append(purchaseOrderInvoices, *purchaseOrderInvoice)
+		supplier, err := h.supplierStore.GetSupplierByID(purchaseOrderInvoice.SupplierID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("supplier id %d not found", purchaseOrderInvoice.SupplierID))
+			return
+		}
+
+		user, err := h.userStore.GetUserByID(purchaseOrderInvoice.UserID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", purchaseOrderInvoice.UserID))
+			return
+		}
+
+		purchaseOrderInvoices = append(purchaseOrderInvoices, types.PurchaseOrderInvoiceListsReturnPayload{
+			ID: purchaseOrderInvoice.ID,
+			Number: purchaseOrderInvoice.Number,
+			SupplierName: supplier.Name,
+			UserName: user.Name,
+			TotalItems: purchaseOrderInvoice.TotalItems,
+			InvoiceDate: purchaseOrderInvoice.InvoiceDate,
+		})
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
 		if err != nil {
@@ -225,28 +245,36 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 			return
 		}
 	} else if params == "user" {
-		user, err := h.userStore.GetUserByName(val)
+		users, err := h.userStore.GetUserBySimilarName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
 			return
 		}
+		
+		for _, user := range(users) {
+			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any po invoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
 
-		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
-			return
+			purchaseOrderInvoices = append(purchaseOrderInvoices, temp...)
 		}
 	} else if params == "supplier" {
-		supplier, err := h.supplierStore.GetSupplierByName(val)
+		suppliers, err := h.supplierStore.GetSupplierBySimilarName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not exists", val))
 			return
 		}
 
-		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndSupplierID(payload.StartDate, payload.EndDate, supplier.ID)
-		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
-			return
+		for _, supplier := range(suppliers) {
+			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, supplier.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s doesn't create any po invoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			purchaseOrderInvoices = append(purchaseOrderInvoices, temp...)
 		}
 	} else {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
