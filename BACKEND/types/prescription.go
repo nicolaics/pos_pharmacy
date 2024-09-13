@@ -8,7 +8,14 @@ import (
 type PrescriptionStore interface {
 	GetPrescriptionsByNumber(int) ([]Prescription, error)
 	GetPrescriptionByID(int) (*Prescription, error)
-	GetPrescriptionsByDate(startDate time.Time, endDate time.Time) ([]Prescription, error)
+
+	GetPrescriptionsByDate(startDate time.Time, endDate time.Time) ([]PrescriptionListsReturnPayload, error)
+	GetPrescriptionsByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PrescriptionListsReturnPayload, error)
+	GetPrescriptionsByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PrescriptionListsReturnPayload, error)
+	GetPrescriptionsByDateAndPatientID(startDate time.Time, endDate time.Time, pid int) ([]PrescriptionListsReturnPayload, error)
+	GetPrescriptionsByDateAndDoctorID(startDate time.Time, endDate time.Time, did int) ([]PrescriptionListsReturnPayload, error)
+	GetPrescriptionsByDateAndInvoiceID(startDate time.Time, endDate time.Time, iid int) ([]PrescriptionListsReturnPayload, error)
+
 	GetPrescriptionID(invoiceId int, number int, date time.Time, patientName string, totalPrice float64) (int, error)
 
 	CreatePrescription(Prescription) error
@@ -48,6 +55,27 @@ type PrescriptionMedicineListPayload struct {
 	Price           float64 `json:"price" validate:"required"`
 	Discount        float64 `json:"discount"`
 	Subtotal        float64 `json:"subtotal" validate:"required"`
+}
+
+// prescription list payload returned to user after searching
+type PrescriptionListsReturnPayload struct {
+	ID                   int           `json:"id"`
+	Number               int           `json:"number"`
+	PrescriptionDate     time.Time     `json:"prescriptionDate"`
+	PatientName          string        `json:"patientName"`
+	DoctorName           string        `json:"doctorName"`
+	Qty                  float64       `json:"qty"`
+	Price                float64       `json:"price"`
+	TotalPrice           float64       `json:"totalPrice"`
+	Description          string        `json:"description"`
+	UserName             string        `json:"userName"`
+
+	Invoice struct {
+		Number       int       `json:"number"`
+		CustomerName string    `json:"customerName"`
+		TotalPrice   float64   `json:"totalPrice"`
+		InvoiceDate  time.Time `json:"invoiceDate"`
+	} `json:"invoice"`
 }
 
 // only view the purchase invoice list

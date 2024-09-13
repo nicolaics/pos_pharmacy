@@ -3,6 +3,7 @@ package prescription
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
@@ -64,11 +65,22 @@ func (s *Store) GetPrescriptionByID(id int) (*types.Prescription, error) {
 	return prescription, nil
 }
 
-func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) ([]types.Prescription, error) {
-	query := `SELECT * FROM prescription 
-				WHERE (prescription_date BETWEEN DATE(?) AND DATE(?)) 
-				AND deleted_at IS NULL 
-				ORDER BY prescription_date DESC`
+func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					ORDER BY p.prescription_date DESC`
 
 	rows, err := s.db.Query(query, startDate, endDate)
 	if err != nil {
@@ -76,10 +88,212 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 	}
 	defer rows.Close()
 
-	prescriptions := make([]types.Prescription, 0)
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
 
 	for rows.Next() {
-		prescription, err := scanRowIntoPrescription(rows)
+		prescription, err := scanRowIntoPrescriptionLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		prescriptions = append(prescriptions, *prescription)
+	}
+
+	return prescriptions, nil
+}
+
+func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.number LIKE ? 
+					ORDER BY p.prescription_date DESC`
+
+	searchVal := "%"
+	for _, val := range(strconv.Itoa(number)) {
+		if string(val) != " " {
+			searchVal += (string(val) + "%")
+		}
+	}
+	
+	rows, err := s.db.Query(query, startDate, endDate, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	for rows.Next() {
+		prescription, err := scanRowIntoPrescriptionLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		prescriptions = append(prescriptions, *prescription)
+	}
+
+	return prescriptions, nil
+}
+
+func (s *Store) GetPrescriptionsByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.user_id = ? 
+					ORDER BY p.prescription_date DESC`
+
+	rows, err := s.db.Query(query, startDate, endDate, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	for rows.Next() {
+		prescription, err := scanRowIntoPrescriptionLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		prescriptions = append(prescriptions, *prescription)
+	}
+
+	return prescriptions, nil
+}
+
+func (s *Store) GetPrescriptionsByDateAndPatientID(startDate time.Time, endDate time.Time, pid int) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.patient_id = ? 
+					ORDER BY p.prescription_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, pid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	for rows.Next() {
+		prescription, err := scanRowIntoPrescriptionLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		prescriptions = append(prescriptions, *prescription)
+	}
+
+	return prescriptions, nil
+}
+
+func (s *Store) GetPrescriptionsByDateAndDoctorID(startDate time.Time, endDate time.Time, did int) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.doctor_id = ? 
+					ORDER BY p.prescription_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, did)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	for rows.Next() {
+		prescription, err := scanRowIntoPrescriptionLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		prescriptions = append(prescriptions, *prescription)
+	}
+
+	return prescriptions, nil
+}
+
+func (s *Store) GetPrescriptionsByDateAndInvoiceID(startDate time.Time, endDate time.Time, iid int) ([]types.PrescriptionListsReturnPayload, error) {
+	query := `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.invoice_id = ? 
+					ORDER BY p.prescription_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, iid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	for rows.Next() {
+		prescription, err := scanRowIntoPrescriptionLists(rows)
 
 		if err != nil {
 			return nil, err
@@ -307,6 +521,36 @@ func scanRowIntoPrescription(rows *sql.Rows) (*types.Prescription, error) {
 	prescription.PrescriptionDate = prescription.PrescriptionDate.Local()
 	prescription.CreatedAt = prescription.CreatedAt.Local()
 	prescription.LastModified = prescription.LastModified.Local()
+
+	return prescription, nil
+}
+
+func scanRowIntoPrescriptionLists(rows *sql.Rows) (*types.PrescriptionListsReturnPayload, error) {
+	prescription := new(types.PrescriptionListsReturnPayload)
+
+	err := rows.Scan(
+		&prescription.ID,
+		&prescription.Number,
+		&prescription.PrescriptionDate,
+		&prescription.PatientName,
+		&prescription.DoctorName,
+		&prescription.Qty,
+		&prescription.Price,
+		&prescription.TotalPrice,
+		&prescription.Description,
+		&prescription.UserName,
+		&prescription.Invoice.Number,
+		&prescription.Invoice.CustomerName,
+		&prescription.Invoice.TotalPrice,
+		&prescription.Invoice.InvoiceDate,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	prescription.PrescriptionDate = prescription.PrescriptionDate.Local()
+	prescription.Invoice.InvoiceDate = prescription.Invoice.InvoiceDate.Local()
 
 	return prescription, nil
 }

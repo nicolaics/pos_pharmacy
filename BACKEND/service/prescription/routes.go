@@ -3,6 +3,7 @@ package prescription
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -47,7 +48,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/prescription", h.handleRegister).Methods(http.MethodPost)
 
 	// TODO: add more get prescriptions
-	router.HandleFunc("/prescription/all/date", h.handleGetPrescriptions).Methods(http.MethodPost)
+	router.HandleFunc("/prescription/{params}/{val}", h.handleGetPrescriptions).Methods(http.MethodPost)
 
 	router.HandleFunc("/prescription/detail", h.handleGetPrescriptionDetail).Methods(http.MethodPost)
 	router.HandleFunc("/prescription", h.handleDelete).Methods(http.MethodDelete)
@@ -228,9 +229,159 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	prescriptions, err := h.prescriptionStore.GetPrescriptionsByDate(payload.StartDate, payload.EndDate)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	vars := mux.Vars(r)
+	params := vars["params"]
+	val := vars["val"]
+
+	// TODO: RECHECK
+	var prescriptions []types.PrescriptionListsReturnPayload
+
+	if val == "all" {
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDate(payload.StartDate, payload.EndDate)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "id" {
+		id, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		prescription, err := h.prescriptionStore.GetPrescriptionByID(id)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription id %d not exist", id))
+			return
+		}
+
+		invoice, err := h.invoiceStore.GetInvoiceByID(prescription.InvoiceID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("invoice id %d not found", prescription.InvoiceID))
+			return
+		}
+
+		patient, err := h.patientStore.GetPatientByID(prescription.PatientID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("patient id %d not found", prescription.PatientID))
+			return
+		}
+
+		doctor, err := h.doctorStore.GetDoctorByID(prescription.DoctorID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("doctor id %d not found", prescription.DoctorID))
+			return
+		}
+
+		user, err := h.userStore.GetUserByID(prescription.UserID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", prescription.UserID))
+			return
+		}
+
+		customer, err := h.customerStore.GetCustomerByID(invoice.CustomerID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("customer id %d not found", invoice.CustomerID))
+			return
+		}
+
+		prescriptions = append(prescriptions, types.PrescriptionListsReturnPayload{
+			ID:               prescription.ID,
+			Number:           prescription.Number,
+			PrescriptionDate: prescription.PrescriptionDate,
+			PatientName:      patient.Name,
+			DoctorName:       doctor.Name,
+			Qty:              prescription.Qty,
+			Price:            prescription.Price,
+			TotalPrice:       prescription.TotalPrice,
+			Description:      prescription.Description,
+			UserName:         user.Name,
+			Invoice: struct {
+				Number       int       "json:\"number\""
+				CustomerName string    "json:\"customerName\""
+				TotalPrice   float64   "json:\"totalPrice\""
+				InvoiceDate  time.Time "json:\"invoiceDate\""
+			}{
+				Number:       invoice.Number,
+				CustomerName: customer.Name,
+				TotalPrice:   invoice.TotalPrice,
+				InvoiceDate:  invoice.InvoiceDate,
+			},
+		})
+	} else if params == "number" {
+		number, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else if params == "user" {
+		users, err := h.userStore.GetUserBySimilarName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
+			return
+		}
+
+		for _, user := range users {
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			prescriptions = append(prescriptions, temp...)
+		}
+	} else if params == "patient" {
+		patients, err := h.patientStore.GetPatientsBySimilarName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val))
+			return
+		}
+
+		for _, patient := range patients {
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndPatientID(payload.StartDate, payload.EndDate, patient.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			prescriptions = append(prescriptions, temp...)
+		}
+	} else if params == "doctor" {
+		doctors, err := h.doctorStore.GetDoctorsBySimilarName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val))
+			return
+		}
+
+		for _, doctor := range doctors {
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndDoctorID(payload.StartDate, payload.EndDate, doctor.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s doesn't have any poInvoice between %s and %s", val, payload.StartDate, payload.EndDate))
+				return
+			}
+
+			prescriptions = append(prescriptions, temp...)
+		}
+	} else if params == "invoice-id" {
+		iid, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndInvoiceID(payload.StartDate, payload.EndDate, iid)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	} else {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
 		return
 	}
 
