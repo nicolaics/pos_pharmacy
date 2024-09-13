@@ -292,6 +292,17 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	users, err := h.store.GetAllUsers()
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(users) == 1 || payload.ID == 1{
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cannot delete initial admin"))
+		return
+	}
+
 	user, err := h.store.GetUserByID(payload.ID)
 	if user == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
