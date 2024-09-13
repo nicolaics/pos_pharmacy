@@ -21,7 +21,6 @@ const ModifyPatientPage: React.FC = () => {
     heading = "Add";
   }
 
-  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
 
@@ -29,8 +28,7 @@ const ModifyPatientPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      // TODO: add query for searching patients
-      const patientURL = `http://${BACKEND_BASE_URL}/patient?all=all`; // Set the URL or handle this logic
+      const patientURL = `http://${BACKEND_BASE_URL}/patient/${state.id}`; // Set the URL or handle this logic
       fetch(patientURL, {
         method: "GET",
         headers: {
@@ -46,8 +44,8 @@ const ModifyPatientPage: React.FC = () => {
 
             console.log(data["data"]);
 
-            setId(data["data"].id);
-            setName(data["data"].name);
+            setId(data[0]["data"].id);
+            setName(data[0]["data"].name);
           })
         )
         .catch((error) => {
@@ -59,7 +57,6 @@ const ModifyPatientPage: React.FC = () => {
       setShowIdField(false);
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
-  */
 
 
   const handleNameChange = (event: any) => {
@@ -78,13 +75,16 @@ const ModifyPatientPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/patient`;
 
       fetch(url, {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          name: name,
+          id: Number(id),
+          newData: {
+            name: name,
+          },
         }),
       })
         .then((response) =>
@@ -104,22 +104,19 @@ const ModifyPatientPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/patient`;
 
       fetch(url, {
-        method: "PATCH",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          id: Number(id),
-          newData: {
             name: name,
-          },
         }),
       })
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Invalid c redentials or network issue");
+              throw new Error("Invalid credentials or network issue");
             }
 
             console.log(data);
@@ -196,12 +193,12 @@ const ModifyPatientPage: React.FC = () => {
 
       <div className="modify-patient-buttons">
         <div className="modify-patient-btns-grp">
-          <button
+        <button
             type="button"
-            className="modify-patient-ok-btn"
-            onClick={handleSendRequest}
+            className="modify-patient-delete-btn"
+            onClick={handleDelete}
           >
-            {okBtnLabel}
+            Delete Patient
           </button>
 
           <button
@@ -214,10 +211,10 @@ const ModifyPatientPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-patient-delete-btn"
-            onClick={handleDelete}
+            className="modify-patient-ok-btn"
+            onClick={handleSendRequest}
           >
-            Delete Patient
+            {okBtnLabel}
           </button>
         </div>
       </div>
