@@ -49,6 +49,8 @@ function fillTable(
 const ViewCustomerPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const [searchVal, setSearchVal] = useState("");
+
   const testData = [
     {
       id: 1,
@@ -62,51 +64,67 @@ const ViewCustomerPage: React.FC = () => {
     },
   ];
 
+  const handleSearchValChange = (event: any) => {
+    event.preventDefault();
+    setSearchVal(event.target.value);
+  }
+
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllCustomerURL = `http://${BACKEND_BASE_URL}/customer`;
+
+    var getAllCustomerURL = "";
+
+    if (searchVal === "") {
+      getAllCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
+    } else {
+      getAllCustomerURL = `http://${BACKEND_BASE_URL}/${searchVal}`;
+    }
+
+    console.log(getAllCustomerURL);
 
     // TEST DATA
-    const tableBody = document.querySelector("#customer-data-table tbody");
-    if (!tableBody) {
-      console.error("table body not found");
-      return;
-    }
-    tableBody.innerHTML = "";
-    for (let i = 0; i < testData.length; i++) {
-      fillTable(testData[i], tableBody, navigate);
-    }
+    // const tableBody = document.querySelector("#customer-data-table tbody");
+    // if (!tableBody) {
+    //   console.error("table body not found");
+    //   return;
+    // }
+    // tableBody.innerHTML = "";
+    // for (let i = 0; i < testData.length; i++) {
+    //   fillTable(testData[i], tableBody, navigate);
+    // }
 
-    // fetch(getAllCustomerURL, {
-    //   method: "GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: "Bearer " + token,
-    //   },
-    // })
-    //   .then((response) =>
-    //     response.json().then((data) => {
-    //       if (!response.ok) {
-    //         throw new Error("Invalid credentials or network issue");
-    //       }
+    fetch(getAllCustomerURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
 
-    //       const tableBody = document.querySelector("#dataTable tbody");
-    //       if (!tableBody) {
-    //         console.error("table body not found");
-    //         return;
-    //       }
+          console.log(data);
 
-    //       tableBody.innerHTML = "";
+          const tableBody = document.querySelector("#customer-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
 
-    //       for (let i = 0; i < data.length; i++) {
-    //         fillTable(data[i], tableBody, navigate);
-    //       }
-    //     })
-    //   )
-    //   .catch((error) => {
-    //     console.error("Error loading customer data:", error);
-    //     alert("Error loading customer data");
-    //   });
+          tableBody.innerHTML = "";
+
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading customer data:", error);
+        alert("Error loading customer data");
+      });
   };
 
   const returnToHome = () => {
@@ -126,6 +144,8 @@ const ViewCustomerPage: React.FC = () => {
           type="text"
           className="customer-search-input"
           placeholder="Search"
+          value={searchVal}
+          onChange={handleSearchValChange}
         />
         <button onClick={search} className="customer-search-button">
           <MdPersonSearch size={30} id="customer-search-icon" />
