@@ -10,6 +10,7 @@ import {
 import { FaUserDoctor } from "react-icons/fa6";
 import { IoIosLogOut } from "react-icons/io";
 import { MdSick } from "react-icons/md";
+import { GiMedicines } from "react-icons/gi";
 
 import "./Home.css";
 import { useNavigate } from "react-router-dom";
@@ -102,7 +103,11 @@ const HomePage: React.FC = () => {
           <FaClock size={50} />
           <h2>Purchasing</h2>
         </div>
-        <div className="home-grid-item" onClick={logout}>
+        <div className="home-grid-item">
+          <GiMedicines size={50} />
+          <h2>Production</h2>
+        </div>
+        <div className="home-grid-item-logout" onClick={logout}>
           <IoIosLogOut size={50} />
           <h2>Logout</h2>
         </div>
