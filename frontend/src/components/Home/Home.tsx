@@ -6,6 +6,7 @@ import {
   FaReceipt,
   FaUser,
   FaClock,
+  FaBuilding,
 } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
 import { IoIosLogOut } from "react-icons/io";
@@ -67,6 +68,10 @@ const HomePage: React.FC = () => {
     navigate("/doctor");
   };
 
+  const company = () => {
+    navigate("/company")
+  }
+
   return (
     <div className="home-page">
       <h1>Welcome!</h1>
@@ -90,6 +95,10 @@ const HomePage: React.FC = () => {
         <div className="home-grid-item" onClick={doctor}>
           <FaUserDoctor size={50} />
           <h2>Doctor</h2>
+        </div>
+        <div className="home-grid-item" onClick={company}>
+          <FaBuilding size={50} />
+          <h2>Company</h2>
         </div>
         <div className="home-grid-item">
           <FaPills size={50} />
