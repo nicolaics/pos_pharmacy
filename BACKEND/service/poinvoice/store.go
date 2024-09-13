@@ -186,7 +186,29 @@ func (s *Store) GetPurchaseOrderInvoicesByDate(startDate time.Time, endDate time
 }
 
 func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PurchaseOrderInvoiceListsReturnPayload, error) {
-	query := `SELECT poi.id, poi.number, 
+	query := `SELECT COUNT(*)
+					FROM purchase_order_invoice 
+					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number = ? 
+					AND deleted_at IS NULL 
+					ORDER BY invoice_date DESC`
+
+	row := s.db.QueryRow(query, startDate, endDate, number)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseOrderInvoices := make([]types.PurchaseOrderInvoiceListsReturnPayload, 0)
+
+	if count == 0 {
+		query := `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_items, poi.invoice_date 
 					FROM purchase_order_invoice AS poi 
@@ -197,20 +219,48 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, end
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`
 
-	searchVal := "%"
-	for _, val := range(strconv.Itoa(number)) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
+		searchVal := "%"
+		for _, val := range strconv.Itoa(number) {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
 		}
+
+		rows, err := s.db.Query(query, startDate, endDate, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+
+		for rows.Next() {
+			purchaseOrderInvoice, err := scanRowIntoPurchaseOrderInvoiceLists(rows)
+			if err != nil {
+				return nil, err
+			}
+
+			purchaseOrderInvoices = append(purchaseOrderInvoices, *purchaseOrderInvoice)
+		}
+
+		return purchaseOrderInvoices, nil
 	}
 
-	rows, err := s.db.Query(query, startDate, endDate, searchVal)
+	query = `SELECT poi.id, poi.number, 
+					supplier.name, user.name, 
+					poi.total_items, poi.invoice_date 
+					FROM purchase_order_invoice AS poi 
+					JOIN supplier ON poi.supplier_id = supplier.id 
+					JOIN user ON poi.user_id = user.id 
+					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND poi.number = ? 
+					AND poi.deleted_at IS NULL 
+					ORDER BY poi.invoice_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, number)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	purchaseOrderInvoices := make([]types.PurchaseOrderInvoiceListsReturnPayload, 0)
 
 	for rows.Next() {
 		purchaseOrderInvoice, err := scanRowIntoPurchaseOrderInvoiceLists(rows)

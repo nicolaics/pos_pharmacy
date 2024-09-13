@@ -7,7 +7,7 @@ import (
 
 type CustomerStore interface {
 	GetCustomerByName(name string) (*Customer, error)
-	GetCustomersBySimilarName(name string) ([]Customer, error)
+	GetCustomersBySearchName(name string) ([]Customer, error)
 	GetCustomerByID(id int) (*Customer, error)
 	CreateCustomer(Customer) error
 	GetAllCustomers() ([]Customer, error)

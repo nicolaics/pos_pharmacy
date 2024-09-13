@@ -10,6 +10,9 @@ type UserStore interface {
 	GetUserByID(int) (*User, error)
 	GetAllUsers() ([]User, error)
 
+	GetUserBySearchName(string) ([]User, error)
+	GetUserBySearchPhoneNumber(string) ([]User, error)
+
 	CreateUser(User) error
 
 	DeleteUser(*User, int) error

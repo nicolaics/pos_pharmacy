@@ -96,7 +96,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			patients, err = h.patientStore.GetPatientsBySimilarName(val)
+			patients, err = h.patientStore.GetPatientsBySearchName(val)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not found", val))
 				return

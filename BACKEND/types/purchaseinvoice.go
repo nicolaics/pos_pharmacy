@@ -6,11 +6,15 @@ import (
 )
 
 type PurchaseInvoiceStore interface {
-	GetPurchaseInvoicesByNumber(int) ([]PurchaseInvoice, error)
+	GetPurchaseInvoicesByNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (int, error)
-	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoice, error)
 	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
+
+	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoiceListsReturnPayload, error)
+	GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseInvoiceListsReturnPayload, error)
+	GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseInvoiceListsReturnPayload, error)
+	GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseInvoiceListsReturnPayload, error)
 
 	CreatePurchaseInvoice(PurchaseInvoice) error
 	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
@@ -116,6 +120,17 @@ type PurchaseInvoiceDetailPayload struct {
 	} `json:"user"`
 
 	MedicineLists []PurchaseMedicineItemsReturn `json:"medicineLists"`
+}
+
+// view the lists of the purchase invoice
+type PurchaseInvoiceListsReturnPayload struct {
+	ID           int       `json:"id"`
+	Number       int       `json:"number"`
+	SupplierName string    `json:"supplierName"`
+	TotalPrice   float64   `json:"totalPrice"`
+	Description  string    `json:"description"`
+	UserName     string    `json:"userName"`
+	InvoiceDate  time.Time `json:"invoiceDate"`
 }
 
 type DeletePurchaseInvoice struct {

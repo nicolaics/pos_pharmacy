@@ -99,7 +99,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			customers, err = h.custStore.GetCustomersBySimilarName(val)
+			customers, err = h.custStore.GetCustomersBySearchName(val)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val))
 				return

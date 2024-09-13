@@ -43,25 +43,59 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	return customer, nil
 }
 
-func (s *Store) GetCustomersBySimilarName(name string) ([]types.Customer, error) {
-	query := "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL"
-	searchVal := "%"
-
-	for _, val := range(name) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
-		}
+func (s *Store) GetCustomersBySearchName(name string) ([]types.Customer, error) {
+	query := "SELECT COUNT(*) FROM customer WHERE name = ? AND deleted_at IS NULL"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
 	}
 
-	log.Println("search val customer: ", searchVal)
-	
-	rows, err := s.db.Query(query, searchVal)
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	customers := make([]types.Customer, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL"
+		searchVal := "%"
+
+		log.Println("search val customer: ", searchVal)
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			customer, err := scanRowIntoCustomer(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			customers = append(customers, *customer)
+		}
+
+		return customers, nil
+	}
+
+	query = "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	customers := make([]types.Customer, 0)
 
 	for rows.Next() {
 		customer, err := scanRowIntoCustomer(rows)
@@ -103,7 +137,7 @@ func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 
 func (s *Store) CreateCustomer(customer types.Customer) error {
 	_, err := s.db.Exec("INSERT INTO customer (name) VALUES (?)",
-						customer.Name)
+		customer.Name)
 
 	if err != nil {
 		return err
@@ -141,7 +175,7 @@ func (s *Store) DeleteCustomer(uid int, customer *types.Customer) error {
 		return err
 	}
 
-	data, err := s.GetCustomerByID(customer.ID)	
+	data, err := s.GetCustomerByID(customer.ID)
 	if err != nil {
 		return err
 	}

@@ -24,9 +24,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/register", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/user/register", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	// TODO: add search function for user. in the query
-	router.HandleFunc("/user?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/user?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user/{params}/{val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/user/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
 	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -174,26 +173,23 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-
 	params := vars["params"]
 	val := vars["val"]
 
 	var users []types.User
 
-	if params == "all" && val == "all" {
+	if val == "all" {
 		users, err = h.store.GetAllUsers()
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 	} else if params == "name" {
-		user, err := h.store.GetUserByName(val)
+		users, err = h.store.GetUserBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val))
 			return
 		}
-
-		users = append(users, *user)
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
@@ -208,6 +204,12 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 
 		users = append(users, *user)
+	} else if params == "phone-number" {
+		users, err = h.store.GetUserBySearchPhoneNumber(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val))
+			return
+		}
 	} else {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return

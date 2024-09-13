@@ -3,6 +3,7 @@ package purchaseinvoice
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
@@ -140,33 +141,6 @@ func (s *Store) CreatePurchaseMedicineItems(purchaseMedItem types.PurchaseMedici
 	return nil
 }
 
-func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoice, error) {
-	query := `SELECT * FROM purchase_invoice 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
-				AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
-
-	rows, err := s.db.Query(query, startDate, endDate)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	purchaseInvoices := make([]types.PurchaseInvoice, 0)
-
-	for rows.Next() {
-		purchaseInvoice, err := scanRowIntoPurchaseInvoice(rows)
-
-		if err != nil {
-			return nil, err
-		}
-
-		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
-	}
-
-	return purchaseInvoices, nil
-}
-
 func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.PurchaseMedicineItemsReturn, error) {
 	query := `SELECT 
 			pmi.id, 
@@ -203,6 +177,204 @@ func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 	return purchaseMedicineItems, nil
 }
 
+func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT pi.id, pi.number, 
+				supplier.name, 
+				pi.total_price, pi.description, 
+				user.name, 
+				pi.invoice_date 
+				FROM purchase_invoice AS pi 
+				JOIN supplier ON supplier.id = pi.supplier_id 
+				JOIN user ON user.id = pi.user_id 
+				WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND pi.deleted_at IS NULL 
+				ORDER BY pi.invoice_date DESC`
+
+	rows, err := s.db.Query(query, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	purchaseInvoices := make([]types.PurchaseInvoiceListsReturnPayload, 0)
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
+func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT COUNT(*) 
+				FROM purchase_invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND number = ? 
+				AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+	row := s.db.QueryRow(query, startDate, endDate, number)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseInvoices := make([]types.PurchaseInvoiceListsReturnPayload, 0)
+
+	if count == 0 {
+		query = `SELECT pi.id, pi.number, 
+					supplier.name, 
+					pi.total_price, pi.description, 
+					user.name, 
+					pi.invoice_date 
+					FROM purchase_invoice AS pi 
+					JOIN supplier ON supplier.id = pi.supplier_id 
+					JOIN user ON user.id = pi.user_id 
+					WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number LIKE ?
+					AND pi.deleted_at IS NULL 
+					ORDER BY pi.invoice_date DESC`
+
+		searchVal := "%"
+		for _, val := range strconv.Itoa(number) {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, startDate, endDate, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+
+		for rows.Next() {
+			purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+			if err != nil {
+				return nil, err
+			}
+
+			purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+		}
+
+		return purchaseInvoices, nil
+	}
+
+	query = `SELECT pi.id, pi.number, 
+					supplier.name, 
+					pi.total_price, pi.description, 
+					user.name, 
+					pi.invoice_date 
+					FROM purchase_invoice AS pi 
+					JOIN supplier ON supplier.id = pi.supplier_id 
+					JOIN user ON user.id = pi.user_id 
+					WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number = ?
+					AND pi.deleted_at IS NULL 
+					ORDER BY pi.invoice_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, number)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
+func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT pi.id, pi.number, 
+				supplier.name, 
+				pi.total_price, pi.description, 
+				user.name, 
+				pi.invoice_date 
+				FROM purchase_invoice AS pi 
+				JOIN supplier ON supplier.id = pi.supplier_id 
+				JOIN user ON user.id = pi.user_id 
+				WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND pi.supplier_id = ? 
+				AND pi.deleted_at IS NULL 
+				ORDER BY pi.invoice_date DESC`
+
+	rows, err := s.db.Query(query, startDate, endDate, sid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	purchaseInvoices := make([]types.PurchaseInvoiceListsReturnPayload, 0)
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
+func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT pi.id, pi.number, 
+				supplier.name, 
+				pi.total_price, pi.description, 
+				user.name, 
+				pi.invoice_date 
+				FROM purchase_invoice AS pi 
+				JOIN supplier ON supplier.id = pi.supplier_id 
+				JOIN user ON user.id = pi.user_id 
+				WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND pi.user_id = ? 
+				AND pi.deleted_at IS NULL 
+				ORDER BY pi.invoice_date DESC`
+
+	rows, err := s.db.Query(query, startDate, endDate, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	purchaseInvoices := make([]types.PurchaseInvoiceListsReturnPayload, 0)
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
 func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, userId int) error {
 	query := "UPDATE purchase_invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
 	_, err := s.db.Exec(query, time.Now(), userId, purchaseInvoice.ID)
@@ -230,7 +402,7 @@ func (s *Store) DeletePurchaseMedicineItems(purchaseInvoice *types.PurchaseInvoi
 	}
 
 	writeData := map[string]interface{}{
-		"purchase_invoice": purchaseInvoice,
+		"purchase_invoice":       purchaseInvoice,
 		"deleted_medicine_items": data,
 	}
 
@@ -309,6 +481,28 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
 	purchaseInvoice.CreatedAt = purchaseInvoice.CreatedAt.Local()
 	purchaseInvoice.LastModified = purchaseInvoice.LastModified.Local()
+
+	return purchaseInvoice, nil
+}
+
+func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceListsReturnPayload, error) {
+	purchaseInvoice := new(types.PurchaseInvoiceListsReturnPayload)
+
+	err := rows.Scan(
+		&purchaseInvoice.ID,
+		&purchaseInvoice.Number,
+		&purchaseInvoice.SupplierName,
+		&purchaseInvoice.TotalPrice,
+		&purchaseInvoice.Description,
+		&purchaseInvoice.UserName,
+		&purchaseInvoice.InvoiceDate,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
 
 	return purchaseInvoice, nil
 }

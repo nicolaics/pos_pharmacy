@@ -104,7 +104,29 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 }
 
 func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PrescriptionListsReturnPayload, error) {
-	query := `SELECT p.id, p.number, p.prescription_date, 
+	query := `SELECT COUNT(*)
+					FROM prescription 
+					WHERE (prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number = ? 
+					AND deleted_at IS NULL 
+					ORDER BY p.prescription_date DESC`
+
+	row := s.db.QueryRow(query, startDate, endDate, number)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
+
+	if count == 0 {
+		query := `SELECT p.id, p.number, p.prescription_date, 
 					patient.name, doctor.name, 
 					p.qty, p.price, p.total_price, p.description, 
 					user.name, 
@@ -121,20 +143,54 @@ func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate tim
 					AND p.number LIKE ? 
 					ORDER BY p.prescription_date DESC`
 
-	searchVal := "%"
-	for _, val := range(strconv.Itoa(number)) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
+		searchVal := "%"
+		for _, val := range strconv.Itoa(number) {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
 		}
+
+		rows, err := s.db.Query(query, startDate, endDate, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+
+		for rows.Next() {
+			prescription, err := scanRowIntoPrescriptionLists(rows)
+			if err != nil {
+				return nil, err
+			}
+
+			prescriptions = append(prescriptions, *prescription)
+		}
+
+		return prescriptions, nil
 	}
+
+	query = `SELECT p.id, p.number, p.prescription_date, 
+					patient.name, doctor.name, 
+					p.qty, p.price, p.total_price, p.description, 
+					user.name, 
+					i.number, 
+					customer.name, 
+					i.total_price, i.invoice_date 
+					FROM prescription AS p 
+					JOIN patient ON p.patient_id = patient.id 
+					JOIN doctor ON p.doctor_id = doctor.id 
+					JOIN invoice ON p.invoice_id = invoice.id 
+					JOIN customer ON invoice.customer_id = customer.id 
+					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					AND p.deleted_at IS NULL 
+					AND p.number = ? 
+					ORDER BY p.prescription_date DESC`
 	
-	rows, err := s.db.Query(query, startDate, endDate, searchVal)
+	rows, err := s.db.Query(query, startDate, endDate, number)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	prescriptions := make([]types.PrescriptionListsReturnPayload, 0)
 
 	for rows.Next() {
 		prescription, err := scanRowIntoPrescriptionLists(rows)

@@ -171,7 +171,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if params == "name" {
-		medicines, err = h.medStore.GetMedicinesBySimilarName(val)
+		medicines, err = h.medStore.GetMedicinesBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not found", val))
 			return
@@ -225,13 +225,13 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			Description:    medicine.Description,
 		})
 	} else if params == "barcode" {
-		medicines, err = h.medStore.GetMedicinesBySimilarBarcode(val)
+		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val))
 			return
 		}
 	} else if params == "description" {
-		medicines, err = h.medStore.GetMedicinesBySimilarBarcode(val)
+		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val))
 			return

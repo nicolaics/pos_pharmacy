@@ -10,8 +10,8 @@ type MedicineStore interface {
 	GetMedicineByID(int) (*Medicine, error)
 	GetMedicineByBarcode(string) (*Medicine, error)
 
-	GetMedicinesBySimilarName(string) ([]MedicineListsReturnPayload, error)
-	GetMedicinesBySimilarBarcode(string) ([]MedicineListsReturnPayload, error)
+	GetMedicinesBySearchName(string) ([]MedicineListsReturnPayload, error)
+	GetMedicinesBySearchBarcode(string) ([]MedicineListsReturnPayload, error)
 	GetMedicinesByDescription(string) ([]MedicineListsReturnPayload, error)
 
 	CreateMedicine(Medicine, int) error

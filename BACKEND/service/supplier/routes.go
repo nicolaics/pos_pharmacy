@@ -22,14 +22,14 @@ func NewHandler(supplierStore types.SupplierStore, userStore types.UserStore) *H
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/supplier", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/supplier?{params}={val}", h.handleGetAll).Methods(http.MethodGet)
+	router.HandleFunc("/supplier/{params}/{val}", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/supplier/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/supplier", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/supplier", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/supplier", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/supplier/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/supplier?{params}={val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/supplier/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -96,20 +96,18 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 	var suppliers []types.Supplier
 
-	if params == "all" && val == "all" {
+	if val == "all" {
 		suppliers, err = h.supplierStore.GetAllSuppliers()
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, err)
 			return
 		}
 	} else if params == "name" {
-		supplier, err := h.supplierStore.GetSupplierByName(val)
+		suppliers, err = h.supplierStore.GetSupplierBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not found", val))
 			return
 		}
-
-		suppliers = append(suppliers, *supplier)
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
@@ -124,6 +122,12 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 
 		suppliers = append(suppliers, *supplier)
+	} else if params == "cp-name" {
+		suppliers, err = h.supplierStore.GetSupplierBySearchContactPersonName(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier contact person %s not found", val))
+			return
+		}
 	} else {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
 		return

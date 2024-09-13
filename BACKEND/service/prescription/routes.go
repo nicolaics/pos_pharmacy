@@ -320,7 +320,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	} else if params == "user" {
-		users, err := h.userStore.GetUserBySimilarName(val)
+		users, err := h.userStore.GetUserBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
 			return
@@ -336,7 +336,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			prescriptions = append(prescriptions, temp...)
 		}
 	} else if params == "patient" {
-		patients, err := h.patientStore.GetPatientsBySimilarName(val)
+		patients, err := h.patientStore.GetPatientsBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val))
 			return
@@ -352,7 +352,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			prescriptions = append(prescriptions, temp...)
 		}
 	} else if params == "doctor" {
-		doctors, err := h.doctorStore.GetDoctorsBySimilarName(val)
+		doctors, err := h.doctorStore.GetDoctorsBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not exists", val))
 			return

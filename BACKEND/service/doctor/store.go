@@ -41,23 +41,57 @@ func (s *Store) GetDoctorByName(name string) (*types.Doctor, error) {
 	return doctor, nil
 }
 
-func (s *Store) GetDoctorsBySimilarName(name string) ([]types.Doctor, error) {
-	query := "SELECT * FROM doctor WHERE name = ?"
-
-	searchVal := "%"
-	for _, val := range(name) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
-		}
+func (s *Store) GetDoctorsBySearchName(name string) ([]types.Doctor, error) {
+	query := "SELECT COUNT(*) FROM doctor WHERE name = ?"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
 	}
 
-	rows, err := s.db.Query(query, searchVal)
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	doctors := make([]types.Doctor, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM doctor WHERE name LIKE ?"
+		searchVal := "%"
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			doctor, err := scanRowIntoDoctor(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			doctors = append(doctors, *doctor)
+		}
+
+		return doctors, nil
+	}
+
+	query = "SELECT * FROM doctor WHERE name = ?"
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	doctors := make([]types.Doctor, 0)
 
 	for rows.Next() {
 		doctor, err := scanRowIntoDoctor(rows)
@@ -99,7 +133,7 @@ func (s *Store) GetDoctorByID(id int) (*types.Doctor, error) {
 
 func (s *Store) CreateDoctor(doctor types.Doctor) error {
 	_, err := s.db.Exec("INSERT INTO doctor (name) VALUES (?)",
-						doctor.Name)
+		doctor.Name)
 
 	if err != nil {
 		return err

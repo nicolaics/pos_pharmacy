@@ -135,7 +135,29 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 }
 
 func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.InvoiceListsReturnPayload, error) {
-	query := `SELECT invoice.id, invoice.number, 
+	query := `SELECT COUNT(*) 
+				FROM invoice 
+				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND number = ? 
+				AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
+
+	row := s.db.QueryRow(query, startDate, endDate, number)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	invoices := make([]types.InvoiceListsReturnPayload, 0)
+
+	if count == 0 {
+		query = `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
 					invoice.subtotal, invoice.discount, 
 					invoice.tax, invoice.total_price, 
@@ -145,27 +167,61 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND number LIKE ? 
+					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number LIKE ? 
 					AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+					ORDER BY invoice_date DESC`
 
-	searchVal := "%"
-	for _, val := range strconv.Itoa(number) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
+		searchVal := "%"
+		for _, val := range strconv.Itoa(number) {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
 		}
+
+		rows, err := s.db.Query(query, startDate, endDate, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+
+		for rows.Next() {
+			invoice, err := scanRowIntoInvoiceLists(rows)
+			if err != nil {
+				return nil, err
+			}
+
+			invoices = append(invoices, *invoice)
+		}
+
+		return invoices, nil
 	}
 
-	rows, err := s.db.Query(query, startDate, endDate, searchVal)
+	query = `SELECT invoice.id, invoice.number, 
+					user.name, customer.name, 
+					invoice.subtotal, invoice.discount, 
+					invoice.tax, invoice.total_price, 
+					payment_method.name, 
+					invoice.description, invoice.invoice_date 
+					FROM invoice 
+					JOIN user ON user.id = invoice.user_id 
+					JOIN customer ON customer.id = invoice.customer_id 
+					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
+					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND number = ? 
+					AND deleted_at IS NULL 
+					ORDER BY invoice_date DESC`
+	
+	rows, err := s.db.Query(query, startDate, endDate, number)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	invoices := make([]types.InvoiceListsReturnPayload, 0)
-
 	for rows.Next() {
 		invoice, err := scanRowIntoInvoiceLists(rows)
+
 		if err != nil {
 			return nil, err
 		}

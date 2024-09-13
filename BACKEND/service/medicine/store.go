@@ -91,8 +91,24 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 	return medicine, nil
 }
 
-func (s *Store) GetMedicinesBySimilarName(name string) ([]types.MedicineListsReturnPayload, error) {
-	query := `SELECT med.id, med.barcode, med.name, med.qty, 
+func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsReturnPayload, error) {
+	query := "SELECT COUNT(*) FROM medicine WHERE name = ? AND deleted_at IS NULL"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	medicines := make([]types.MedicineListsReturnPayload, 0)
+
+	if count == 0 {
+		query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
 					med.first_discount, med.first_price, 
 					utt.name AS unit_two, 
@@ -104,22 +120,55 @@ func (s *Store) GetMedicinesBySimilarName(name string) ([]types.MedicineListsRet
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
-					WHERE med.name LIKE ? AND med.deleted_at IS NULL`
+					WHERE med.name LIKE ? 
+					AND med.deleted_at IS NULL`
+		searchVal := "%"
 
-	searchVal := "%"
-	for _, val := range(name) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
 		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			medicine, err := scanRowIntoMedicineLists(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			medicines = append(medicines, *medicine)
+		}
+
+		return medicines, nil
 	}
 
-	rows, err := s.db.Query(query, searchVal)
+	query = `SELECT med.id, med.barcode, med.name, med.qty, 
+					uot.name AS unit_one, 
+					med.first_discount, med.first_price, 
+					utt.name AS unit_two, 
+					med.second_discount, med.second_price, 
+					utht.name AS unit_three, 
+					med.third_discount, med.third_price, 
+					med.description 
+					FROM medicine AS med 
+					JOIN unit AS uot ON med.first_unit_id = uot.id 
+					JOIN unit AS utt ON med.second_unit_id = utt.id 
+					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					WHERE med.name = ? 
+					AND med.deleted_at IS NULL`
+	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	medicines := make([]types.MedicineListsReturnPayload, 0)
 
 	for rows.Next() {
 		medicine, err := scanRowIntoMedicineLists(rows)
@@ -134,8 +183,24 @@ func (s *Store) GetMedicinesBySimilarName(name string) ([]types.MedicineListsRet
 	return medicines, nil
 }
 
-func (s *Store) GetMedicinesBySimilarBarcode(barcode string) ([]types.MedicineListsReturnPayload, error) {
-	query := `SELECT med.id, med.barcode, med.name, med.qty, 
+func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineListsReturnPayload, error) {
+	query := "SELECT COUNT(*) FROM medicine WHERE barcode = ? AND deleted_at IS NULL"
+	row := s.db.QueryRow(query, barcode)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	medicines := make([]types.MedicineListsReturnPayload, 0)
+
+	if count == 0 {
+		query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
 					med.first_discount, med.first_price, 
 					utt.name AS unit_two, 
@@ -147,22 +212,55 @@ func (s *Store) GetMedicinesBySimilarBarcode(barcode string) ([]types.MedicineLi
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
-					WHERE med.barcode LIKE ? AND med.deleted_at IS NULL`
+					WHERE med.barcode LIKE ? 
+					AND med.deleted_at IS NULL`
+		searchVal := "%"
 
-	searchVal := "%"
-	for _, val := range(barcode) {
-		if string(val) != " " {
-			searchVal += (string(val) + "%")
+
+		for _, val := range barcode {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
 		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			medicine, err := scanRowIntoMedicineLists(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			medicines = append(medicines, *medicine)
+		}
+
+		return medicines, nil
 	}
 
-	rows, err := s.db.Query(query, searchVal)
+	query = `SELECT med.id, med.barcode, med.name, med.qty, 
+					uot.name AS unit_one, 
+					med.first_discount, med.first_price, 
+					utt.name AS unit_two, 
+					med.second_discount, med.second_price, 
+					utht.name AS unit_three, 
+					med.third_discount, med.third_price, 
+					med.description 
+					FROM medicine AS med 
+					JOIN unit AS uot ON med.first_unit_id = uot.id 
+					JOIN unit AS utt ON med.second_unit_id = utt.id 
+					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					WHERE med.barcode = ? 
+					AND med.deleted_at IS NULL`
+	rows, err := s.db.Query(query, barcode)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	medicines := make([]types.MedicineListsReturnPayload, 0)
 
 	for rows.Next() {
 		medicine, err := scanRowIntoMedicineLists(rows)
@@ -193,7 +291,7 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 					WHERE med.description LIKE ? AND med.deleted_at IS NULL`
 
 	searchVal := "%"
-	for _, val := range(description) {
+	for _, val := range description {
 		if string(val) != " " {
 			searchVal += (string(val) + "%")
 		}

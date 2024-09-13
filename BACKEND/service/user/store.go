@@ -38,10 +38,144 @@ func (s *Store) GetUserByName(name string) (*types.User, error) {
 	}
 
 	if user.ID == 0 {
-		return nil, fmt.Errorf("customer not found")
+		return nil, fmt.Errorf("user not found")
 	}
 
 	return user, nil
+}
+
+func (s *Store) GetUserBySearchName(name string) ([]types.User, error) {
+	query := "SELECT COUNT(*) FROM user WHERE name = ?"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]types.User, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM user WHERE name LIKE ?"
+		searchVal := "%"
+
+		log.Println("search val user: ", searchVal)
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			user, err := scanRowIntoUser(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			users = append(users, *user)
+		}
+
+		return users, nil
+	}
+
+	query = "SELECT * FROM user WHERE name = ?"
+	rows, err := s.db.Query(query, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user, err := scanRowIntoUser(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	return users, nil
+}
+
+func (s *Store) GetUserBySearchPhoneNumber(phoneNumber string) ([]types.User, error) {
+	query := "SELECT COUNT(*) FROM user WHERE phone_number = ?"
+	row := s.db.QueryRow(query, phoneNumber)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]types.User, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM user WHERE phone_number LIKE ?"
+		searchVal := "%"
+
+		log.Println("search val user: ", searchVal)
+
+		for _, val := range phoneNumber {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			user, err := scanRowIntoUser(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			users = append(users, *user)
+		}
+
+		return users, nil
+	}
+
+	query = "SELECT * FROM user WHERE phone_number = ?"
+	rows, err := s.db.Query(query, phoneNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user, err := scanRowIntoUser(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	return users, nil
 }
 
 func (s *Store) GetUserByID(id int) (*types.User, error) {
@@ -181,6 +315,7 @@ func (s *Store) DeleteToken(userId int) error {
 }
 
 // TODO: think about whether need to verify count or not
+// TODO: delete token that has expired
 func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAdmin bool) (*types.User, error) {
 	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {

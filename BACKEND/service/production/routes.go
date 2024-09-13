@@ -218,16 +218,16 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		prods = append(prods, types.ProductionListsReturnPayload{
-			ID:               prod.ID,
-			BatchNumber:           prod.BatchNumber,
+			ID:                   prod.ID,
+			BatchNumber:          prod.BatchNumber,
 			ProducedMedicineName: med.Name,
-			ProducedQty: prod.ProducedQty,
-			ProductionDate: prod.ProductionDate,
-			Description:      prod.Description,
-			UpdatedToStock: prod.UpdatedToStock,
-			UpdatedToAccount: prod.UpdatedToAccount,
-			TotalCost: prod.TotalCost,
-			UserName:         user.Name,
+			ProducedQty:          prod.ProducedQty,
+			ProductionDate:       prod.ProductionDate,
+			Description:          prod.Description,
+			UpdatedToStock:       prod.UpdatedToStock,
+			UpdatedToAccount:     prod.UpdatedToAccount,
+			TotalCost:            prod.TotalCost,
+			UserName:             user.Name,
 		})
 	} else if params == "batch-number" {
 		batchNumber, err := strconv.Atoi(val)
@@ -242,7 +242,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if params == "user" {
-		users, err := h.userStore.GetUserBySimilarName(val)
+		users, err := h.userStore.GetUserBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val))
 			return
@@ -258,7 +258,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			prods = append(prods, temp...)
 		}
 	} else if params == "produced-medicine-name" {
-		medicines, err := h.medStore.GetMedicinesBySimilarName(val)
+		medicines, err := h.medStore.GetMedicinesBySearchName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not exists", val))
 			return
@@ -385,7 +385,7 @@ func (h *Handler) handleGetProductionDetail(w http.ResponseWriter, r *http.Reque
 		Description:      production.Description,
 		UpdatedToStock:   production.UpdatedToStock,
 		UpdatedToAccount: production.UpdatedToAccount,
-		TotalCost: production.TotalCost,
+		TotalCost:        production.TotalCost,
 
 		User: struct {
 			ID   int    "json:\"id\""

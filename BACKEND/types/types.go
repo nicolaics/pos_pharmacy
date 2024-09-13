@@ -18,6 +18,7 @@ type PaymentMethod struct {
 
 type UnitStore interface {
 	GetUnitByName(string) (*Unit, error)
+	GetUnitByID(int) (*Unit, error)
 	CreateUnit(string) error
 }
 type Unit struct {

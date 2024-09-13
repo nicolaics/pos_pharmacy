@@ -42,6 +42,136 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 	return supplier, nil
 }
 
+func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
+	query := "SELECT COUNT(*) FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	suppliers := make([]types.Supplier, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM supplier WHERE name LIKE ? AND deleted_at IS NULL"
+		searchVal := "%"
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			supplier, err := scanRowIntoSupplier(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			suppliers = append(suppliers, *supplier)
+		}
+
+		return suppliers, nil
+	}
+
+	query = "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		supplier, err := scanRowIntoSupplier(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		suppliers = append(suppliers, *supplier)
+	}
+
+	return suppliers, nil
+}
+
+func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Supplier, error) {
+	query := "SELECT COUNT(*) FROM supplier WHERE contact_person_name = ? AND deleted_at IS NULL"
+	row := s.db.QueryRow(query, name)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
+	suppliers := make([]types.Supplier, 0)
+
+	if count == 0 {
+		query = "SELECT * FROM supplier WHERE contact_person_name LIKE ? AND deleted_at IS NULL"
+		searchVal := "%"
+
+		for _, val := range name {
+			if string(val) != " " {
+				searchVal += (string(val) + "%")
+			}
+		}
+
+		rows, err := s.db.Query(query, searchVal)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			supplier, err := scanRowIntoSupplier(rows)
+
+			if err != nil {
+				return nil, err
+			}
+
+			suppliers = append(suppliers, *supplier)
+		}
+
+		return suppliers, nil
+	}
+
+	query = "SELECT * FROM supplier WHERE contact_person_name = ? AND deleted_at IS NULL"
+	rows, err := s.db.Query(query, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		supplier, err := scanRowIntoSupplier(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		suppliers = append(suppliers, *supplier)
+	}
+
+	return suppliers, nil
+}
+
 func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
 	query := "SELECT * FROM supplier WHERE id = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, id)
