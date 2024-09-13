@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./Patient.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -55,6 +55,44 @@ const ViewPatientPage: React.FC = () => {
     setSearchVal(e.target.value);
   };
 
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const getAllPatientURL = `http://${BACKEND_BASE_URL}/patient/all`;
+    
+    fetch(getAllPatientURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
+
+          console.log(data);
+
+          const tableBody = document.querySelector("#patient-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
+
+          tableBody.innerHTML = "";
+
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading patient data:", error);
+        alert("Error loading patient data");
+      });
+  });
+
   const testData = [
     {
       id: 1,
@@ -70,13 +108,13 @@ const ViewPatientPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    var getAllPatientURL = "";
+    var getPatientURL = "";
 
     if (searchVal === "") {
-      getAllPatientURL = `http://${BACKEND_BASE_URL}/patient/all`;
+      getPatientURL = `http://${BACKEND_BASE_URL}/patient/all`;
     }
     else {
-      getAllPatientURL = `http://${BACKEND_BASE_URL}/patient/${searchVal}`;
+      getPatientURL = `http://${BACKEND_BASE_URL}/patient/${searchVal}`;
     }
 
     // TEST DATA
@@ -90,7 +128,7 @@ const ViewPatientPage: React.FC = () => {
     //   fillTable(testData[i], tableBody, navigate);
     // }
 
-    fetch(getAllPatientURL, {
+    fetch(getPatientURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

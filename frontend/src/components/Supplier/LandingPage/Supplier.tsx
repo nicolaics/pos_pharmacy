@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./Supplier.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -93,6 +93,44 @@ const ViewSupplierPage: React.FC = () => {
     e.preventDefault();
     setSearchParams(e.target.value);
   };
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
+    
+    fetch(getAllSupplierURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
+
+          console.log(data);
+
+          const tableBody = document.querySelector("#supplier-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
+
+          tableBody.innerHTML = "";
+
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading supplier data:", error);
+        alert("Error loading supplier data");
+      });
+  });
 
   const testData = [
     {
