@@ -27,7 +27,6 @@ const ModifySupplierPage: React.FC = () => {
     heading = "Add";
   }
 
-  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
 
@@ -35,8 +34,7 @@ const ModifySupplierPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      // TODO: add query for searching suppliers
-      const supplierURL = `http://${BACKEND_BASE_URL}/supplier?id=`; // Set the URL or handle this logic
+      const supplierURL = `http://${BACKEND_BASE_URL}/supplier/id/${state.id}`; // Set the URL or handle this logic
       fetch(supplierURL, {
         method: "GET",
         headers: {
@@ -50,10 +48,19 @@ const ModifySupplierPage: React.FC = () => {
               throw new Error("Unable to modify supplier data");
             }
 
-            console.log(data["data"]);
+            console.log(data);
 
-            setId(data["data"].id);
-            setName(data["data"].name);
+            setId(data[0].id);
+            setName(data[0].name);
+            setAddress(data[0].address);
+            setCompanyPhoneNumber(data[0].companyPhoneNumber);
+            setContactPersonName(data[0].contactPersonName);
+            setTerms(data[0].terms);
+            if (data[0].vendorIsTaxable === "true") {
+              setVendorIsTaxable(true);
+            } else {
+              setVendorIsTaxable(false);
+            }
           })
         )
         .catch((error) => {
@@ -65,7 +72,6 @@ const ModifySupplierPage: React.FC = () => {
       setShowIdField(false);
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
-  */
 
   const handleNameChange = (event: any) => {
     setName(event.target.value);
@@ -111,13 +117,22 @@ const ModifySupplierPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/supplier`;
 
       fetch(url, {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          name: name,
+          id: Number(id),
+          newData: {
+            name: name,
+            address: address,
+            companyPhoneNumber: companyPhoneNumber,
+            contactPersonName: contactPersonName,
+            contactPersonNumber: contactPersonNumber,
+            terms: terms,
+            vendorIsTaxable: vendorIsTaxable,
+          },
         }),
       })
         .then((response) =>
@@ -137,22 +152,25 @@ const ModifySupplierPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/supplier`;
 
       fetch(url, {
-        method: "PATCH",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          id: Number(id),
-          newData: {
-            name: name,
-          },
+          name: name,
+          address: address,
+          companyPhoneNumber: companyPhoneNumber,
+          contactPersonName: contactPersonName,
+          contactPersonNumber: contactPersonNumber,
+          terms: terms,
+          vendorIsTaxable: vendorIsTaxable,
         }),
       })
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Invalid c redentials or network issue");
+              throw new Error("Invalid credentials or network issue");
             }
 
             console.log(data);
@@ -211,10 +229,10 @@ const ModifySupplierPage: React.FC = () => {
 
       <div className="supplier-data-container">
         {showIdField && (
-        <div className="supplier-data-form-group">
-          <label htmlFor="id">ID:</label>
-          <input type="text" id="modify-supplier-id" value={id} readOnly />
-        </div>
+          <div className="supplier-data-form-group">
+            <label htmlFor="id">ID:</label>
+            <input type="text" id="modify-supplier-id" value={id} readOnly />
+          </div>
         )}
 
         <div className="supplier-data-form-group">
@@ -303,12 +321,12 @@ const ModifySupplierPage: React.FC = () => {
 
       <div className="modify-supplier-buttons">
         <div className="modify-supplier-btns-grp">
-          <button
+        <button
             type="button"
-            className="modify-supplier-ok-btn"
-            onClick={handleSendRequest}
+            className="modify-supplier-delete-btn"
+            onClick={handleDelete}
           >
-            {okBtnLabel}
+            Delete Supplier
           </button>
 
           <button
@@ -321,10 +339,10 @@ const ModifySupplierPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-supplier-delete-btn"
-            onClick={handleDelete}
+            className="modify-supplier-ok-btn"
+            onClick={handleSendRequest}
           >
-            Delete Supplier
+            {okBtnLabel}
           </button>
         </div>
       </div>

@@ -80,6 +80,19 @@ function fillTable(
 
 const ViewSupplierPage: React.FC = () => {
   const navigate = useNavigate();
+  
+  const [searchVal, setSearchVal] = useState("");
+  const [searchParams, setSearchParams] = useState();
+
+  const handleSearchValChange = (e: any) => {
+    e.preventDefault();
+    setSearchVal(e.target.value);
+  };
+
+  const handleSearchParamsChange = (e: any) => {
+    e.preventDefault();
+    setSearchParams(e.target.value);
+  };
 
   const testData = [
     {
@@ -112,49 +125,56 @@ const ViewSupplierPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier`;
+    var getAllSupplierURL = "";
+    
+    if (searchVal === "") {
+      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
+    }
+    else {
+      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/${searchParams}/${searchVal}`;
+    }
 
     // TEST DATA
-    const tableBody = document.querySelector("#supplier-data-table tbody");
-    if (!tableBody) {
-      console.error("table body not found");
-      return;
-    }
-    tableBody.innerHTML = "";
-    for (let i = 0; i < testData.length; i++) {
-      fillTable(testData[i], tableBody, navigate);
-    }
+    // const tableBody = document.querySelector("#supplier-data-table tbody");
+    // if (!tableBody) {
+    //   console.error("table body not found");
+    //   return;
+    // }
+    // tableBody.innerHTML = "";
+    // for (let i = 0; i < testData.length; i++) {
+    //   fillTable(testData[i], tableBody, navigate);
+    // }
 
-    // fetch(getAllSupplierURL, {
-    //   method: "GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: "Bearer " + token,
-    //   },
-    // })
-    //   .then((response) =>
-    //     response.json().then((data) => {
-    //       if (!response.ok) {
-    //         throw new Error("Invalid credentials or network issue");
-    //       }
+    fetch(getAllSupplierURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
 
-    //       const tableBody = document.querySelector("#dataTable tbody");
-    //       if (!tableBody) {
-    //         console.error("table body not found");
-    //         return;
-    //       }
+          const tableBody = document.querySelector("#supplier-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
 
-    //       tableBody.innerHTML = "";
+          tableBody.innerHTML = "";
 
-    //       for (let i = 0; i < data.length; i++) {
-    //         fillTable(data[i], tableBody, navigate);
-    //       }
-    //     })
-    //   )
-    //   .catch((error) => {
-    //     console.error("Error loading supplier data:", error);
-    //     alert("Error loading supplier data");
-    //   });
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading supplier data:", error);
+        alert("Error loading supplier data");
+      });
   };
 
   const returnToHome = () => {
@@ -165,6 +185,7 @@ const ViewSupplierPage: React.FC = () => {
     navigate("/supplier/detail");
   };
 
+  // TODO: add search options for the parameters
   return (
     <div className="view-supplier-page">
       <h1>Supplier</h1>
@@ -174,6 +195,8 @@ const ViewSupplierPage: React.FC = () => {
           type="text"
           className="supplier-search-input"
           placeholder="Search"
+          value={searchVal}
+          onChange={handleSearchValChange}
         />
         <button onClick={search} className="supplier-search-button">
           <FaSearch size={30} id="supplier-search-icon" />
