@@ -67,6 +67,18 @@ function fillTable(
 
 const ViewUserPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchVal, setSearchVal] = useState("");
+  const [searchParams, setSearchParams] = useState("");
+
+  const handleSearchValChange = (e: any) => {
+    e.preventDefault();
+    setSearchVal(e.target.value);
+  };
+
+  const handleSearchParamsChange = (e: any) => {
+    e.preventDefault();
+    setSearchParams(e.target.value);
+  };
 
   const testData = [
     {
@@ -89,62 +101,75 @@ const ViewUserPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllUserURL = `http://${BACKEND_BASE_URL}/user`;
-
+    var getAllUserURL = "";
+    
+    if (searchVal != "") {
+      getAllUserURL = `http://${BACKEND_BASE_URL}/user/all/all`;
+    }
+    else {
+      getAllUserURL = `http://${BACKEND_BASE_URL}/user/${searchParams}/${searchVal}`
+    }
 
     // TEST DATA
-    const tableBody = document.querySelector("#user-data-table tbody");
-    if (!tableBody) {
-      console.error("table body not found");
-      return;
-    }
-    tableBody.innerHTML = "";
-    for (let i = 0; i < testData.length; i++) {
-      fillTable(testData[i], tableBody, navigate);
-    }
+    // const tableBody = document.querySelector("#user-data-table tbody");
+    // if (!tableBody) {
+    //   console.error("table body not found");
+    //   return;
+    // }
+    // tableBody.innerHTML = "";
+    // for (let i = 0; i < testData.length; i++) {
+    //   fillTable(testData[i], tableBody, navigate);
+    // }
 
-    // fetch(getAllUserURL, {
-    //   method: "GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: "Bearer " + token,
-    //   },
-    // })
-    //   .then((response) =>
-    //     response.json().then((data) => {
-    //       if (!response.ok) {
-    //         throw new Error("Invalid credentials or network issue");
-    //       }
+    fetch(getAllUserURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
 
-    //       const tableBody = document.querySelector("#user-data-table tbody");
-    //       if (!tableBody) {
-    //         console.error("table body not found");
-    //         return;
-    //       }
+          const tableBody = document.querySelector("#user-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
 
-    //       tableBody.innerHTML = "";
+          tableBody.innerHTML = "";
 
-    //       for (let i = 0; i < data.length; i++) {
-    //         fillTable(data[i], tableBody, navigate);
-    //       }
-    //     })
-    //   )
-    //   .catch((error) => {
-    //     console.error("Error loading user data:", error);
-    //     alert("Error loading user data");
-    //   });
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading user data:", error);
+        alert("Error loading user data");
+      });
   };
 
   const returnToHome = () => {
     navigate("/home");
   };
 
+  // TODO: create options for search params
   return (
     <div className="view-user-page">
       <h1>User</h1>
 
       <div className="user-search-container">
-        <input type="text" className="user-search-input" placeholder="Search" />
+        <input
+          type="text"
+          className="user-search-input"
+          placeholder="Search"
+          value={searchVal}
+          onChange={handleSearchValChange}
+        />
         <button onClick={search} className="user-search-button">
           <MdPersonSearch size={30} id="user-search-icon" />
           Search

@@ -60,12 +60,13 @@ const ModifyUserPage: React.FC = () => {
               throw new Error("Unable to modify user data");
             }
 
-            console.log(data["data"]);
-            setId(data["data"].id);
-            setName(data["data"].name);
-            setPassword(data["data"].password);
-            setPhoneNumber(data["data"].phoneNumber);
-            setAdmin(data["data"].admin);
+            console.log(data);
+
+            setId(data.id);
+            setName(data.name);
+            setPassword(data.password);
+            setPhoneNumber(data.phoneNumber);
+            setAdmin(data.admin);
           })
         )
         .catch((error) => {
@@ -350,21 +351,6 @@ const ModifyUserPage: React.FC = () => {
 
       <div className="modify-user-buttons">
         <div className="modify-user-btns-grp">
-          <button
-            type="submit"
-            className="modify-user-ok-btn"
-            onSubmit={handleRequestAdminPassword}
-          >
-            {okBtnLabel}
-          </button>
-          <button
-            type="button"
-            className="modify-user-cancel-btn"
-            onClick={handleCancel}
-          >
-            Cancel
-          </button>
-
           {showDeleteButton && (
             <button
               type="button"
@@ -374,6 +360,22 @@ const ModifyUserPage: React.FC = () => {
               Delete User
             </button>
           )}
+
+          <button
+            type="button"
+            className="modify-user-cancel-btn"
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="modify-user-ok-btn"
+            onSubmit={handleRequestAdminPassword}
+          >
+            {okBtnLabel}
+          </button>
         </div>
 
         <div className="modify-user-btns-grp">
