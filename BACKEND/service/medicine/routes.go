@@ -161,7 +161,8 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	params := vars["params"]
 	val := vars["val"]
 
-	var medicines []types.Medicine
+	// TODO: recheck return payload
+	var medicines []types.MedicineListsReturnPayload
 
 	if val == "all" {
 		medicines, err = h.medStore.GetAllMedicines()
@@ -188,7 +189,41 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		medicines = append(medicines, *medicine)
+		// TODO: get unit name
+		unitOne, err := h.unitStore.GetUnitByID(medicine.FirstUnitID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.FirstUnitID))
+			return
+		}
+
+		unitTwo, err := h.unitStore.GetUnitByID(medicine.SecondUnitID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.SecondUnitID))
+			return
+		}
+
+		unitThree, err := h.unitStore.GetUnitByID(medicine.ThirdUnitID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.ThirdUnitID))
+			return
+		}
+
+		medicines = append(medicines, types.MedicineListsReturnPayload{
+			ID:             medicine.ID,
+			Barcode:        medicine.Barcode,
+			Name:           medicine.Name,
+			Qty:            medicine.Qty,
+			FirstUnitName:  unitOne.Name,
+			FirstDiscount:  medicine.FirstDiscount,
+			FirstPrice:     medicine.FirstPrice,
+			SecondUnitName: unitTwo.Name,
+			SecondDiscount: medicine.SecondDiscount,
+			SecondPrice:    medicine.SecondPrice,
+			ThirdUnitName:  unitThree.Name,
+			ThirdDiscount:  medicine.ThirdDiscount,
+			ThirdPrice:     medicine.ThirdPrice,
+			Description:    medicine.Description,
+		})
 	} else if params == "barcode" {
 		medicines, err = h.medStore.GetMedicinesBySimilarBarcode(val)
 		if err != nil {

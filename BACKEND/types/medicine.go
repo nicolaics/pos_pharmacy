@@ -7,15 +7,16 @@ import (
 
 type MedicineStore interface {
 	GetMedicineByName(string) (*Medicine, error)
-	GetMedicinesBySimilarName(string) ([]Medicine, error)
 	GetMedicineByID(int) (*Medicine, error)
 	GetMedicineByBarcode(string) (*Medicine, error)
-	GetMedicinesBySimilarBarcode(string) ([]Medicine, error)
-	GetMedicinesByDescription(string) ([]Medicine, error)
+
+	GetMedicinesBySimilarName(string) ([]MedicineListsReturnPayload, error)
+	GetMedicinesBySimilarBarcode(string) ([]MedicineListsReturnPayload, error)
+	GetMedicinesByDescription(string) ([]MedicineListsReturnPayload, error)
 
 	CreateMedicine(Medicine, int) error
 
-	GetAllMedicines() ([]Medicine, error)
+	GetAllMedicines() ([]MedicineListsReturnPayload, error)
 
 	DeleteMedicine(*Medicine, int) error
 
@@ -53,6 +54,23 @@ type GetOneMedicinePayload struct {
 type ModifyMedicinePayload struct {
 	ID      int                     `json:"id" validate:"required"`
 	NewData RegisterMedicinePayload `json:"newData" validate:"required"`
+}
+
+type MedicineListsReturnPayload struct {
+	ID             int     `json:"id"`
+	Barcode        string  `json:"barcode"`
+	Name           string  `json:"name"`
+	Qty            float64 `json:"qty"`
+	FirstUnitName  string  `json:"firstUnitName"`
+	FirstDiscount  float64 `json:"firstDiscount"`
+	FirstPrice     float64 `json:"firstPrice"`
+	SecondUnitName string  `json:"secondUnitName"`
+	SecondDiscount float64 `json:"secondDiscount"`
+	SecondPrice    float64 `json:"secondPrice"`
+	ThirdUnitName  string  `json:"thirdUnitName"`
+	ThirdDiscount  float64 `json:"thirdDiscount"`
+	ThirdPrice     float64 `json:"thirdPrice"`
+	Description    string  `json:"description"`
 }
 
 type Medicine struct {
