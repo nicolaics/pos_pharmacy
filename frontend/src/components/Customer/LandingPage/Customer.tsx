@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./Customer.css";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -69,18 +69,56 @@ const ViewCustomerPage: React.FC = () => {
     setSearchVal(event.target.value);
   }
 
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const getAllCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
+    
+    fetch(getAllCustomerURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
+
+          console.log(data);
+
+          const tableBody = document.querySelector("#customer-data-table tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
+
+          tableBody.innerHTML = "";
+
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading customer data:", error);
+        alert("Error loading customer data");
+      });
+  });
+
   const search = () => {
     const token = sessionStorage.getItem("token");
 
-    var getAllCustomerURL = "";
+    var getCustomerURL = "";
 
     if (searchVal === "") {
-      getAllCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
+      getCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
     } else {
-      getAllCustomerURL = `http://${BACKEND_BASE_URL}/${searchVal}`;
+      getCustomerURL = `http://${BACKEND_BASE_URL}/${searchVal}`;
     }
 
-    console.log(getAllCustomerURL);
+    console.log(getCustomerURL);
 
     // TEST DATA
     // const tableBody = document.querySelector("#customer-data-table tbody");
@@ -93,7 +131,7 @@ const ViewCustomerPage: React.FC = () => {
     //   fillTable(testData[i], tableBody, navigate);
     // }
 
-    fetch(getAllCustomerURL, {
+    fetch(getCustomerURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
