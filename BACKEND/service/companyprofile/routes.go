@@ -22,7 +22,6 @@ func NewHandler(companyProfileStore types.CompanyProfileStore, userStore types.U
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/company-profile", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/company-profile", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/company-profile", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/company-profile", h.handleModify).Methods(http.MethodPatch)
 
 	router.HandleFunc("/company-profile", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -85,54 +84,54 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the company profile exists
-	companyProfiles, err := h.companyProfileStore.GetAllCompanyProfiles()
+	companyProfile, err := h.companyProfileStore.GetCompanyProfile()
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, companyProfiles)
+	utils.WriteJSON(w, http.StatusOK, companyProfile)
 }
 
-func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
-	// get JSON Payload
-	var payload types.DeleteCompanyProfilePayload
+// func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
+// 	// get JSON Payload
+// 	var payload types.DeleteCompanyProfilePayload
 
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+// 	if err := utils.ParseJSON(r, &payload); err != nil {
+// 		utils.WriteError(w, http.StatusBadRequest, err)
+// 		return
+// 	}
 
-	// validate the payload
-	if err := utils.Validate.Struct(payload); err != nil {
-		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-		return
-	}
+// 	// validate the payload
+// 	if err := utils.Validate.Struct(payload); err != nil {
+// 		errors := err.(validator.ValidationErrors)
+// 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+// 		return
+// 	}
 
-	// validate user token
-	user, err := h.userStore.ValidateUserToken(w, r, true)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
-		return
-	}
+// 	// validate user token
+// 	user, err := h.userStore.ValidateUserToken(w, r, true)
+// 	if err != nil {
+// 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token or not admin: %v", err))
+// 		return
+// 	}
 
-	// check if the company profile exists
-	companyProfile, err := h.companyProfileStore.GetCompanyProfileByID(payload.ID)
-	if err != nil || companyProfile == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("company profile with name %s doesn't exists", payload.Name))
-		return
-	}
+// 	// check if the company profile exists
+// 	companyProfile, err := h.companyProfileStore.GetCompanyProfileByID(payload.ID)
+// 	if err != nil || companyProfile == nil {
+// 		utils.WriteError(w, http.StatusBadRequest,
+// 			fmt.Errorf("company profile with name %s doesn't exists", payload.Name))
+// 		return
+// 	}
 
-	err = h.companyProfileStore.DeleteCompanyProfile(companyProfile.ID, user.ID)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
+// 	err = h.companyProfileStore.DeleteCompanyProfile(companyProfile.ID, user.ID)
+// 	if err != nil {
+// 		utils.WriteError(w, http.StatusInternalServerError, err)
+// 		return
+// 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %s deleted by %s", payload.Name, user.Name))
-}
+// 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("company profile %s deleted by %s", payload.Name, user.Name))
+// }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload

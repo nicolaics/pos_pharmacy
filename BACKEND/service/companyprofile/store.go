@@ -18,8 +18,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetCompanyProfileByName(name string) (*types.CompanyProfile, error) {
-	query := "SELECT * FROM self_company_profile WHERE name = ? AND deleted_at IS NULL"
-
+	query := `SELECT * FROM self_company_profile WHERE name = ?`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -44,8 +43,7 @@ func (s *Store) GetCompanyProfileByName(name string) (*types.CompanyProfile, err
 }
 
 func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
-	query := "SELECT * FROM self_company_profile WHERE id = ? AND deleted_at IS NULL"
-
+	query := `SELECT * FROM self_company_profile WHERE id = ?`
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -56,7 +54,6 @@ func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
 
 	for rows.Next() {
 		companyProfile, err = scanRowIntoCompanyProfile(rows)
-
 		if err != nil {
 			return nil, err
 		}
@@ -86,47 +83,51 @@ func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error 
 	return nil
 }
 
-func (s *Store) GetAllCompanyProfiles() ([]types.CompanyProfile, error) {
-	rows, err := s.db.Query("SELECT * FROM self_company_profile WHERE deleted_at IS NULL")
+func (s *Store) GetCompanyProfile() (*types.CompanyProfileReturn, error) {
+	query := `SELECT c.id, c.name, c.address, c.business_number, 
+					c.pharmacist, c.pharmacist_license_number, 
+					c.last_modified, 
+					user.name 
+					FROM self_company_profile AS c 
+					JOIN user ON user.id = c.last_modified_by_user_id`
+
+	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	companyProfiles := make([]types.CompanyProfile, 0)
+	companyProfile := new(types.CompanyProfileReturn)
 
 	for rows.Next() {
-		companyProfile, err := scanRowIntoCompanyProfile(rows)
-
+		companyProfile, err = scanRowIntoCompanyProfileReturn(rows)
 		if err != nil {
 			return nil, err
 		}
-
-		companyProfiles = append(companyProfiles, *companyProfile)
 	}
 
-	return companyProfiles, nil
+	return companyProfile, nil
 }
 
-func (s *Store) DeleteCompanyProfile(cpid int, userId int) error {
-	query := "UPDATE self_company_profile SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
-	_, err := s.db.Exec(query, time.Now(), userId, cpid)
-	if err != nil {
-		return err
-	}
+// func (s *Store) DeleteCompanyProfile(cpid int, userId int) error {
+// 	query := "UPDATE self_company_profile SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+// 	_, err := s.db.Exec(query, time.Now(), userId, cpid)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	data, err := s.GetCompanyProfileByID(cpid)
-	if err != nil {
-		return err
-	}
+// 	data, err := s.GetCompanyProfileByID(cpid)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = logger.WriteLog("delete", "company-profile", userId, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+// 	err = logger.WriteLog("delete", "company-profile", userId, data.ID, data)
+// 	if err != nil {
+// 		return fmt.Errorf("error write log file")
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *Store) ModifyCompanyProfile(id int, userId int, newCompanyProfile types.CompanyProfile) error {
 	data, err := s.GetCompanyProfileByID(id)
@@ -170,8 +171,6 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 		&companyProfile.CreatedAt,
 		&companyProfile.LastModified,
 		&companyProfile.LastModifiedByUserID,
-		&companyProfile.DeletedAt,
-		&companyProfile.DeletedByUserID,
 	)
 
 	if err != nil {
@@ -180,6 +179,29 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 
 	companyProfile.LastModified = companyProfile.LastModified.Local()
 	companyProfile.CreatedAt = companyProfile.CreatedAt.Local()
+
+	return companyProfile, nil
+}
+
+func scanRowIntoCompanyProfileReturn(rows *sql.Rows) (*types.CompanyProfileReturn, error) {
+	companyProfile := new(types.CompanyProfileReturn)
+
+	err := rows.Scan(
+		&companyProfile.ID,
+		&companyProfile.Name,
+		&companyProfile.Address,
+		&companyProfile.BusinessNumber,
+		&companyProfile.Pharmacist,
+		&companyProfile.PharmacistLicenseNumber,
+		&companyProfile.LastModified,
+		&companyProfile.LastModifiedByUserName,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	companyProfile.LastModified = companyProfile.LastModified.Local()
 
 	return companyProfile, nil
 }

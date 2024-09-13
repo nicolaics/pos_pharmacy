@@ -1,7 +1,6 @@
 package types
 
 import (
-	"database/sql"
 	"time"
 )
 
@@ -27,21 +26,29 @@ type CompanyProfileStore interface {
 	GetCompanyProfileByName(string) (*CompanyProfile, error)
 	GetCompanyProfileByID(int) (*CompanyProfile, error)
 	CreateCompanyProfile(CompanyProfile) error
-	GetAllCompanyProfiles() ([]CompanyProfile, error)
-	DeleteCompanyProfile(int, int) error
+	GetCompanyProfile() (*CompanyProfileReturn, error)
 	ModifyCompanyProfile(int, int, CompanyProfile) error
 }
 
-type CompanyProfile struct {
+type CompanyProfileReturn struct {
 	ID                      int       `json:"id"`
 	Name                    string    `json:"name"`
 	Address                 string    `json:"address"`
 	BusinessNumber          string    `json:"businessNumber"`
 	Pharmacist              string    `json:"pharmacist"`
 	PharmacistLicenseNumber string    `json:"pharmacistLicenseNumber"`
-	CreatedAt               time.Time `json:"createdAt"`
 	LastModified            time.Time `json:"lastModified"`
-	LastModifiedByUserID    int       `json:"lastModifiedByUserId"`
-	DeletedAt               sql.NullTime `json:"deletedAt"`
-	DeletedByUserID         sql.NullInt64       `json:"deletedByUserId"`
+	LastModifiedByUserName  string    `json:"lastModifiedByUserName"`
+}
+
+type CompanyProfile struct {
+	ID                      int           `json:"id"`
+	Name                    string        `json:"name"`
+	Address                 string        `json:"address"`
+	BusinessNumber          string        `json:"businessNumber"`
+	Pharmacist              string        `json:"pharmacist"`
+	PharmacistLicenseNumber string        `json:"pharmacistLicenseNumber"`
+	CreatedAt               time.Time     `json:"createdAt"`
+	LastModified            time.Time     `json:"lastModified"`
+	LastModifiedByUserID    int           `json:"lastModifiedByUserId"`
 }
