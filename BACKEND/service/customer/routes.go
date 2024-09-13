@@ -23,7 +23,7 @@ func NewHandler(custStore types.CustomerStore, userStore types.UserStore) *Handl
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/customer", h.handleRegister).Methods(http.MethodPost)
-	router.HandleFunc("/customer/{val}", h.handleGetAll).Methods(http.MethodGet).Name("getCustomer")
+	router.HandleFunc("/customer/{val}", h.handleGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/customer/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/customer", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/customer", h.handleModify).Methods(http.MethodPatch)
@@ -86,7 +86,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	val := vars["val"]
 
-	log.Println(val)
+	log.Println("customer val: ", val)
 
 	var customers []types.Customer
 
