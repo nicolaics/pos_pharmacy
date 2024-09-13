@@ -6,7 +6,7 @@ import (
 )
 
 type PurchaseInvoiceStore interface {
-	GetPurchaseInvoicesByNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseInvoice, error)
+	GetPurchaseInvoicesByNumber(number int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (int, error)
 	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
