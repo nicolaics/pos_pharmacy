@@ -16,7 +16,7 @@ import ModifyPatientPage from "./components/Patient/Modify/Modify";
 import ViewDoctorPage from "./components/Doctor/LandingPage/Doctor";
 import ModifyDoctorPage from "./components/Doctor/Modify/Modify";
 
-export const BACKEND_BASE_URL = "localhost:90808/api/v1";
+export const BACKEND_BASE_URL = "localhost:9988/api/v1";
 
 const App: React.FC = () => {
   return (
