@@ -73,47 +73,20 @@ const LoginPage: React.FC = () => {
           placeholder="Name"
           value={name}
           onChange={handleNameChange}
-          className="login-input"
+          className="login-form-input"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={handlePasswordChange}
-          className="login-input"
+          className="login-form-input"
         />
         <button type="submit" className="login-btn">
           Login
         </button>
       </form>
     </div>
-    // <div className="login-grid">
-    //   <h1>Login</h1>
-
-    //   <div className="login-form">
-    //     <form onSubmit={handleSubmit}>
-    //       <label id="name">Name: </label>
-    //       <input
-    //         type="text"
-    //         id="name"
-    //         value={name}
-    //         onChange={handleNameChange}
-    //       />
-    //       <br />
-
-    //       <label id="password">Password: </label>
-    //       <input
-    //         type="password"
-    //         id="password"
-    //         value={password}
-    //         onChange={handlePasswordChange}
-    //       />
-    //       <br />
-
-    //       <input type="submit" value={"Login"} />
-    //     </form>
-    //   </div>
-    // </div>
   );
 };
 
