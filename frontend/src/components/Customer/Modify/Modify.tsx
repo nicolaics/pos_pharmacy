@@ -21,7 +21,6 @@ const ModifyCustomerPage: React.FC = () => {
     heading = "Add";
   }
 
-  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
 
@@ -29,8 +28,7 @@ const ModifyCustomerPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      // TODO: add query for searching customers
-      const customerURL = `http://${BACKEND_BASE_URL}/customer?all=all`; // Set the URL or handle this logic
+      const customerURL = `http://${BACKEND_BASE_URL}/customer?id=${state.id}`; // Set the URL or handle this logic
       fetch(customerURL, {
         method: "GET",
         headers: {
@@ -44,10 +42,10 @@ const ModifyCustomerPage: React.FC = () => {
               throw new Error("Unable to modify customer data");
             }
 
-            console.log(data["data"]);
+            console.log(data[0]);
 
-            setId(data["data"].id);
-            setName(data["data"].name);
+            setId(data[0]["data"].id);
+            setName(data[0]["data"].name);
           })
         )
         .catch((error) => {
@@ -59,7 +57,6 @@ const ModifyCustomerPage: React.FC = () => {
       setShowIdField(false);
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
-  */
 
   const handleNameChange = (event: any) => {
     setName(event.target.value);
@@ -74,32 +71,6 @@ const ModifyCustomerPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
 
     if (state) {
-      const url = `http://${BACKEND_BASE_URL}/customer`;
-
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          name: name,
-        }),
-      })
-        .then((response) =>
-          response.json().then((data) => {
-            if (!response.ok) {
-              throw new Error("Unable to modify customer data");
-            }
-
-            console.log(data);
-          })
-        )
-        .catch((error) => {
-          console.error("Error modify customer:", error);
-          alert("Error modify customer");
-        });
-    } else {
       const url = `http://${BACKEND_BASE_URL}/customer`;
 
       fetch(url, {
@@ -118,15 +89,41 @@ const ModifyCustomerPage: React.FC = () => {
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Invalid c redentials or network issue");
+              throw new Error("Unable to add customer data");
             }
 
             console.log(data);
           })
         )
         .catch((error) => {
-          console.error("Error adding new customer:", error);
-          alert("Error adding new customer");
+          console.error("Error add customer:", error);
+          alert("Error add customer");
+        });
+    } else {
+      const url = `http://${BACKEND_BASE_URL}/customer`;
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          name: name
+        }),
+      })
+        .then((response) =>
+          response.json().then((data) => {
+            if (!response.ok) {
+              throw new Error("Invalid credentials or network issue");
+            }
+
+            console.log(data);
+          })
+        )
+        .catch((error) => {
+          console.error("Error add customer:", error);
+          alert("Error add customer");
         });
     }
 
@@ -195,12 +192,12 @@ const ModifyCustomerPage: React.FC = () => {
 
       <div className="modify-customer-buttons">
         <div className="modify-customer-btns-grp">
-          <button
+        <button
             type="button"
-            className="modify-customer-ok-btn"
-            onClick={handleSendRequest}
+            className="modify-customer-delete-btn"
+            onClick={handleDelete}
           >
-            {okBtnLabel}
+            Delete Customer
           </button>
 
           <button
@@ -213,10 +210,10 @@ const ModifyCustomerPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-customer-delete-btn"
-            onClick={handleDelete}
+            className="modify-customer-ok-btn"
+            onClick={handleSendRequest}
           >
-            Delete Customer
+            {okBtnLabel}
           </button>
         </div>
       </div>
