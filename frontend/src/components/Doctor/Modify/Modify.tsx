@@ -196,12 +196,12 @@ const ModifyDoctorPage: React.FC = () => {
 
       <div className="modify-doctor-buttons">
         <div className="modify-doctor-btns-grp">
-          <button
+        <button
             type="button"
-            className="modify-doctor-ok-btn"
-            onClick={handleSendRequest}
+            className="modify-doctor-delete-btn"
+            onClick={handleDelete}
           >
-            {okBtnLabel}
+            Delete Doctor
           </button>
 
           <button
@@ -214,10 +214,10 @@ const ModifyDoctorPage: React.FC = () => {
 
           <button
             type="button"
-            className="modify-doctor-delete-btn"
-            onClick={handleDelete}
+            className="modify-doctor-ok-btn"
+            onClick={handleSendRequest}
           >
-            Delete Doctor
+            {okBtnLabel}
           </button>
         </div>
       </div>

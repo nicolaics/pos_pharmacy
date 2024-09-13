@@ -48,6 +48,12 @@ function fillTable(
 
 const ViewDoctorPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchVal, setSearchVal] = useState("");
+
+  const handleSearchValChange = (event: any) => {
+    event.preventDefault();
+    setSearchVal(event.target.value);
+  };
 
   const testData = [
     {
@@ -64,49 +70,56 @@ const ViewDoctorPage: React.FC = () => {
 
   const search = () => {
     const token = sessionStorage.getItem("token");
-    const getAllDoctorURL = `http://${BACKEND_BASE_URL}/doctor`;
+    var getAllDoctorURL = "";
+    
+    if (searchVal === "") {
+      getAllDoctorURL = `http://${BACKEND_BASE_URL}/doctor/all`;
+    }
+    else {
+      getAllDoctorURL = `http://${BACKEND_BASE_URL}/doctor/${searchVal}`;
+    }
 
     // TEST DATA
-    const tableBody = document.querySelector("#doctor-data-table tbody");
-    if (!tableBody) {
-      console.error("table body not found");
-      return;
-    }
-    tableBody.innerHTML = "";
-    for (let i = 0; i < testData.length; i++) {
-      fillTable(testData[i], tableBody, navigate);
-    }
+    // const tableBody = document.querySelector("#doctor-data-table tbody");
+    // if (!tableBody) {
+    //   console.error("table body not found");
+    //   return;
+    // }
+    // tableBody.innerHTML = "";
+    // for (let i = 0; i < testData.length; i++) {
+    //   fillTable(testData[i], tableBody, navigate);
+    // }
 
-    // fetch(getAllDoctorURL, {
-    //   method: "GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: "Bearer " + token,
-    //   },
-    // })
-    //   .then((response) =>
-    //     response.json().then((data) => {
-    //       if (!response.ok) {
-    //         throw new Error("Invalid credentials or network issue");
-    //       }
+    fetch(getAllDoctorURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw new Error("Invalid credentials or network issue");
+          }
 
-    //       const tableBody = document.querySelector("#dataTable tbody");
-    //       if (!tableBody) {
-    //         console.error("table body not found");
-    //         return;
-    //       }
+          const tableBody = document.querySelector("#dataTable tbody");
+          if (!tableBody) {
+            console.error("table body not found");
+            return;
+          }
 
-    //       tableBody.innerHTML = "";
+          tableBody.innerHTML = "";
 
-    //       for (let i = 0; i < data.length; i++) {
-    //         fillTable(data[i], tableBody, navigate);
-    //       }
-    //     })
-    //   )
-    //   .catch((error) => {
-    //     console.error("Error loading doctor data:", error);
-    //     alert("Error loading doctor data");
-    //   });
+          for (let i = 0; i < data.length; i++) {
+            fillTable(data[i], tableBody, navigate);
+          }
+        })
+      )
+      .catch((error) => {
+        console.error("Error loading doctor data:", error);
+        alert("Error loading doctor data");
+      });
   };
 
   const returnToHome = () => {
@@ -126,6 +139,8 @@ const ViewDoctorPage: React.FC = () => {
           type="text"
           className="doctor-search-input"
           placeholder="Search"
+          value={searchVal}
+          onChange={handleSearchValChange}
         />
         <button onClick={search} className="doctor-search-button">
           <MdPersonSearch size={30} id="doctor-search-icon" />

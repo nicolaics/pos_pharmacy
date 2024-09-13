@@ -1,4 +1,4 @@
-.view-patient-page {
+.view-doctor-page {
   justify-content: center;
   text-align: center;
   max-width: 1200px;
@@ -7,11 +7,11 @@
   font-family: Arial, sans-serif;
 }
 
-.patient-search-container {
+.doctor-search-container {
   display: inline-flex;
 }
 
-.patient-search-input {
+.doctor-search-input {
   flex-grow: 1;
   padding: 10px;
   font-size: 20px;
@@ -23,11 +23,11 @@
   width: 50%;
 }
 
-#patient-search-icon {
+#doctor-search-icon {
   margin-right: 10px;
 }
 
-.patient-search-button {
+.doctor-search-button {
   display: inline-flex;
   align-items: center;
   justify-items: baseline;
@@ -43,15 +43,15 @@
   margin-right: 20px;
 }
 
-.patient-search-button:hover {
+.doctor-search-button:hover {
   background-color: #60666e;
 }
 
-#patient-add-icon {
+#doctor-add-icon {
   margin-right: 10px;
 }
 
-.patient-add-button {
+.doctor-add-button {
   display: inline-flex;
   align-items: center;
   justify-items: baseline;
@@ -67,48 +67,48 @@
 
 }
 
-.patient-add-button:hover {
+.doctor-add-button:hover {
   background-color: #45a049;
 }
 
-.patient-table-container {
+.doctor-table-container {
   overflow-x: auto;
 }
 
-#patient-data-table {
+#doctor-data-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
 }
 
-#patient-data-table th,
+#doctor-data-table th,
 td {
   border: 1px solid #ddd;
   padding: 12px;
   text-align: center;
 }
 
-#patient-data-table th {
+#doctor-data-table th {
   background-color: #c4c2c2;
   font-weight: bold;
   font-size: 18px;
 }
 
-#patient-data-table tbody {
+#doctor-data-table tbody {
   font-size: 16px;
 }
 
-.view-patient-data-row {
+.view-doctor-data-row {
   background-color: #f9f9f9;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
-.view-patient-data-row:hover {
+.view-doctor-data-row:hover {
   background-color: #afe6ff;
 }
 
-.view-patient-home-button {
+.view-doctor-home-button {
   display: flex;
   align-items: center;
   padding: 10px 15px;
@@ -121,10 +121,10 @@ td {
   cursor: pointer;
 }
 
-#view-patient-home-icon {
+#view-doctor-home-icon {
   margin-right: 10px;
 }
 
-.view-patient-home-button:hover {
+.view-doctor-home-button:hover {
   background-color: #007B9A;
 }
