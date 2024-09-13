@@ -103,7 +103,7 @@ const ViewUserPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
     var getAllUserURL = "";
     
-    if (searchVal != "") {
+    if (searchVal === "") {
       getAllUserURL = `http://${BACKEND_BASE_URL}/user/all/all`;
     }
     else {
@@ -120,6 +120,8 @@ const ViewUserPage: React.FC = () => {
     // for (let i = 0; i < testData.length; i++) {
     //   fillTable(testData[i], tableBody, navigate);
     // }
+
+    console.log(getAllUserURL);
 
     fetch(getAllUserURL, {
       method: "GET",
