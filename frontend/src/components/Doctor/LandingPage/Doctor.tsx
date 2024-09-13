@@ -103,7 +103,7 @@ const ViewDoctorPage: React.FC = () => {
             throw new Error("Invalid credentials or network issue");
           }
 
-          const tableBody = document.querySelector("#dataTable tbody");
+          const tableBody = document.querySelector("#doctor-data-table tbody");
           if (!tableBody) {
             console.error("table body not found");
             return;

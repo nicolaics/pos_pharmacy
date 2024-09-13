@@ -21,7 +21,6 @@ const ModifyDoctorPage: React.FC = () => {
     heading = "Add";
   }
 
-  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
 
@@ -29,8 +28,7 @@ const ModifyDoctorPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      // TODO: add query for searching doctors
-      const doctorURL = `http://${BACKEND_BASE_URL}/doctor?all=all`; // Set the URL or handle this logic
+      const doctorURL = `http://${BACKEND_BASE_URL}/doctor/${state.id}`; // Set the URL or handle this logic
       fetch(doctorURL, {
         method: "GET",
         headers: {
@@ -46,8 +44,8 @@ const ModifyDoctorPage: React.FC = () => {
 
             console.log(data["data"]);
 
-            setId(data["data"].id);
-            setName(data["data"].name);
+            setId(data[0]["data"].id);
+            setName(data[0]["data"].name);
           })
         )
         .catch((error) => {
@@ -59,7 +57,6 @@ const ModifyDoctorPage: React.FC = () => {
       setShowIdField(false);
     }
   }, [state]); // Dependency array ensures this effect only runs when reqType changes
-  */
 
 
   const handleNameChange = (event: any) => {
@@ -78,13 +75,16 @@ const ModifyDoctorPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/doctor`;
 
       fetch(url, {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          name: name,
+          id: Number(id),
+          newData: {
+            name: name,
+          },
         }),
       })
         .then((response) =>
@@ -104,22 +104,19 @@ const ModifyDoctorPage: React.FC = () => {
       const url = `http://${BACKEND_BASE_URL}/doctor`;
 
       fetch(url, {
-        method: "PATCH",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
         body: JSON.stringify({
-          id: Number(id),
-          newData: {
-            name: name,
-          },
+          name: name,
         }),
       })
         .then((response) =>
           response.json().then((data) => {
             if (!response.ok) {
-              throw new Error("Invalid c redentials or network issue");
+              throw new Error("Invalid credentials or network issue");
             }
 
             console.log(data);

@@ -28,7 +28,7 @@ const ModifyCustomerPage: React.FC = () => {
       setOkBtnLabel("Modify");
       setShowIdField(true);
 
-      const customerURL = `http://${BACKEND_BASE_URL}/customer?id=${state.id}`; // Set the URL or handle this logic
+      const customerURL = `http://${BACKEND_BASE_URL}/customer/${state.id}`; // Set the URL or handle this logic
       fetch(customerURL, {
         method: "GET",
         headers: {
