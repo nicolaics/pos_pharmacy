@@ -5,6 +5,7 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import FormatDateTime from "../../../DateTimeFormatter";
 import { MdPersonSearch } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
+import { IoArrowUndoOutline } from "react-icons/io5";
 import { BACKEND_BASE_URL } from "../../../App";
 
 function fillTable(
@@ -159,6 +160,10 @@ const ViewUserPage: React.FC = () => {
     navigate("/home");
   };
 
+  const returnToUserLandingPage = () => {
+    navigate("/user");
+  }
+
   // TODO: create options for search params
   return (
     <div className="view-user-page">
@@ -193,10 +198,17 @@ const ViewUserPage: React.FC = () => {
         </table>
       </div>
 
-      <button onClick={returnToHome} className="view-user-home-button">
-        <FaHome size={30} id="view-user-home-icon" />
-        Back to Home
-      </button>
+      <div className="user-return-btns-grp">
+      <button onClick={returnToUserLandingPage} className="view-user-back-button">
+          <IoArrowUndoOutline size={30} id="view-user-back-icon" />
+          Cancel
+        </button>
+
+        <button onClick={returnToHome} className="view-user-home-button">
+          <FaHome size={30} id="view-user-home-icon" />
+          Back to Home
+        </button>
+      </div>
     </div>
   );
 };

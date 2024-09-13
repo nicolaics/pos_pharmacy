@@ -27,6 +27,7 @@ const ModifyCustomerPage: React.FC = () => {
     if (state) {
       setOkBtnLabel("Modify");
       setShowIdField(true);
+      console.log(state.id);
 
       const customerURL = `http://${BACKEND_BASE_URL}/customer/${state.id}`; // Set the URL or handle this logic
       fetch(customerURL, {
@@ -42,10 +43,10 @@ const ModifyCustomerPage: React.FC = () => {
               throw new Error("Unable to modify customer data");
             }
 
-            console.log(data[0]);
+            console.log("data: ", data[0]);
 
-            setId(data[0]["data"].id);
-            setName(data[0]["data"].name);
+            setId(data[0].id);
+            setName(data[0].name);
           })
         )
         .catch((error) => {

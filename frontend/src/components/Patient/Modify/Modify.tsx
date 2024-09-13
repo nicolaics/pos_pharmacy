@@ -42,10 +42,10 @@ const ModifyPatientPage: React.FC = () => {
               throw new Error("Unable to modify patient data");
             }
 
-            console.log(data["data"]);
+            console.log(data);
 
-            setId(data[0]["data"].id);
-            setName(data[0]["data"].name);
+            setId(data[0].id);
+            setName(data[0].name);
           })
         )
         .catch((error) => {

@@ -80,12 +80,17 @@ td {
   background-color: #afe6ff;
 }
 
+.user-return-btns-grp {
+  display: flex;
+  justify-content: center;
+}
+
 .view-user-home-button {
   display: flex;
   align-items: center;
   padding: 10px 15px;
   font-size: 20px;
-  margin: 50px auto;
+  margin: 10px;
   background-color: #008CBA;
   color: white;
   border: none;
@@ -99,4 +104,25 @@ td {
 
 .view-user-home-button:hover {
   background-color: #007B9A;
+}
+
+.view-user-back-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 10px;
+  background-color: #8a8137;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-user-back-icon {
+  margin-right: 10px;
+}
+
+.view-user-back-button:hover {
+  background-color: #5e5725;
 }
