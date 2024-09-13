@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import UserLandingPage from "./components/User/LandingPage/User/User";
+import UserLandingPage from "./components/User/LandingPage/User";
 import ViewUserPage from "./components/User/View/ViewUser";
 import ModifyUserPage from "./components/User/Modify/Modify";
 import ViewCustomerPage from "./components/Customer/LandingPage/Customer";
