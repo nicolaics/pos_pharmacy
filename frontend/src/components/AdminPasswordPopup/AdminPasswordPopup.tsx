@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Modal from "react-modal";
 
 import "./AdminPasswordPopup.css";
+import { FaCheckCircle } from "react-icons/fa";
 
 // Set the root element for the modal (for accessibility reasons)
 Modal.setAppElement("#root");
@@ -34,25 +35,25 @@ const AdminPasswordPopup: React.FC<ModalComponentProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
-      className={"popup"}
-    >
+    <Modal isOpen={isOpen} onRequestClose={onClose} className={"popup"}>
       <h2>Enter your admin password: </h2>
-      <div>
+      <div className="admin-password-container">
         <input
           type="password"
           value={adminPassword}
           onChange={handleAdminPasswordChange}
+          id="admin-password-input"
         />
+
+          <button onClick={handleSubmit} className="admin-password-ok-btn">
+            <FaCheckCircle size={20} id="admin-password-ok-icon"/>
+            Ok
+          </button>
+
+        <button onClick={onClose} className="close-popup-btn">
+          &times;
+        </button>
       </div>
-      <button onClick={handleSubmit} id="submit-btn">
-        Ok
-      </button>
-      <button onClick={onClose} id="close-btn">
-        &times;
-      </button>
     </Modal>
   );
 };
