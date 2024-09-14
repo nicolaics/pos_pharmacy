@@ -27,7 +27,7 @@ const ModifyUserPage: React.FC = () => {
   const [showAddBtn, setshowAddBtn] = useState(false);
   const [showIdField, setShowIdField] = useState(false);
 
-  const reqType = state.reqType;
+  const [reqType, setReqType] = useState(state.reqType);
 
   var heading = "";
   if (reqType == "add") {
@@ -126,6 +126,7 @@ const ModifyUserPage: React.FC = () => {
 
   const handleRequestAdminPassword = (e: any) => {
     e.preventDefault(); // Prevent form submission and page reload
+    console.log(reqType);
     openPopup(e); // Open the popup
   };
 
@@ -136,6 +137,8 @@ const ModifyUserPage: React.FC = () => {
 
     // Handle form submission logic here
     const token = sessionStorage.getItem("token");
+
+    console.log(reqType);
 
     if (reqType === "modify") {
       const url = `http://${BACKEND_BASE_URL}/user/modify`;
@@ -228,6 +231,40 @@ const ModifyUserPage: React.FC = () => {
           console.error("Error modify user:", error);
           alert("Error modify user");
         });
+    } else if (reqType === "delete") {
+      const url = `http://${BACKEND_BASE_URL}/user/delete`;
+
+      console.log("admin password", adminPassword);
+
+      fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          id: Number(id),
+          name: name,
+          adminPassword: adminPassword,
+        }),
+      })
+        .then((response) =>
+          response.json().then((data) => {
+            if (!response.ok) {
+              alert(data.error);
+              throw new Error("Unable to delete user data");
+            }
+
+            console.log(data);
+            setAdminPassword("");
+            navigate("/user");
+          })
+        )
+        .catch((error) => {
+          console.error("Error delete user:", error);
+        });
+
+      setAdminPassword("");
     }
 
     // Reset the state
@@ -244,38 +281,9 @@ const ModifyUserPage: React.FC = () => {
     e.preventDefault();
     handleRequestAdminPassword(e);
 
-    const token = sessionStorage.getItem("token");
-    const url = `http://${BACKEND_BASE_URL}/user/delete`;
+    setReqType("delete");
 
-    fetch(url, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({
-        id: Number(id),
-        name: name,
-        adminPassword: adminPassword,
-      }),
-    })
-      .then((response) =>
-        response.json().then((data) => {
-          if (!response.ok) {
-            throw new Error("Unable to delete user data");
-          }
-
-          console.log(data);
-          setAdminPassword("");
-          navigate("/user");
-        })
-      )
-      .catch((error) => {
-        console.error("Error delete user:", error);
-        alert("Error delete user");
-      });
-
-    setAdminPassword("");
+    console.log(reqType);
   };
 
   return (
