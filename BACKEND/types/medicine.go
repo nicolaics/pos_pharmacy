@@ -7,7 +7,7 @@ import (
 
 type MedicineStore interface {
 	GetMedicineByName(string) (*Medicine, error)
-	GetMedicineByID(int) (*Medicine, error)
+	GetMedicineByID(int) (*MedicineListsReturnPayload, error)
 	GetMedicineByBarcode(string) (*Medicine, error)
 
 	GetMedicinesBySearchName(string) ([]MedicineListsReturnPayload, error)
@@ -57,20 +57,23 @@ type ModifyMedicinePayload struct {
 }
 
 type MedicineListsReturnPayload struct {
-	ID             int     `json:"id"`
-	Barcode        string  `json:"barcode"`
-	Name           string  `json:"name"`
-	Qty            float64 `json:"qty"`
-	FirstUnitName  string  `json:"firstUnitName"`
-	FirstDiscount  float64 `json:"firstDiscount"`
-	FirstPrice     float64 `json:"firstPrice"`
-	SecondUnitName string  `json:"secondUnitName"`
-	SecondDiscount float64 `json:"secondDiscount"`
-	SecondPrice    float64 `json:"secondPrice"`
-	ThirdUnitName  string  `json:"thirdUnitName"`
-	ThirdDiscount  float64 `json:"thirdDiscount"`
-	ThirdPrice     float64 `json:"thirdPrice"`
-	Description    string  `json:"description"`
+	ID                     int       `json:"id"`
+	Barcode                string    `json:"barcode"`
+	Name                   string    `json:"name"`
+	Qty                    float64   `json:"qty"`
+	FirstUnitName          string    `json:"firstUnitName"`
+	FirstDiscount          float64   `json:"firstDiscount"`
+	FirstPrice             float64   `json:"firstPrice"`
+	SecondUnitName         string    `json:"secondUnitName"`
+	SecondDiscount         float64   `json:"secondDiscount"`
+	SecondPrice            float64   `json:"secondPrice"`
+	ThirdUnitName          string    `json:"thirdUnitName"`
+	ThirdDiscount          float64   `json:"thirdDiscount"`
+	ThirdPrice             float64   `json:"thirdPrice"`
+	Description            string    `json:"description"`
+	CreatedAt              time.Time `json:"createdAt"`
+	LastModified           time.Time `json:"lastModified"`
+	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 }
 
 type Medicine struct {
