@@ -267,7 +267,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 		}
 
 		for _, supplier := range suppliers {
-			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, supplier.ID)
+			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndSupplierID(payload.StartDate, payload.EndDate, supplier.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s doesn't create any po invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
