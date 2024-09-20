@@ -2,6 +2,8 @@ package unit
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/types"
 )
@@ -15,7 +17,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
-	rows, err := s.db.Query("SELECT * FROM unit WHERE name = ? ", unitName)
+	rows, err := s.db.Query("SELECT * FROM unit WHERE name = ? ", strings.ToUpper(unitName))
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +31,10 @@ func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if unit.ID == 0 {
+		return nil, fmt.Errorf("unit not found")
 	}
 
 	return unit, nil
@@ -56,7 +62,7 @@ func (s *Store) GetUnitByID(id int) (*types.Unit, error) {
 
 
 func (s *Store) CreateUnit(unitName string) error {
-	_, err := s.db.Exec("INSERT INTO unit (name) VALUES (?)", unitName)
+	_, err := s.db.Exec("INSERT INTO unit (name) VALUES (?)", strings.ToUpper(unitName))
 
 	if err != nil {
 		return err
@@ -77,8 +83,6 @@ func scanRowIntoUnit(rows *sql.Rows) (*types.Unit, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	unit.CreatedAt = unit.CreatedAt.Local()
 
 	return unit, nil
 }

@@ -28,9 +28,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/medicine", h.handleModify).Methods(http.MethodPatch)
 
-	// router.HandleFunc("/medicine", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	// router.HandleFunc("/medicine/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	// router.HandleFunc("/medicine/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	firstUnit, err := h.unitStore.GetUnitByName(firstUnitStr)
-	if firstUnit == nil {
+	if firstUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(firstUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
@@ -94,7 +94,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	secondUnit, err := h.unitStore.GetUnitByName(secondUnitStr)
-	if secondUnit == nil {
+	if secondUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(secondUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
@@ -109,7 +109,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	thirdUnit, err := h.unitStore.GetUnitByName(thirdUnitStr)
-	if thirdUnit == nil {
+	if thirdUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(thirdUnitStr)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
@@ -161,7 +161,6 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	params := vars["params"]
 	val := vars["val"]
 
-	// TODO: recheck return payload
 	var medicines []types.MedicineListsReturnPayload
 
 	if val == "all" {
@@ -189,41 +188,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO: get unit name
-		unitOne, err := h.unitStore.GetUnitByID(medicine.FirstUnitID)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.FirstUnitID))
-			return
-		}
-
-		unitTwo, err := h.unitStore.GetUnitByID(medicine.SecondUnitID)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.SecondUnitID))
-			return
-		}
-
-		unitThree, err := h.unitStore.GetUnitByID(medicine.ThirdUnitID)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("unit id %d not found", medicine.ThirdUnitID))
-			return
-		}
-
-		medicines = append(medicines, types.MedicineListsReturnPayload{
-			ID:             medicine.ID,
-			Barcode:        medicine.Barcode,
-			Name:           medicine.Name,
-			Qty:            medicine.Qty,
-			FirstUnitName:  unitOne.Name,
-			FirstDiscount:  medicine.FirstDiscount,
-			FirstPrice:     medicine.FirstPrice,
-			SecondUnitName: unitTwo.Name,
-			SecondDiscount: medicine.SecondDiscount,
-			SecondPrice:    medicine.SecondPrice,
-			ThirdUnitName:  unitThree.Name,
-			ThirdDiscount:  medicine.ThirdDiscount,
-			ThirdPrice:     medicine.ThirdPrice,
-			Description:    medicine.Description,
-		})
+		medicines = append(medicines, *medicine)
 	} else if params == "barcode" {
 		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
@@ -267,6 +232,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: return medicine lists return payload instead
 	// get medicine data
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
 	if medicine == nil || err != nil {
@@ -309,7 +275,11 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.medStore.DeleteMedicine(medicine, user)
+	err = h.medStore.DeleteMedicine(&types.Medicine{
+		ID: medicine.ID,
+		Barcode: medicine.Barcode,
+		Name: medicine.Name,
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

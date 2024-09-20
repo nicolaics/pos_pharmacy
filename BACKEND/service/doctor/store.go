@@ -216,7 +216,5 @@ func scanRowIntoDoctor(rows *sql.Rows) (*types.Doctor, error) {
 		return nil, err
 	}
 
-	doctor.CreatedAt = doctor.CreatedAt.Local()
-
 	return doctor, nil
 }

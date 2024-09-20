@@ -42,18 +42,33 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 	return medicine, nil
 }
 
-func (s *Store) GetMedicineByID(id int) (*types.Medicine, error) {
-	query := "SELECT * FROM medicine WHERE id = ? AND deleted_at IS NULL"
+func (s *Store) GetMedicineByID(id int) (*types.MedicineListsReturnPayload, error) {
+	query := `SELECT med.id, med.barcode, med.name, med.qty, 
+					uot.name AS unit_one, 
+					med.first_discount, med.first_price, 
+					utt.name AS unit_two, 
+					med.second_discount, med.second_price, 
+					utht.name AS unit_three, 
+					med.third_discount, med.third_price, 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
+					FROM medicine AS med 
+					JOIN unit AS uot ON med.first_unit_id = uot.id 
+					JOIN unit AS utt ON med.second_unit_id = utt.id 
+					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
+					WHERE med.id = ? 
+					AND med.deleted_at IS NULL`
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	medicine := new(types.Medicine)
+	medicine := new(types.MedicineListsReturnPayload)
 
 	for rows.Next() {
-		medicine, err = scanRowIntoMedicine(rows)
+		medicine, err = scanRowIntoMedicineLists(rows)
 
 		if err != nil {
 			return nil, err
@@ -116,11 +131,13 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.name LIKE ? 
 					AND med.deleted_at IS NULL`
 		searchVal := "%"
@@ -158,11 +175,13 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.name = ? 
 					AND med.deleted_at IS NULL`
 	rows, err := s.db.Query(query, name)
@@ -208,11 +227,13 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.barcode LIKE ? 
 					AND med.deleted_at IS NULL`
 		searchVal := "%"
@@ -250,11 +271,13 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.barcode = ? 
 					AND med.deleted_at IS NULL`
 	rows, err := s.db.Query(query, barcode)
@@ -284,11 +307,13 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.description LIKE ? AND med.deleted_at IS NULL`
 
 	searchVal := "%"
@@ -353,11 +378,13 @@ func (s *Store) GetAllMedicines() ([]types.MedicineListsReturnPayload, error) {
 					med.second_discount, med.second_price, 
 					utht.name AS unit_three, 
 					med.third_discount, med.third_price, 
-					med.description 
+					med.description, med.created_at, 
+					med.last_modified, user.name 
 					FROM medicine AS med 
 					JOIN unit AS uot ON med.first_unit_id = uot.id 
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
+					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.deleted_at IS NULL`
 
 	rows, err := s.db.Query(query)
@@ -459,9 +486,6 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 		return nil, err
 	}
 
-	medicine.CreatedAt = medicine.CreatedAt.Local()
-	medicine.LastModified = medicine.LastModified.Local()
-
 	return medicine, nil
 }
 
@@ -483,6 +507,9 @@ func scanRowIntoMedicineLists(rows *sql.Rows) (*types.MedicineListsReturnPayload
 		&medicine.ThirdDiscount,
 		&medicine.ThirdPrice,
 		&medicine.Description,
+		&medicine.CreatedAt,
+		&medicine.LastModified,
+		&medicine.LastModifiedByUserName,
 	)
 
 	if err != nil {

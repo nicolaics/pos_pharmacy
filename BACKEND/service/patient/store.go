@@ -221,7 +221,5 @@ func scanRowIntoPatient(rows *sql.Rows) (*types.Patient, error) {
 		return nil, err
 	}
 
-	patient.CreatedAt = patient.CreatedAt.Local()
-
 	return patient, nil
 }

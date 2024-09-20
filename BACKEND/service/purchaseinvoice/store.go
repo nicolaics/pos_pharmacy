@@ -478,10 +478,6 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		return nil, err
 	}
 
-	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
-	purchaseInvoice.CreatedAt = purchaseInvoice.CreatedAt.Local()
-	purchaseInvoice.LastModified = purchaseInvoice.LastModified.Local()
-
 	return purchaseInvoice, nil
 }
 
@@ -501,8 +497,6 @@ func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceList
 	if err != nil {
 		return nil, err
 	}
-
-	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
 
 	return purchaseInvoice, nil
 }
@@ -527,8 +521,6 @@ func scanRowIntoPurchaseMedicineItems(rows *sql.Rows) (*types.PurchaseMedicineIt
 	if err != nil {
 		return nil, err
 	}
-
-	purchaseMedicineItem.ExpDate = purchaseMedicineItem.ExpDate.Local()
-
+	
 	return purchaseMedicineItem, nil
 }

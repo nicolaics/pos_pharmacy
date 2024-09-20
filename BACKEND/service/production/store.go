@@ -515,10 +515,6 @@ func scanRowIntoProduction(rows *sql.Rows) (*types.Production, error) {
 		return nil, err
 	}
 
-	production.ProductionDate = production.ProductionDate.Local()
-	production.CreatedAt = production.CreatedAt.Local()
-	production.LastModified = production.LastModified.Local()
-
 	return production, nil
 }
 
@@ -541,8 +537,6 @@ func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPay
 	if err != nil {
 		return nil, err
 	}
-
-	production.ProductionDate = production.ProductionDate.Local()
 
 	return production, nil
 }

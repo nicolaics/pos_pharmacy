@@ -540,10 +540,6 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		return nil, err
 	}
 
-	invoice.InvoiceDate = invoice.InvoiceDate.Local()
-	invoice.CreatedAt = invoice.CreatedAt.Local()
-	invoice.LastModified = invoice.LastModified.Local()
-
 	return invoice, nil
 }
 
@@ -567,8 +563,6 @@ func scanRowIntoInvoiceLists(rows *sql.Rows) (*types.InvoiceListsReturnPayload, 
 	if err != nil {
 		return nil, err
 	}
-
-	invoice.InvoiceDate = invoice.InvoiceDate.Local()
 
 	return invoice, nil
 }

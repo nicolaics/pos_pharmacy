@@ -2,6 +2,7 @@ package paymentmethod
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/nicolaics/pos_pharmacy/types"
@@ -32,6 +33,10 @@ func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.Payment
 		}
 	}
 
+	if paymentMethod.ID == 0 {
+		return nil, fmt.Errorf("payment method %s not found", paymentMethodName)
+	}
+
 	return paymentMethod, nil
 }
 
@@ -50,6 +55,10 @@ func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if paymentMethod.ID == 0 {
+		return nil, fmt.Errorf("payment method %d not found", id)
 	}
 
 	return paymentMethod, nil
@@ -77,8 +86,6 @@ func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	paymentMethod.CreatedAt = paymentMethod.CreatedAt.Local()
 
 	return paymentMethod, nil
 }

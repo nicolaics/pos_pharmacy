@@ -223,7 +223,5 @@ func scanRowIntoCustomer(rows *sql.Rows) (*types.Customer, error) {
 		return nil, err
 	}
 
-	customer.CreatedAt = customer.CreatedAt.Local()
-
 	return customer, nil
 }
