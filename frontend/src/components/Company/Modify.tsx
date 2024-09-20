@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import "./Modify.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../../App";
 
 const ModifyCompanyPage: React.FC = () => {
@@ -36,7 +36,6 @@ const ModifyCompanyPage: React.FC = () => {
 
           console.log("company", data);
 
-          // TODO: check if there is no company exist yet
           if (data.id === 0) {
             newCompany = true;
             return;
