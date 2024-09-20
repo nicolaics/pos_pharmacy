@@ -80,9 +80,9 @@ function fillTable(
 
 const ViewSupplierPage: React.FC = () => {
   const navigate = useNavigate();
-  
+
   const [searchVal, setSearchVal] = useState("");
-  const [searchParams, setSearchParams] = useState();
+  const [searchParams, setSearchParams] = useState("none");
 
   const handleSearchValChange = (e: any) => {
     e.preventDefault();
@@ -90,10 +90,11 @@ const ViewSupplierPage: React.FC = () => {
   };
 
   const handleSearchParamsChange = (e: any) => {
-    e.preventDefault();
+    // e.preventDefault();
     setSearchParams(e.target.value);
   };
 
+  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
@@ -131,6 +132,7 @@ const ViewSupplierPage: React.FC = () => {
         alert("Error loading supplier data");
       });
   });
+  */
 
   const testData = [
     {
@@ -164,13 +166,6 @@ const ViewSupplierPage: React.FC = () => {
   const search = () => {
     const token = sessionStorage.getItem("token");
     var getAllSupplierURL = "";
-    
-    if (searchVal === "") {
-      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
-    }
-    else {
-      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/${searchParams}/${searchVal}`;
-    }
 
     // TEST DATA
     // const tableBody = document.querySelector("#supplier-data-table tbody");
@@ -182,6 +177,18 @@ const ViewSupplierPage: React.FC = () => {
     // for (let i = 0; i < testData.length; i++) {
     //   fillTable(testData[i], tableBody, navigate);
     // }
+    
+    if (searchVal === "") {
+      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
+    } else {
+      console.log(searchParams);
+      if (searchParams === "none") {
+        alert("search by cannot be none!");
+        return;
+      }
+
+      getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/${searchParams}/${searchVal}`;
+    }
 
     fetch(getAllSupplierURL, {
       method: "GET",
@@ -196,7 +203,9 @@ const ViewSupplierPage: React.FC = () => {
             throw new Error("Invalid credentials or network issue");
           }
 
-          const tableBody = document.querySelector("#supplier-data-table tbody");
+          const tableBody = document.querySelector(
+            "#supplier-data-table tbody"
+          );
           if (!tableBody) {
             console.error("table body not found");
             return;
@@ -245,6 +254,58 @@ const ViewSupplierPage: React.FC = () => {
           <BsBuildingFillAdd size={30} id="supplier-add-icon" />
           Add
         </button>
+
+        <div className="supplier-search-radio-container">
+          <label>Search By:</label>
+          <div className="supplier-search-radio-grp">
+            <div className="supplier-search-radio-item">
+              <input
+                type="radio"
+                id="supplier-search-radio-none"
+                checked={true}
+                name="searchParams"
+                value={"none"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="supplier-search-radio-none">None</label>
+            </div>
+
+            <div className="supplier-search-radio-item">
+              <input
+                type="radio"
+                id="supplier-search-radio-name"
+                name="searchParams"
+                value={"name"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="supplier-search-radio-name">Supplier Name</label>
+            </div>
+
+            <div className="supplier-search-radio-item">
+              <input
+                type="radio"
+                id="supplier-search-radio-cp-name"
+                name="searchParams"
+                value={"cp-name"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="supplier-search-radio-cp-name">
+                Contact Person Name
+              </label>
+            </div>
+
+            <div className="supplier-search-radio-item">
+              <input
+                type="radio"
+                id="supplier-search-radio-id"
+                name="searchParams"
+                value={"id"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="supplier-search-radio-id">ID</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="supplier-table-container">

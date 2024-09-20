@@ -8,17 +8,21 @@
 }
 
 .user-search-container {
-  display: flex;
-  margin-bottom: 20px;
+  display: inline-block;
+  width: 1000px;
+  margin-bottom: 50px;
 }
 
 .user-search-input {
   flex-grow: 1;
   padding: 10px;
   font-size: 20px;
+  vertical-align: middle;
   border: 1px solid #ccc;
   border-radius: 10px;
   margin-right: 25px;
+  margin-bottom: 20px;
+  width: 50%;
 }
 
 #user-search-icon {
@@ -26,9 +30,10 @@
 }
 
 .user-search-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-items: baseline;
+  vertical-align: middle;
   padding: 10px 15px;
   font-size: 20px;
   background-color: #4CAF50;
@@ -36,11 +41,44 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  margin-bottom: 20px;
   
 }
 
 .user-search-button:hover {
   background-color: #45a049;
+}
+
+.user-search-radio-container {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+}
+
+.user-search-radio-container label {
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.user-search-radio-grp label {
+  font-size: 20px;
+  margin-right: 20px;
+  font-weight: normal;
+}
+
+.user-search-radio-grp input[type="radio"]{
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.user-search-radio-item {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
 }
 
 .user-table-container {
@@ -68,6 +106,26 @@ td {
 
 #user-data-table tbody {
   font-size: 16px;
+}
+
+.user-id-column {
+  width: 20px;
+}
+
+.user-name-column {
+  width: 200px;
+}
+
+.user-admin-column {
+  width: 60px;
+}
+
+.user-phone-number-column {
+  width: 200px;
+}
+
+.user-last-logged-in-column, .user-created-at-column {
+  width: 230px;
 }
 
 .view-user-data-row {

@@ -22,10 +22,12 @@ function fillTable(
   // Create and append cells for each column
   const idCell = document.createElement("td");
   idCell.textContent = data["id"].toString();
+  idCell.className = "user-id-column";
   row.appendChild(idCell);
 
   const nameCell = document.createElement("td");
   nameCell.textContent = data["name"];
+  nameCell.className = "user-name-column";
   row.appendChild(nameCell);
 
   const adminCell = document.createElement("td");
@@ -34,22 +36,26 @@ function fillTable(
   } else {
     adminCell.textContent = "No";
   }
+  adminCell.className = "user-admin-column";
 
   row.appendChild(adminCell);
 
   const phoneNumberCell = document.createElement("td");
   phoneNumberCell.textContent = data["phoneNumber"];
+  phoneNumberCell.className = "user-phone-number-column";
   row.appendChild(phoneNumberCell);
 
-  const lastLoggenInCell = document.createElement("td");
+  const lastLoggedInCell = document.createElement("td");
 
   const lastLoggedIn = new Date(data["lastLoggedIn"]);
-  lastLoggenInCell.textContent = FormatDateTime(lastLoggedIn);
-  row.appendChild(lastLoggenInCell);
+  lastLoggedInCell.textContent = FormatDateTime(lastLoggedIn);
+  lastLoggedInCell.className = "user-last-logged-in-column";
+  row.appendChild(lastLoggedInCell);
 
   const createdAt = new Date(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
+  createdAtCell.className = "user-created-at-column";
   row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
@@ -77,7 +83,6 @@ const ViewUserPage: React.FC = () => {
   };
 
   const handleSearchParamsChange = (e: any) => {
-    e.preventDefault();
     setSearchParams(e.target.value);
   };
 
@@ -104,13 +109,6 @@ const ViewUserPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
     var getAllUserURL = "";
     
-    if (searchVal === "") {
-      getAllUserURL = `http://${BACKEND_BASE_URL}/user/all/all`;
-    }
-    else {
-      getAllUserURL = `http://${BACKEND_BASE_URL}/user/${searchParams}/${searchVal}`
-    }
-
     // TEST DATA
     // const tableBody = document.querySelector("#user-data-table tbody");
     // if (!tableBody) {
@@ -121,6 +119,18 @@ const ViewUserPage: React.FC = () => {
     // for (let i = 0; i < testData.length; i++) {
     //   fillTable(testData[i], tableBody, navigate);
     // }
+
+    if (searchVal === "") {
+      getAllUserURL = `http://${BACKEND_BASE_URL}/user/all/all`;
+    }
+    else {
+      if (searchParams === "none") {
+        alert("search by cannot be none!");
+        return;
+      }
+
+      getAllUserURL = `http://${BACKEND_BASE_URL}/user/${searchParams}/${searchVal}`
+    }
 
     console.log(getAllUserURL);
 
@@ -181,17 +191,69 @@ const ViewUserPage: React.FC = () => {
           <MdPersonSearch size={30} id="user-search-icon" />
           Search
         </button>
+
+        <div className="user-search-radio-container">
+          <label>Search By:</label>
+          <div className="user-search-radio-grp">
+            <div className="user-search-radio-item">
+              <input
+                type="radio"
+                id="user-search-radio-none"
+                checked={true}
+                name="searchParams"
+                value={"none"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="user-search-radio-none">None</label>
+            </div>
+
+            <div className="user-search-radio-item">
+              <input
+                type="radio"
+                id="user-search-radio-name"
+                name="searchParams"
+                value={"name"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="user-search-radio-name">Name</label>
+            </div>
+
+            <div className="user-search-radio-item">
+              <input
+                type="radio"
+                id="user-search-radio-phone-number"
+                name="searchParams"
+                value={"phone-number"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="user-search-radio-phone-number">
+                Phone Number
+              </label>
+            </div>
+
+            <div className="user-search-radio-item">
+              <input
+                type="radio"
+                id="user-search-radio-id"
+                name="searchParams"
+                value={"id"}
+                onChange={handleSearchParamsChange}
+              />
+              <label htmlFor="user-search-radio-id">ID</label>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="user-table-container">
         <table id="user-data-table" border={1}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Admin</th>
-              <th>Phone Number</th>
-              <th>Last Logged In</th>
-              <th>Created At</th>
+              <th className="user-id-column">ID</th>
+              <th className="user-name-column">Name</th>
+              <th className="user-admin-column">Admin</th>
+              <th className="user-phone-number-column">Phone Number</th>
+              <th className="user-last-logged-in-column">Last Logged In</th>
+              <th className="user-created-at-column">Created At</th>
             </tr>
           </thead>
           <tbody></tbody>
