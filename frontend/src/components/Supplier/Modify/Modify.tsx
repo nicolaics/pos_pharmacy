@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./Modify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../../../App";
+import FormatDateTime from "../../../DateTimeFormatter";
 
 const ModifySupplierPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ const ModifySupplierPage: React.FC = () => {
   const [contactPersonNumber, setContactPersonNumber] = useState("");
   const [terms, setTerms] = useState("");
   const [vendorIsTaxable, setVendorIsTaxable] = useState(true);
+  const [lastModified, setLastModified] = useState("");
+  const [lastModifiedByUserName, setLastModifiedByUserName] = useState("");
+  const [createdAt, setCreatedAt] = useState("");
 
   const [okBtnLabel, setOkBtnLabel] = useState("Modify");
   const [showIdField, setShowIdField] = useState(false);
@@ -50,6 +54,9 @@ const ModifySupplierPage: React.FC = () => {
 
             console.log(data);
 
+            const lastModifiedStr = FormatDateTime(new Date(data[0].lastModified));
+            const createdAtStr = FormatDateTime(new Date(data[0].createdAt));
+
             setId(data[0].id);
             setName(data[0].name);
             setAddress(data[0].address);
@@ -61,6 +68,10 @@ const ModifySupplierPage: React.FC = () => {
             } else {
               setVendorIsTaxable(false);
             }
+
+            setLastModified(lastModifiedStr);
+            setLastModifiedByUserName(data[0].lastModifiedByUserName);
+            setCreatedAt(createdAtStr);
           })
         )
         .catch((error) => {
@@ -230,13 +241,13 @@ const ModifySupplierPage: React.FC = () => {
       <div className="supplier-data-container">
         {showIdField && (
           <div className="supplier-data-form-group">
-            <label htmlFor="id">ID:</label>
+            <label htmlFor="modify-supplier-id">ID:</label>
             <input type="text" id="modify-supplier-id" value={id} readOnly />
           </div>
         )}
 
         <div className="supplier-data-form-group">
-          <label htmlFor="name">Name:</label>
+          <label htmlFor="modify-supplier-name">Name:</label>
           <input
             type="text"
             id="modify-supplier-name"
@@ -246,7 +257,7 @@ const ModifySupplierPage: React.FC = () => {
         </div>
 
         <div className="supplier-data-form-group">
-          <label htmlFor="address">Address:</label>
+          <label htmlFor="modify-supplier-address">Address:</label>
           <textarea
             id="modify-supplier-address"
             value={address}
@@ -255,37 +266,37 @@ const ModifySupplierPage: React.FC = () => {
         </div>
 
         <div className="supplier-data-form-group">
-          <label htmlFor="companyPhoneNumber">Company Phone Number:</label>
+          <label htmlFor="modify-supplier-company-pn">Company Phone Number:</label>
           <input
             type="text"
-            id="modify-supplier-companyPhoneNumber"
+            id="modify-supplier-company-pn"
             value={companyPhoneNumber}
             onChange={handleCompanyPhoneNumberChange}
           />
         </div>
 
         <div className="supplier-data-form-group">
-          <label htmlFor="contactPersonName">Contact Person Name:</label>
+          <label htmlFor="modify-supplier-cp-name">Contact Person Name:</label>
           <input
             type="text"
-            id="modify-supplier-contactPersonName"
+            id="modify-supplier-cp-name"
             value={contactPersonName}
             onChange={handleContactPersonNameChange}
           />
         </div>
 
         <div className="supplier-data-form-group">
-          <label htmlFor="contactPersonNumber">Contact Person Number:</label>
+          <label htmlFor="modify-supplier-cp-pn">Contact Person Number:</label>
           <input
             type="text"
-            id="modify-supplier-contactPersonNumber"
+            id="modify-supplier-cp-pn"
             value={contactPersonNumber}
             onChange={handleContactPersonNumberChange}
           />
         </div>
 
         <div className="supplier-data-form-group">
-          <label htmlFor="terms">Terms:</label>
+          <label htmlFor="modify-supplier-terms">Terms:</label>
           <input
             type="text"
             id="modify-supplier-terms"
@@ -305,7 +316,8 @@ const ModifySupplierPage: React.FC = () => {
               value={"yes"}
               onChange={handleVendorIsTaxableChange}
             />
-            <label htmlFor="radio-yes">Yes</label>
+            <label htmlFor="modify-supplier-radio-yes">Yes</label>
+
             <input
               type="radio"
               checked={vendorIsTaxable === false}
@@ -314,9 +326,40 @@ const ModifySupplierPage: React.FC = () => {
               value={"no"}
               onChange={handleVendorIsTaxableChange}
             />
-            <label htmlFor="radio-no">No</label>
+            <label htmlFor="modify-supplier-radio-no">No</label>
           </div>
         </div>
+
+        <div className="supplier-data-form-group">
+          <label htmlFor="modify-supplier-last-modified">Last Modified:</label>
+          <input
+            type="text"
+            id="modify-supplier-last-modified"
+            value={lastModified}
+            readOnly={true}
+          />
+        </div>
+
+        <div className="supplier-data-form-group">
+          <label htmlFor="modify-supplier-last-modified-by">Last Modified By:</label>
+          <input
+            type="text"
+            id="modify-supplier-last-modified-by"
+            value={lastModifiedByUserName}
+            readOnly={true}
+          />
+        </div>
+
+        <div className="supplier-data-form-group">
+          <label htmlFor="modify-supplier-created-at">Created At:</label>
+          <input
+            type="text"
+            id="modify-supplier-created-at"
+            value={createdAt}
+            readOnly={true}
+          />
+        </div>
+        
       </div>
 
       <div className="modify-supplier-buttons">

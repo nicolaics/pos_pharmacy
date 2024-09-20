@@ -49,32 +49,32 @@ function fillTable(
   contactPersonNumberCell.className = "supplier-cp-pn-column";
   row.appendChild(contactPersonNumberCell);
 
-  const termsCell = document.createElement("td");
-  termsCell.textContent = data["terms"];
-  termsCell.className = "supplier-terms-column";
-  row.appendChild(termsCell);
+  // const termsCell = document.createElement("td");
+  // termsCell.textContent = data["terms"];
+  // termsCell.className = "supplier-terms-column";
+  // row.appendChild(termsCell);
 
-  const vendorIsTaxableCell = document.createElement("td");
-  vendorIsTaxableCell.textContent = data["vendorIsTaxable"];
-  vendorIsTaxableCell.className = "supplier-vendor-is-taxable-column";
-  row.appendChild(vendorIsTaxableCell);
+  // const vendorIsTaxableCell = document.createElement("td");
+  // vendorIsTaxableCell.textContent = data["vendorIsTaxable"];
+  // vendorIsTaxableCell.className = "supplier-vendor-is-taxable-column";
+  // row.appendChild(vendorIsTaxableCell);
 
-  const lastModified = new Date(data["lastModified"]);
-  const lastModifiedCell = document.createElement("td");
-  lastModifiedCell.textContent = FormatDateTime(lastModified);
-  lastModifiedCell.className = "supplier-last-modified-column";
-  row.appendChild(lastModifiedCell);
+  // const lastModified = new Date(data["lastModified"]);
+  // const lastModifiedCell = document.createElement("td");
+  // lastModifiedCell.textContent = FormatDateTime(lastModified);
+  // lastModifiedCell.className = "supplier-last-modified-column";
+  // row.appendChild(lastModifiedCell);
 
-  const lastModifiedByUserNameCell = document.createElement("td");
-  lastModifiedByUserNameCell.textContent = data["lastModifiedByUserName"];
-  lastModifiedByUserNameCell.className = "supplier-last-modified-by-column";
-  row.appendChild(lastModifiedByUserNameCell);
+  // const lastModifiedByUserNameCell = document.createElement("td");
+  // lastModifiedByUserNameCell.textContent = data["lastModifiedByUserName"];
+  // lastModifiedByUserNameCell.className = "supplier-last-modified-by-column";
+  // row.appendChild(lastModifiedByUserNameCell);
 
-  const createdAt = new Date(data["createdAt"]);
-  const createdAtCell = document.createElement("td");
-  createdAtCell.textContent = FormatDateTime(createdAt);
-  createdAtCell.className = "supplier-created-at-column";
-  row.appendChild(createdAtCell);
+  // const createdAt = new Date(data["createdAt"]);
+  // const createdAtCell = document.createElement("td");
+  // createdAtCell.textContent = FormatDateTime(createdAt);
+  // createdAtCell.className = "supplier-created-at-column";
+  // row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
     navigate("/supplier/detail", {
@@ -326,11 +326,11 @@ const ViewSupplierPage: React.FC = () => {
               <th className="supplier-company-pn-column">Company Phone Number</th>
               <th className="supplier-cp-name-column">Contact Person Name</th>
               <th className="supplier-cp-pn-column">Contact Person Number</th>
-              <th className="supplier-terms-column">Terms</th>
+              {/* <th className="supplier-terms-column">Terms</th>
               <th className="supplier-vendor-is-taxable-column">Vendor is Taxable</th>
               <th className="supplier-last-modified-column">Last Modified</th>
               <th className="supplier-last-modified-by-column">Last Modified By</th>
-              <th className="supplier-created-at-column">Created At</th>
+              <th className="supplier-created-at-column">Created At</th> */}
             </tr>
           </thead>
           <tbody></tbody>

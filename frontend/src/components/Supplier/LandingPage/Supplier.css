@@ -164,22 +164,6 @@ td {
   width: 150px;
 }
 
-.supplier-terms-column {
-  width: 100px;
-}
-
-.supplier-vendor-is-taxable-column {
-  width: 90px;
-}
-
-.supplier-last-modified-column, .supplier-created-at-column {
-  width: 200px;
-}
-
-.supplier-last-modified-by-column {
-  width: 150px;
-}
-
 .view-supplier-home-button {
   display: flex;
   align-items: center;
