@@ -94,7 +94,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	params := vars["params"]
 	val := vars["val"]
 
-	var suppliers []types.Supplier
+	var suppliers []types.SupplierInformationReturnPayload
 
 	if val == "all" {
 		suppliers, err = h.supplierStore.GetAllSuppliers()
@@ -201,7 +201,10 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.supplierStore.DeleteSupplier(supplier, user)
+	err = h.supplierStore.DeleteSupplier(&types.Supplier{
+		ID: supplier.ID,
+		Name: supplier.Name,
+	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -7,14 +7,14 @@ import (
 
 type SupplierStore interface {
 	GetSupplierByName(name string) (*Supplier, error)
-	GetSupplierByID(id int) (*Supplier, error)
+	GetSupplierByID(id int) (*SupplierInformationReturnPayload, error)
 
-	GetSupplierBySearchName(name string) ([]Supplier, error)
-	GetSupplierBySearchContactPersonName(name string) ([]Supplier, error)
-	
+	GetSupplierBySearchName(name string) ([]SupplierInformationReturnPayload, error)
+	GetSupplierBySearchContactPersonName(name string) ([]SupplierInformationReturnPayload, error)
+
 	CreateSupplier(Supplier) error
 
-	GetAllSuppliers() ([]Supplier, error)
+	GetAllSuppliers() ([]SupplierInformationReturnPayload, error)
 
 	DeleteSupplier(*Supplier, *User) error
 
@@ -43,6 +43,20 @@ type DeleteSupplierPayload struct {
 
 type GetOneSupplierPayload struct {
 	ID int `json:"id" validate:"required"`
+}
+
+type SupplierInformationReturnPayload struct {
+	ID                     int       `json:"id"`
+	Name                   string    `json:"name"`
+	Address                string    `json:"address"`
+	CompanyPhoneNumber     string    `json:"companyPhoneNumber"`
+	ContactPersonName      string    `json:"contactPersonName"`
+	ContactPersonNumber    string    `json:"contactPersonNumber"`
+	Terms                  string    `json:"terms"`
+	VendorIsTaxable        bool      `json:"vendorIsTaxable"`
+	CreatedAt              time.Time `json:"createdAt"`
+	LastModified           time.Time `json:"lastModified"`
+	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 }
 
 type Supplier struct {

@@ -42,7 +42,7 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 	return supplier, nil
 }
 
-func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
+func (s *Store) GetSupplierBySearchName(name string) ([]types.SupplierInformationReturnPayload, error) {
 	query := "SELECT COUNT(*) FROM supplier WHERE name = ? AND deleted_at IS NULL"
 	row := s.db.QueryRow(query, name)
 	if row.Err() != nil {
@@ -56,10 +56,15 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
 		return nil, err
 	}
 
-	suppliers := make([]types.Supplier, 0)
+	suppliers := make([]types.SupplierInformationReturnPayload, 0)
 
 	if count == 0 {
-		query = "SELECT * FROM supplier WHERE name LIKE ? AND deleted_at IS NULL"
+		query = `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.name LIKE ? AND s.deleted_at IS NULL`
 		searchVal := "%"
 
 		for _, val := range name {
@@ -75,7 +80,7 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
 		defer rows.Close()
 
 		for rows.Next() {
-			supplier, err := scanRowIntoSupplier(rows)
+			supplier, err := scanRowIntoSupplierInformationReturn(rows)
 
 			if err != nil {
 				return nil, err
@@ -87,7 +92,12 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
 		return suppliers, nil
 	}
 
-	query = "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	query = `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.name = ? AND s.deleted_at IS NULL`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -95,7 +105,7 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		supplier, err := scanRowIntoSupplier(rows)
+		supplier, err := scanRowIntoSupplierInformationReturn(rows)
 
 		if err != nil {
 			return nil, err
@@ -107,7 +117,7 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.Supplier, error) {
 	return suppliers, nil
 }
 
-func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Supplier, error) {
+func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.SupplierInformationReturnPayload, error) {
 	query := "SELECT COUNT(*) FROM supplier WHERE contact_person_name = ? AND deleted_at IS NULL"
 	row := s.db.QueryRow(query, name)
 	if row.Err() != nil {
@@ -121,10 +131,15 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 		return nil, err
 	}
 
-	suppliers := make([]types.Supplier, 0)
+	suppliers := make([]types.SupplierInformationReturnPayload, 0)
 
 	if count == 0 {
-		query = "SELECT * FROM supplier WHERE contact_person_name LIKE ? AND deleted_at IS NULL"
+		query = `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.contact_person_name LIKE ? AND s.deleted_at IS NULL`
 		searchVal := "%"
 
 		for _, val := range name {
@@ -140,7 +155,7 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 		defer rows.Close()
 
 		for rows.Next() {
-			supplier, err := scanRowIntoSupplier(rows)
+			supplier, err := scanRowIntoSupplierInformationReturn(rows)
 
 			if err != nil {
 				return nil, err
@@ -152,7 +167,12 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 		return suppliers, nil
 	}
 
-	query = "SELECT * FROM supplier WHERE contact_person_name = ? AND deleted_at IS NULL"
+	query = `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.contact_person_name = ? AND s.deleted_at IS NULL`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -160,7 +180,7 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 	defer rows.Close()
 
 	for rows.Next() {
-		supplier, err := scanRowIntoSupplier(rows)
+		supplier, err := scanRowIntoSupplierInformationReturn(rows)
 
 		if err != nil {
 			return nil, err
@@ -172,18 +192,23 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 	return suppliers, nil
 }
 
-func (s *Store) GetSupplierByID(id int) (*types.Supplier, error) {
-	query := "SELECT * FROM supplier WHERE id = ? AND deleted_at IS NULL"
+func (s *Store) GetSupplierByID(id int) (*types.SupplierInformationReturnPayload, error) {
+	query := `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.id = ? AND s.deleted_at IS NULL`
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	supplier := new(types.Supplier)
+	supplier := new(types.SupplierInformationReturnPayload)
 
 	for rows.Next() {
-		supplier, err = scanRowIntoSupplier(rows)
+		supplier, err = scanRowIntoSupplierInformationReturn(rows)
 
 		if err != nil {
 			return nil, err
@@ -219,17 +244,24 @@ func (s *Store) CreateSupplier(supplier types.Supplier) error {
 	return nil
 }
 
-func (s *Store) GetAllSuppliers() ([]types.Supplier, error) {
-	rows, err := s.db.Query("SELECT * FROM supplier WHERE deleted_at IS NULL")
+func (s *Store) GetAllSuppliers() ([]types.SupplierInformationReturnPayload, error) {
+	query := `SELECT s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, s.terms, 
+					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
+				FROM supplier AS s 
+				JOIN user ON s.last_modified_by_user_id = user.id 
+				WHERE s.deleted_at IS NULL`
+
+	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	suppliers := make([]types.Supplier, 0)
+	suppliers := make([]types.SupplierInformationReturnPayload, 0)
 
 	for rows.Next() {
-		supplier, err := scanRowIntoSupplier(rows)
+		supplier, err := scanRowIntoSupplierInformationReturn(rows)
 
 		if err != nil {
 			return nil, err
@@ -310,6 +342,33 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 		&supplier.LastModifiedByUserID,
 		&supplier.DeletedAt,
 		&supplier.DeletedByUserID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	supplier.CreatedAt = supplier.CreatedAt.Local()
+	supplier.LastModified = supplier.LastModified.Local()
+
+	return supplier, nil
+}
+
+func scanRowIntoSupplierInformationReturn(rows *sql.Rows) (*types.SupplierInformationReturnPayload, error) {
+	supplier := new(types.SupplierInformationReturnPayload)
+
+	err := rows.Scan(
+		&supplier.ID,
+		&supplier.Name,
+		&supplier.Address,
+		&supplier.CompanyPhoneNumber,
+		&supplier.ContactPersonName,
+		&supplier.ContactPersonNumber,
+		&supplier.Terms,
+		&supplier.VendorIsTaxable,
+		&supplier.CreatedAt,
+		&supplier.LastModified,
+		&supplier.LastModifiedByUserName,
 	)
 
 	if err != nil {
