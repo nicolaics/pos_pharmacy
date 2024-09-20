@@ -83,6 +83,8 @@
 
 .user-table-container {
   overflow-x: auto;
+  margin: 0px auto;
+  width: 100%;
 }
 
 #user-data-table {

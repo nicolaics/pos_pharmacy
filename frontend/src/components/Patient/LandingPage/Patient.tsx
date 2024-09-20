@@ -22,15 +22,18 @@ function fillTable(
   // Create and append cells for each column
   const idCell = document.createElement("td");
   idCell.textContent = data["id"].toString();
+  idCell.className = "patient-id-column";
   row.appendChild(idCell);
 
   const nameCell = document.createElement("td");
   nameCell.textContent = data["name"];
+  nameCell.className = "patient-name-column";
   row.appendChild(nameCell);
 
   const createdAt = new Date(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
+  createdAtCell.className = "patient-created-at-column";
   row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
@@ -110,13 +113,6 @@ const ViewPatientPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
     var getPatientURL = "";
 
-    if (searchVal === "") {
-      getPatientURL = `http://${BACKEND_BASE_URL}/patient/all`;
-    }
-    else {
-      getPatientURL = `http://${BACKEND_BASE_URL}/patient/${searchVal}`;
-    }
-
     // TEST DATA
     // const tableBody = document.querySelector("#patient-data-table tbody");
     // if (!tableBody) {
@@ -127,6 +123,13 @@ const ViewPatientPage: React.FC = () => {
     // for (let i = 0; i < testData.length; i++) {
     //   fillTable(testData[i], tableBody, navigate);
     // }
+
+    if (searchVal === "") {
+      getPatientURL = `http://${BACKEND_BASE_URL}/patient/all`;
+    }
+    else {
+      getPatientURL = `http://${BACKEND_BASE_URL}/patient/${searchVal}`;
+    }
 
     fetch(getPatientURL, {
       method: "GET",
@@ -191,13 +194,13 @@ const ViewPatientPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="patient-table">
+      <div className="patient-table-container">
         <table id="patient-data-table" border={1}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Created At</th>
+              <th className="patient-id-column">ID</th>
+              <th className="patient-name-column">Name</th>
+              <th className="patient-created-at-column">Created At</th>
             </tr>
           </thead>
           <tbody></tbody>

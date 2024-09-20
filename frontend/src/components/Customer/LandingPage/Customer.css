@@ -73,6 +73,8 @@
 
 .customer-table-container {
   overflow-x: auto;
+  margin: 0px auto;
+  width: 1000px;
 }
 
 #customer-data-table {
@@ -106,6 +108,18 @@ td {
 
 .view-customer-data-row:hover {
   background-color: #afe6ff;
+}
+
+.customer-id-column {
+  width: 20px;
+}
+
+.customer-name-column {
+  width: 200px;
+}
+
+.customer-created-at-column {
+  width: 230px;
 }
 
 .view-customer-home-button {

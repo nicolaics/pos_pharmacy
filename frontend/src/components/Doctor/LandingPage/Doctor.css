@@ -64,7 +64,6 @@
   border-radius: 10px;
   cursor: pointer;
   margin-bottom: 50px;
-
 }
 
 .doctor-add-button:hover {
@@ -73,6 +72,8 @@
 
 .doctor-table-container {
   overflow-x: auto;
+  margin: 0px auto;
+  width: 1000px;
 }
 
 #doctor-data-table {
@@ -102,6 +103,18 @@ td {
   background-color: #f9f9f9;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+.doctor-id-column {
+  width: 20px;
+}
+
+.doctor-name-column {
+  width: 200px;
+}
+
+.doctor-created-at-column {
+  width: 230px;
 }
 
 .view-doctor-data-row:hover {

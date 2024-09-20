@@ -21,48 +21,59 @@ function fillTable(
   // Create and append cells for each column
   const idCell = document.createElement("td");
   idCell.textContent = data["id"].toString();
+  idCell.className = "supplier-id-column";
   row.appendChild(idCell);
 
   const nameCell = document.createElement("td");
   nameCell.textContent = data["name"];
+  nameCell.className = "supplier-name-column";
   row.appendChild(nameCell);
 
   const addressCell = document.createElement("td");
   addressCell.textContent = data["address"];
+  addressCell.className = "supplier-address-column";
   row.appendChild(addressCell);
 
   const companyPhoneNumberCell = document.createElement("td");
   companyPhoneNumberCell.textContent = data["companyPhoneNumber"];
+  companyPhoneNumberCell.className = "supplier-company-pn-column";
   row.appendChild(companyPhoneNumberCell);
 
   const contactPersonNameCell = document.createElement("td");
   contactPersonNameCell.textContent = data["contactPersonName"];
+  contactPersonNameCell.className = "supplier-cp-name-column";
   row.appendChild(contactPersonNameCell);
 
   const contactPersonNumberCell = document.createElement("td");
   contactPersonNumberCell.textContent = data["contactPersonNumber"];
+  contactPersonNumberCell.className = "supplier-cp-pn-column";
   row.appendChild(contactPersonNumberCell);
 
   const termsCell = document.createElement("td");
   termsCell.textContent = data["terms"];
+  termsCell.className = "supplier-terms-column";
   row.appendChild(termsCell);
 
   const vendorIsTaxableCell = document.createElement("td");
   vendorIsTaxableCell.textContent = data["vendorIsTaxable"];
+  vendorIsTaxableCell.className = "supplier-vendor-is-taxable-column";
   row.appendChild(vendorIsTaxableCell);
 
   const lastModified = new Date(data["lastModified"]);
   const lastModifiedCell = document.createElement("td");
   lastModifiedCell.textContent = FormatDateTime(lastModified);
+  lastModifiedCell.className = "supplier-last-modified-column";
   row.appendChild(lastModifiedCell);
 
-  const lastModifiedByUserIdCell = document.createElement("td");
-  lastModifiedByUserIdCell.textContent = data["lastModifiedByUserId"];
-  row.appendChild(lastModifiedByUserIdCell);
+  const lastModifiedByUserNameCell = document.createElement("td");
+  lastModifiedByUserNameCell.textContent = data["lastModifiedByUserName"];
+  lastModifiedByUserNameCell.className = "supplier-last-modified-by-column";
+  row.appendChild(lastModifiedByUserNameCell);
 
   const createdAt = new Date(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
+  createdAtCell.className = "supplier-created-at-column";
   row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
@@ -94,7 +105,6 @@ const ViewSupplierPage: React.FC = () => {
     setSearchParams(e.target.value);
   };
 
-  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const getAllSupplierURL = `http://${BACKEND_BASE_URL}/supplier/all/all`;
@@ -132,12 +142,11 @@ const ViewSupplierPage: React.FC = () => {
         alert("Error loading supplier data");
       });
   });
-  */
 
   const testData = [
     {
       id: 1,
-      name: "John Doe 1",
+      name: "John Doe 1 dfashbdkolfahdlifandm,absd",
       address: "ASdlasij",
       companyPhoneNumber: "010-000-10200",
       contactPersonName: "John",
@@ -146,7 +155,7 @@ const ViewSupplierPage: React.FC = () => {
       vendorIsTaxable: true,
       createdAt: "2024-08-01 12.10",
       lastModified: "2024-08-10 12.10",
-      lastModifiedByUserId: 1,
+      lastModifiedByUserName: "sakudhadsi",
     },
     {
       id: 2,
@@ -159,7 +168,7 @@ const ViewSupplierPage: React.FC = () => {
       vendorIsTaxable: false,
       createdAt: "2024-08-01 12.10",
       lastModified: "2024-08-10 12.10",
-      lastModifiedByUserId: 1,
+      lastModifiedByUserName: "sadfasdf",
     },
   ];
 
@@ -232,7 +241,6 @@ const ViewSupplierPage: React.FC = () => {
     navigate("/supplier/detail");
   };
 
-  // TODO: add search options for the parameters
   return (
     <div className="view-supplier-page">
       <h1>Supplier</h1>
@@ -312,17 +320,17 @@ const ViewSupplierPage: React.FC = () => {
         <table id="supplier-data-table" border={1}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Address</th>
-              <th>Company Phone Number</th>
-              <th>Contact Person Name</th>
-              <th>Contact Person Number</th>
-              <th>Terms</th>
-              <th>Vendor is Taxable</th>
-              <th>Last Modified</th>
-              <th>Last Modified By ID</th>
-              <th>Created At</th>
+              <th className="supplier-id-column">ID</th>
+              <th className="supplier-name-column">Name</th>
+              <th className="supplier-address-column">Address</th>
+              <th className="supplier-company-pn-column">Company Phone Number</th>
+              <th className="supplier-cp-name-column">Contact Person Name</th>
+              <th className="supplier-cp-pn-column">Contact Person Number</th>
+              <th className="supplier-terms-column">Terms</th>
+              <th className="supplier-vendor-is-taxable-column">Vendor is Taxable</th>
+              <th className="supplier-last-modified-column">Last Modified</th>
+              <th className="supplier-last-modified-by-column">Last Modified By</th>
+              <th className="supplier-created-at-column">Created At</th>
             </tr>
           </thead>
           <tbody></tbody>

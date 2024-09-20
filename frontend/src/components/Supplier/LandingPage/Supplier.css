@@ -107,6 +107,8 @@
 
 .supplier-table-container {
   overflow-x: auto;
+  margin: 0px auto;
+  width: 100%;
 }
 
 #supplier-data-table {
@@ -140,6 +142,42 @@ td {
 
 .view-supplier-data-row:hover {
   background-color: #afe6ff;
+}
+
+.supplier-id-column {
+  width: 20px;
+}
+
+.supplier-name-column {
+  width: 200px;
+}
+
+.supplier-address-column {
+  width: 300px;
+}
+
+.supplier-company-pn-column, .supplier-cp-pn-column {
+  width: 150px;
+}
+
+.supplier-cp-name-column {
+  width: 150px;
+}
+
+.supplier-terms-column {
+  width: 100px;
+}
+
+.supplier-vendor-is-taxable-column {
+  width: 90px;
+}
+
+.supplier-last-modified-column, .supplier-created-at-column {
+  width: 200px;
+}
+
+.supplier-last-modified-by-column {
+  width: 150px;
 }
 
 .view-supplier-home-button {

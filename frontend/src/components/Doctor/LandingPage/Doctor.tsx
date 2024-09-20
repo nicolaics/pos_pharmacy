@@ -22,15 +22,18 @@ function fillTable(
   // Create and append cells for each column
   const idCell = document.createElement("td");
   idCell.textContent = data["id"].toString();
+  idCell.className = "doctor-id-column";
   row.appendChild(idCell);
 
   const nameCell = document.createElement("td");
   nameCell.textContent = data["name"];
+  nameCell.className = "doctor-name-column";
   row.appendChild(nameCell);
 
   const createdAt = new Date(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
+  createdAtCell.className = "doctor-created-at-column";
   row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
@@ -55,6 +58,7 @@ const ViewDoctorPage: React.FC = () => {
     setSearchVal(event.target.value);
   };
 
+  /*
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const getAllDoctorURL = `http://${BACKEND_BASE_URL}/doctor/all`;
@@ -92,6 +96,7 @@ const ViewDoctorPage: React.FC = () => {
         alert("Error loading doctor data");
       });
   });
+  */
 
   const testData = [
     {
@@ -110,54 +115,54 @@ const ViewDoctorPage: React.FC = () => {
     const token = sessionStorage.getItem("token");
     var getDoctorURL = "";
     
-    if (searchVal === "") {
-      getDoctorURL = `http://${BACKEND_BASE_URL}/doctor/all`;
-    }
-    else {
-      getDoctorURL = `http://${BACKEND_BASE_URL}/doctor/${searchVal}`;
-    }
-
     // TEST DATA
-    // const tableBody = document.querySelector("#doctor-data-table tbody");
-    // if (!tableBody) {
-    //   console.error("table body not found");
-    //   return;
+    const tableBody = document.querySelector("#doctor-data-table tbody");
+    if (!tableBody) {
+      console.error("table body not found");
+      return;
+    }
+    tableBody.innerHTML = "";
+    for (let i = 0; i < testData.length; i++) {
+      fillTable(testData[i], tableBody, navigate);
+    }
+
+    // if (searchVal === "") {
+    //   getDoctorURL = `http://${BACKEND_BASE_URL}/doctor/all`;
     // }
-    // tableBody.innerHTML = "";
-    // for (let i = 0; i < testData.length; i++) {
-    //   fillTable(testData[i], tableBody, navigate);
+    // else {
+    //   getDoctorURL = `http://${BACKEND_BASE_URL}/doctor/${searchVal}`;
     // }
 
-    fetch(getDoctorURL, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-    })
-      .then((response) =>
-        response.json().then((data) => {
-          if (!response.ok) {
-            throw new Error("Invalid credentials or network issue");
-          }
+    // fetch(getDoctorURL, {
+    //   method: "GET",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: "Bearer " + token,
+    //   },
+    // })
+    //   .then((response) =>
+    //     response.json().then((data) => {
+    //       if (!response.ok) {
+    //         throw new Error("Invalid credentials or network issue");
+    //       }
 
-          const tableBody = document.querySelector("#doctor-data-table tbody");
-          if (!tableBody) {
-            console.error("table body not found");
-            return;
-          }
+    //       const tableBody = document.querySelector("#doctor-data-table tbody");
+    //       if (!tableBody) {
+    //         console.error("table body not found");
+    //         return;
+    //       }
 
-          tableBody.innerHTML = "";
+    //       tableBody.innerHTML = "";
 
-          for (let i = 0; i < data.length; i++) {
-            fillTable(data[i], tableBody, navigate);
-          }
-        })
-      )
-      .catch((error) => {
-        console.error("Error loading doctor data:", error);
-        alert("Error loading doctor data");
-      });
+    //       for (let i = 0; i < data.length; i++) {
+    //         fillTable(data[i], tableBody, navigate);
+    //       }
+    //     })
+    //   )
+    //   .catch((error) => {
+    //     console.error("Error loading doctor data:", error);
+    //     alert("Error loading doctor data");
+    //   });
   };
 
   const returnToHome = () => {
@@ -191,13 +196,13 @@ const ViewDoctorPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="doctor-table">
+      <div className="doctor-table-container">
         <table id="doctor-data-table" border={1}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Created At</th>
+              <th className="doctor-id-column">ID</th>
+              <th className="doctor-name-column">Name</th>
+              <th className="doctor-created-at-column">Created At</th>
             </tr>
           </thead>
           <tbody></tbody>

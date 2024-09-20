@@ -73,6 +73,8 @@
 
 .patient-table-container {
   overflow-x: auto;
+  margin: 0px auto;
+  width: 1000px;
 }
 
 #patient-data-table {
@@ -106,6 +108,18 @@ td {
 
 .view-patient-data-row:hover {
   background-color: #afe6ff;
+}
+
+.patient-id-column {
+  width: 20px;
+}
+
+.patient-name-column {
+  width: 200px;
+}
+
+.patient-created-at-column {
+  width: 230px;
 }
 
 .view-patient-home-button {

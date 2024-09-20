@@ -22,15 +22,18 @@ function fillTable(
   // Create and append cells for each column
   const idCell = document.createElement("td");
   idCell.textContent = data["id"].toString();
+  idCell.className = "customer-id-column";
   row.appendChild(idCell);
 
   const nameCell = document.createElement("td");
   nameCell.textContent = data["name"];
+  nameCell.className = "customer-name-column";
   row.appendChild(nameCell);
 
   const createdAt = new Date(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
+  createdAtCell.className = "customer-created-at-column";
   row.appendChild(createdAtCell);
 
   row.addEventListener("dblclick", () => {
@@ -112,14 +115,6 @@ const ViewCustomerPage: React.FC = () => {
 
     var getCustomerURL = "";
 
-    if (searchVal === "") {
-      getCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
-    } else {
-      getCustomerURL = `http://${BACKEND_BASE_URL}/${searchVal}`;
-    }
-
-    console.log(getCustomerURL);
-
     // TEST DATA
     // const tableBody = document.querySelector("#customer-data-table tbody");
     // if (!tableBody) {
@@ -130,6 +125,14 @@ const ViewCustomerPage: React.FC = () => {
     // for (let i = 0; i < testData.length; i++) {
     //   fillTable(testData[i], tableBody, navigate);
     // }
+
+    if (searchVal === "") {
+      getCustomerURL = `http://${BACKEND_BASE_URL}/customer/all`;
+    } else {
+      getCustomerURL = `http://${BACKEND_BASE_URL}/${searchVal}`;
+    }
+
+    console.log(getCustomerURL);
 
     fetch(getCustomerURL, {
       method: "GET",
@@ -196,13 +199,13 @@ const ViewCustomerPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="customer-table">
+      <div className="customer-table-container">
         <table id="customer-data-table" border={1}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Created At</th>
+              <th className="customer-id-column">ID</th>
+              <th className="customer-name-column">Name</th>
+              <th className="customer-created-at-column">Created At</th>
             </tr>
           </thead>
           <tbody></tbody>
