@@ -53,6 +53,7 @@ function fillTable(
   row.appendChild(lastLoggedInCell);
 
   const createdAt = new Date(data["createdAt"]);
+  console.log(data["createdAt"]);
   const createdAtCell = document.createElement("td");
   createdAtCell.textContent = FormatDateTime(createdAt);
   createdAtCell.className = "user-created-at-column";
@@ -198,7 +199,7 @@ const ViewUserPage: React.FC = () => {
               <input
                 type="radio"
                 id="user-search-radio-none"
-                checked={true}
+                checked={!searchParams === true}
                 name="searchParams"
                 value={"none"}
                 onChange={handleSearchParamsChange}

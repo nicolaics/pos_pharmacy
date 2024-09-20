@@ -32,7 +32,7 @@ function login(name: string, password: string, navigate: NavigateFunction) {
     )
     .catch((error) => {
       console.error("Error during sign-in:", error);
-      alert("Invalid credentials"); // Show pop-up message
+      alert("Invalid credentials:" + error); // Show pop-up message
     });
 }
 

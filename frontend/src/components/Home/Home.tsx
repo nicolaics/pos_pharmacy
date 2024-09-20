@@ -69,7 +69,11 @@ const HomePage: React.FC = () => {
   };
 
   const company = () => {
-    navigate("/company")
+    navigate("/company");
+  }
+
+  const inventory = () => {
+    navigate("/inventory");
   }
 
   return (
@@ -100,7 +104,7 @@ const HomePage: React.FC = () => {
           <FaBuilding size={50} />
           <h2>Company</h2>
         </div>
-        <div className="home-grid-item">
+        <div className="home-grid-item" onClick={inventory}>
           <FaPills size={50} />
           <h2>Inventory</h2>
         </div>

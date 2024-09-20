@@ -125,8 +125,8 @@ const ModifyUserPage: React.FC = () => {
   };
 
   const handleRequestAdminPassword = (e: any) => {
-    e.preventDefault(); // Prevent form submission and page reload
     console.log(reqType);
+    e.preventDefault(); // Prevent form submission and page reload
     openPopup(e); // Open the popup
   };
 
@@ -380,7 +380,7 @@ const ModifyUserPage: React.FC = () => {
           <button
             type="submit"
             className="modify-user-ok-btn"
-            onSubmit={handleRequestAdminPassword}
+            onClick={handleRequestAdminPassword}
           >
             {okBtnLabel}
           </button>

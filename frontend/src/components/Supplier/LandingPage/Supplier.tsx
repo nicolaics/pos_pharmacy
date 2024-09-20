@@ -270,7 +270,7 @@ const ViewSupplierPage: React.FC = () => {
               <input
                 type="radio"
                 id="supplier-search-radio-none"
-                checked={true}
+                checked={!searchParams === true}
                 name="searchParams"
                 value={"none"}
                 onChange={handleSearchParamsChange}
