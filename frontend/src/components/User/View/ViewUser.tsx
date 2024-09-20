@@ -174,7 +174,6 @@ const ViewUserPage: React.FC = () => {
     navigate("/user");
   }
 
-  // TODO: create options for search params
   return (
     <div className="view-user-page">
       <h1>User</h1>
