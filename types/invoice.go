@@ -53,8 +53,8 @@ type ModifyInvoicePayload struct {
 }
 
 type ViewInvoicePayload struct {
-	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
-	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
+	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
+	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 type MedicineListsPayload struct {

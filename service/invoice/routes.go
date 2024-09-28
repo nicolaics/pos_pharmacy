@@ -215,6 +215,18 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	startDate, err := utils.ParseDate(payload.StartDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	endDate, err := utils.ParseDate(payload.EndDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	vars := mux.Vars(r)
 	params := vars["params"]
 	val := vars["val"]
@@ -222,7 +234,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 	var invoices []types.InvoiceListsReturnPayload
 
 	if val == "all" {
-		invoices, err = h.invoiceStore.GetInvoicesByDate(payload.StartDate, payload.EndDate)
+		invoices, err = h.invoiceStore.GetInvoicesByDate(*startDate, *endDate)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -278,7 +290,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		invoices, err = h.invoiceStore.GetInvoicesByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndNumber(*startDate, *endDate, number)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -290,7 +302,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		invoices, err = h.invoiceStore.GetInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndUserID(*startDate, *endDate, user.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 			return
@@ -302,7 +314,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		invoices, err = h.invoiceStore.GetInvoicesByDateAndCustomerID(payload.StartDate, payload.EndDate, customer.ID)
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndCustomerID(*startDate, *endDate, customer.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s doesn't have any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 			return
@@ -314,7 +326,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		invoices, err = h.invoiceStore.GetInvoicesByDateAndPaymentMethodID(payload.StartDate, payload.EndDate, paymentMethod.ID)
+		invoices, err = h.invoiceStore.GetInvoicesByDateAndPaymentMethodID(*startDate, *endDate, paymentMethod.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s doesn't have any invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 			return
