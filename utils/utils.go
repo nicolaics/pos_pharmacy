@@ -48,3 +48,14 @@ func GenerateRandomCodeAlphanumeric(length int) string {
 
 	return string(result)
 }
+
+// dateStr must include the GMT
+func ParseDate(dateStr string) (*time.Time, error) {
+	dateFormat := "2006-01-02 -0700MST"
+	date, err := time.Parse(dateFormat, dateStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &date, nil
+}
