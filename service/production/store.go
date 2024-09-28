@@ -76,7 +76,7 @@ func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate tim
 
 	rows, err := s.db.Query(query, batchNumber, producedMedId, prodDate, totalCost, userId)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer rows.Close()
 
@@ -85,12 +85,12 @@ func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate tim
 	for rows.Next() {
 		err = rows.Scan(&productionId)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 	}
 
 	if productionId == 0 {
-		return -1, fmt.Errorf("production not found")
+		return 0, fmt.Errorf("production not found")
 	}
 
 	return productionId, nil

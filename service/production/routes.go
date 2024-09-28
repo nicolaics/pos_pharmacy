@@ -74,11 +74,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prodDate, err := utils.ParseDate(payload.ProductionDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	// check duplicate
+	productionId, err := h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
+		*prodDate, payload.TotalCost, user.ID)
+	if err == nil || productionId != 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d exists", payload.BatchNumber))
+		return
+	}
+
 	err = h.productionStore.CreateProduction(types.Production{
 		BatchNumber:          payload.BatchNumber,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.ProducedQty,
-		ProductionDate:       payload.ProductionDate,
+		ProductionDate:       *prodDate,
 		Description:          payload.Description,
 		UpdatedToStock:       payload.UpdatedToStock,
 		UpdatedToAccount:     payload.UpdatedToAccount,
@@ -92,8 +106,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get production ID
-	productionId, err := h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
-		payload.ProductionDate, payload.TotalCost, user.ID)
+	productionId, err = h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
+		*prodDate, payload.TotalCost, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.BatchNumber))
 		return
@@ -184,10 +198,22 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 	params := vars["params"]
 	val := vars["val"]
 
+	startDate, err := utils.ParseStartDate(payload.StartDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	endDate, err := utils.ParseEndDate(payload.EndDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	var prods []types.ProductionListsReturnPayload
 
 	if val == "all" {
-		prods, err = h.productionStore.GetProductionsByDate(payload.StartDate, payload.EndDate)
+		prods, err = h.productionStore.GetProductionsByDate(*startDate, *endDate)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -236,7 +262,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		prods, err = h.productionStore.GetProductionsByDateAndBatchNumber(payload.StartDate, payload.EndDate, batchNumber)
+		prods, err = h.productionStore.GetProductionsByDateAndBatchNumber(*startDate, *endDate, batchNumber)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -249,7 +275,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, user := range users {
-			temp, err := h.productionStore.GetProductionsByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			temp, err := h.productionStore.GetProductionsByDateAndUserID(*startDate, *endDate, user.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any prod between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -265,7 +291,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, medicine := range medicines {
-			temp, err := h.productionStore.GetProductionsByDateAndMedicineID(payload.StartDate, payload.EndDate, medicine.ID)
+			temp, err := h.productionStore.GetProductionsByDateAndMedicineID(*startDate, *endDate, medicine.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't have any production between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -282,7 +308,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			uts = false
 		}
 
-		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToStock(payload.StartDate, payload.EndDate, uts)
+		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToStock(*startDate, *endDate, uts)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -296,7 +322,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			uta = false
 		}
 
-		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToAccount(payload.StartDate, payload.EndDate, uta)
+		prods, err = h.productionStore.GetProductionsByDateAndUpdatedToAccount(*startDate, *endDate, uta)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -496,11 +522,17 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prodDate, err := utils.ParseDate(payload.NewData.ProductionDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	err = h.productionStore.ModifyProduction(payload.ID, types.Production{
 		BatchNumber:          payload.NewData.BatchNumber,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.NewData.ProducedQty,
-		ProductionDate:       payload.NewData.ProductionDate,
+		ProductionDate:       *prodDate,
 		Description:          payload.NewData.Description,
 		UpdatedToStock:       payload.NewData.UpdatedToStock,
 		UpdatedToAccount:     payload.NewData.UpdatedToAccount,
@@ -514,7 +546,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	// get production ID
 	productionId, err := h.productionStore.GetProductionID(payload.NewData.BatchNumber, producedMedicine.ID,
-		payload.NewData.ProductionDate, payload.NewData.TotalCost, user.ID)
+		*prodDate, payload.NewData.TotalCost, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.NewData.BatchNumber))
 		return

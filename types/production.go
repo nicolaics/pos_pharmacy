@@ -32,7 +32,7 @@ type RegisterProductionPayload struct {
 	ProducedMedicineBarcode string    `json:"producedMedicineBarcode" validate:"required"`
 	ProducedMedicineName    string    `json:"producedMedicineName" validate:"required"`
 	ProducedQty             int       `json:"producedQty" validate:"required"`
-	ProductionDate          time.Time `json:"productionDate" validate:"required"`
+	ProductionDate          string `json:"productionDate" validate:"required"`
 	Description             string    `json:"description"`
 	UpdatedToStock          bool      `json:"updatedToStock" validate:"required"`
 	UpdatedToAccount        bool      `json:"updatedToAccount" validate:"required"`
@@ -51,8 +51,8 @@ type ProductionMedicineListPayload struct {
 
 // only view the production list
 type ViewProductionsPayload struct {
-	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
-	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
+	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
+	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 // view the detail of the production
