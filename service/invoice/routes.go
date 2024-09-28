@@ -101,7 +101,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, *invoiceDate)
+	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Number, payload.CustomerID, payload.TotalPrice, *invoiceDate)
 	if err == nil || invoiceId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d with today's date exists", payload.Number))
 		return
@@ -127,7 +127,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get invoice id
-	invoiceId, err = h.invoiceStore.GetInvoiceID(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, *invoiceDate)
+	invoiceId, err = h.invoiceStore.GetInvoiceID(payload.Number, payload.CustomerID, payload.TotalPrice, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d doesn't exists", payload.Number))
 		return

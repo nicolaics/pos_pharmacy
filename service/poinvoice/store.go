@@ -66,13 +66,13 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 	return purchaseOrderInvoice, nil
 }
 
-func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error) {
+func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, totalItems int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM purchase_order_invoice 
 				WHERE number = ? AND company_id = ? 
-				AND supplier_id = ? AND user_id = ? AND total_items = ? 
+				AND supplier_id = ? AND total_items = ? 
 				AND invoice_date = ? AND deleted_at IS NULL`
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, userId, totalItems, invoiceDate)
+	rows, err := s.db.Query(query, number, companyId, supplierId, totalItems, invoiceDate)
 	if err != nil {
 		return 0, err
 	}

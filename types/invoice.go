@@ -16,7 +16,7 @@ type InvoiceStore interface {
 	GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]InvoiceListsReturnPayload, error)
 	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]InvoiceListsReturnPayload, error)
 
-	GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
+	GetInvoiceID(number int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetNumberOfInvoices() (int, error)
 
 	CreateInvoice(Invoice) error

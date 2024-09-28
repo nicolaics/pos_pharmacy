@@ -93,7 +93,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, *invoiceDate)
+	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItems, *invoiceDate)
 	if err == nil || purchaseOrderInvoiceId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d exists", payload.Number))
 		return
@@ -114,7 +114,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoice ID
-	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, *invoiceDate)
+	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItems, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists: %v", payload.Number, err))
 		return
