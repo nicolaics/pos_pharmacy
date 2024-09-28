@@ -2,7 +2,6 @@ package production
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -80,11 +79,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
 		return
 	}
-
-	log.Println("batch:", payload.BatchNumber)
-	log.Println("prod med id:", producedMedicine.ID)
-	log.Println("date:", prodDate)
-	log.Println("total cost:", payload.TotalCost)
 
 	// check duplicate
 	productionId, err := h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
