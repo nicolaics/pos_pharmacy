@@ -538,6 +538,8 @@ func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPay
 		return nil, err
 	}
 
+	production.ProductionDate = production.ProductionDate.Local()
+
 	return production, nil
 }
 
