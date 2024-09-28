@@ -45,7 +45,7 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 
 func (s *Store) GetInvoiceID(number int, customerId int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM invoice 
-				WHERE number = ? AND customer_id = ? AND 
+				WHERE number = ? AND customer_id = ? 
 				AND invoice_date = ? AND deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, number, customerId, invoiceDate)
