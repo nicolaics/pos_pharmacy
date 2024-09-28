@@ -16,6 +16,8 @@ def create_users(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/user/register",
         json={
@@ -29,6 +31,8 @@ def create_users(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/user/register",
         json={
@@ -42,6 +46,8 @@ def create_users(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/user/register",
         json={
@@ -55,6 +61,7 @@ def create_users(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
 
 
 def create_company_profile(BACKEND_ROOT, TOKEN):
@@ -71,6 +78,7 @@ def create_company_profile(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
 
 
 def create_customers(BACKEND_ROOT, TOKEN):
@@ -81,6 +89,8 @@ def create_customers(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/customer",
         json={"name": "Alpha"},
@@ -88,6 +98,8 @@ def create_customers(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/customer",
         json={"name": "Beta"},
@@ -95,6 +107,8 @@ def create_customers(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/customer",
         json={"name": "Gama"},
@@ -102,39 +116,92 @@ def create_customers(BACKEND_ROOT, TOKEN):
             "Authorization": "Bearer " + TOKEN,
         },
     )
+    print(r.json())
 
 
 def create_doctors(BACKEND_ROOT, TOKEN):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Gray"}, headers={
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Gray"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Jay"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Jay"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Awesome"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Awesome"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Pole"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Pole"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Ulala"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Ulala"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Oscar"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/doctor",
+        json={"name": "Dr. Oscar"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
+        },
+    )
+    print(r.json())
 
 
 def create_patients(BACKEND_ROOT, TOKEN):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Yankee"}, headers={
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/patient",
+        json={"name": "Yankee"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Awesome"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/patient",
+        json={"name": "Awesome"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Two"}, headers={
+        },
+    )
+    print(r.json())
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/patient",
+        json={"name": "Two"},
+        headers={
             "Authorization": "Bearer " + TOKEN,
-        })
+        },
+    )
+    print(r.json())
 
 
 def create_suppliers(BACKEND_ROOT, TOKEN):
@@ -151,8 +218,9 @@ def create_suppliers(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/supplier",
@@ -167,8 +235,9 @@ def create_suppliers(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/supplier",
@@ -183,8 +252,9 @@ def create_suppliers(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def create_medicines(BACKEND_ROOT, TOKEN):
@@ -205,8 +275,9 @@ def create_medicines(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/medicine",
@@ -221,8 +292,9 @@ def create_medicines(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/medicine",
@@ -237,8 +309,9 @@ def create_medicines(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def create_invoices(BACKEND_ROOT, TOKEN):
@@ -246,7 +319,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice",
         json={
             "number": 1,
-            "customerId": 6,
+            "customerId": 1,
             "subtotal": 10000,
             "discount": 100,
             "totalPrice": 9000,
@@ -267,7 +340,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
     print(r.json())
 
@@ -275,7 +348,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice",
         json={
             "number": 2,
-            "customerId": 8,
+            "customerId": 2,
             "subtotal": 37000,
             "totalPrice": 37000,
             "paidAmount": 37000,
@@ -305,7 +378,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
     print(r.json())
 
@@ -313,7 +386,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice",
         json={
             "number": 1,
-            "customerId": 9,
+            "customerId": 3,
             "subtotal": 10000,
             "discount": 100,
             "totalPrice": 9000,
@@ -334,7 +407,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
     print(r.json())
 
@@ -342,7 +415,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice",
         json={
             "number": 2,
-            "customerId": 7,
+            "customerId": 4,
             "subtotal": 37000,
             "totalPrice": 37000,
             "paidAmount": 37000,
@@ -372,7 +445,7 @@ def create_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
     print(r.json())
 
@@ -406,8 +479,9 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
@@ -430,8 +504,9 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
@@ -461,8 +536,9 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
@@ -485,8 +561,9 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def create_prescription(BACKEND_ROOT, TOKEN):
@@ -495,9 +572,7 @@ def create_prescription(BACKEND_ROOT, TOKEN):
         json={
             "invoice": {
                 "number": 1,
-                "userName": "test",
                 "customerName": "Graph",
-                "totalPrice": 9000,
                 "invoiceDate": "2024-09-23 +0900GMT",
             },
             "number": 100,
@@ -529,17 +604,16 @@ def create_prescription(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/prescription",
         json={
             "invoice": {
                 "number": 1,
-                "userName": "test",
                 "customerName": "Graph",
-                "totalPrice": 9000,
                 "invoiceDate": "2024-09-23 +0900GMT",
             },
             "number": 100,
@@ -562,20 +636,19 @@ def create_prescription(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/prescription",
         json={
             "invoice": {
                 "number": 2,
-                "userName": "test",
                 "customerName": "Alpha",
-                "totalPrice": 37000,
-                "invoiceDate": "2024-09-28 +0900GMT",
+                "invoiceDate": "2024-09-21 +0900GMT",
             },
-            "number": 100,
+            "number": 111,
             "prescriptionDate": "2024-09-28 +0700GMT",
             "patientName": "Yankee",
             "doctorName": "Dr. Play",
@@ -604,17 +677,16 @@ def create_prescription(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/prescription",
         json={
             "invoice": {
                 "number": 2,
-                "userName": "test",
-                "customerName": "Alpha",
-                "totalPrice": 37000,
+                "customerName": "Gama",
                 "invoiceDate": "2024-09-28 +0900GMT",
             },
             "number": 100,
@@ -637,15 +709,16 @@ def create_prescription(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def create_production(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/production",
         json={
-            "batchNumber": 2,
+            "number": 2,
             "producedMedicineBarcode": "1111",
             "producedMedicineName": "S2",
             "producedQty": random.randint(1, 200),
@@ -672,13 +745,14 @@ def create_production(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/production",
         json={
-            "batchNumber": 210,
+            "number": 210,
             "producedMedicineBarcode": "2222",
             "producedMedicineName": "S1",
             "producedQty": random.randint(1, 200),
@@ -705,13 +779,14 @@ def create_production(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/production",
         json={
-            "batchNumber": 10,
+            "number": 10,
             "producedMedicineBarcode": "1111",
             "producedMedicineName": "S2",
             "producedQty": random.randint(1, 200),
@@ -738,13 +813,14 @@ def create_production(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/production",
         json={
-            "batchNumber": 245,
+            "number": 245,
             "producedMedicineBarcode": "2222",
             "producedMedicineName": "S1",
             "producedQty": random.randint(1, 200),
@@ -771,8 +847,9 @@ def create_production(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def create_purchase_invoice(BACKEND_ROOT, TOKEN):
@@ -815,8 +892,9 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
@@ -855,9 +933,10 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
-    
+    print(r.json())
+
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
         json={
@@ -897,8 +976,9 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
@@ -937,8 +1017,9 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
-        }
+        },
     )
+    print(r.json())
 
 
 def main():
