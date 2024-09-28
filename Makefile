@@ -33,5 +33,8 @@ migrate-rm:
 init-admin:
 	@go run cmd/init/InitAdmin.go $(username)
 
+init-data:
+	@python3 -u cmd/init/create_dummy_data.py
+
 # deploy:
 # https://medium.com/nerd-for-tech/build-cross-platform-executables-in-go-94b84686fb44

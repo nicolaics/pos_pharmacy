@@ -40,7 +40,7 @@ type RegisterInvoicePayload struct {
 	TotalPrice        float64   `json:"totalPrice" validate:"required"`
 	PaidAmount        float64   `json:"paidAmount" validate:"required"`
 	ChangeAmount      float64   `json:"changeAmount" validate:"required"`
-	PaymentMethodName string    `json:"paymentMethodString" validate:"required"`
+	PaymentMethodName string    `json:"paymentMethodName" validate:"required"`
 	Description       string    `json:"description"`
 	InvoiceDate       time.Time `json:"invoiceDate" validate:"required"`
 
