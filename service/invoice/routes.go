@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -215,17 +216,20 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startDate, err := utils.ParseDate(payload.StartDate)
+	startDate, err := utils.ParseStartDate(payload.StartDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
 		return
 	}
 
-	endDate, err := utils.ParseDate(payload.EndDate)
+	endDate, err := utils.ParseEndDate(payload.EndDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
 		return
 	}
+
+	log.Println("start date:", *startDate)
+	log.Println("end date:", *endDate)
 
 	vars := mux.Vars(r)
 	params := vars["params"]

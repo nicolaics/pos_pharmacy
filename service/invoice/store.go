@@ -50,7 +50,7 @@ func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice 
 
 	rows, err := s.db.Query(query, number, userId, customerId, totalPrice, invoiceDate)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer rows.Close()
 
@@ -111,9 +111,9 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
-					AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND invoice.deleted_at IS NULL 
+				ORDER BY invoice.invoice_date DESC`
 	rows, err := s.db.Query(query, startDate, endDate)
 	if err != nil {
 		return nil, err
@@ -167,10 +167,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
-					AND number LIKE ? 
-					AND deleted_at IS NULL 
-					ORDER BY invoice_date DESC`
+					WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND invoice.number LIKE ? 
+					AND invoice.deleted_at IS NULL 
+					ORDER BY invoice.invoice_date DESC`
 
 		searchVal := "%"
 		for _, val := range strconv.Itoa(number) {
@@ -208,10 +208,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
-					AND number = ? 
-					AND deleted_at IS NULL 
-					ORDER BY invoice_date DESC`
+					WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					AND invoice.number = ? 
+					AND invoice.deleted_at IS NULL 
+					ORDER BY invoice.invoice_date DESC`
 	
 	rows, err := s.db.Query(query, startDate, endDate, number)
 	if err != nil {
@@ -243,9 +243,9 @@ func (s *Store) GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND user_id = ? 
-					AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND user_id = ? 
+					AND invoice.deleted_at IS NULL 
+				ORDER BY invoice.invoice_date DESC`
 
 	rows, err := s.db.Query(query, startDate, endDate, uid)
 	if err != nil {
@@ -278,9 +278,9 @@ func (s *Store) GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND customer_id = ? 
-					AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND customer_id = ? 
+					AND invoice.deleted_at IS NULL 
+				ORDER BY invoice.invoice_date DESC`
 
 	rows, err := s.db.Query(query, startDate, endDate, cid)
 	if err != nil {
@@ -313,9 +313,9 @@ func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) AND payment_method_id = ? 
-					AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND payment_method_id = ? 
+					AND invoice.deleted_at IS NULL 
+				ORDER BY invoice.invoice_date DESC`
 
 	rows, err := s.db.Query(query, startDate, endDate, pmid)
 	if err != nil {
@@ -563,6 +563,8 @@ func scanRowIntoInvoiceLists(rows *sql.Rows) (*types.InvoiceListsReturnPayload, 
 	if err != nil {
 		return nil, err
 	}
+
+	invoice.InvoiceDate = invoice.InvoiceDate.Local()
 
 	return invoice, nil
 }
