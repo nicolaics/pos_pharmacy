@@ -96,8 +96,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get invoice data
-	invoiceId, err := h.invoiceStore.GetInvoiceID(
-		payload.Invoice.Number, invoiceCustomer.ID, *invoiceDate)
+	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Invoice.Number, invoiceCustomer.ID, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.Invoice.Number))
 		return
