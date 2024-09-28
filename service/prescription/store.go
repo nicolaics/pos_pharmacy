@@ -76,8 +76,9 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 					FROM prescription AS p 
 					JOIN patient ON p.patient_id = patient.id 
 					JOIN doctor ON p.doctor_id = doctor.id 
-					JOIN invoice ON p.invoice_id = invoice.id 
-					JOIN customer ON invoice.customer_id = customer.id 
+					JOIN invoice AS i ON p.invoice_id = i.id 
+					JOIN customer ON i.customer_id = customer.id 
+					JOIN user ON user.id = p.user_id 
 					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
 					AND p.deleted_at IS NULL 
 					ORDER BY p.prescription_date DESC`
@@ -600,6 +601,9 @@ func scanRowIntoPrescriptionLists(rows *sql.Rows) (*types.PrescriptionListsRetur
 	if err != nil {
 		return nil, err
 	}
+
+	prescription.PrescriptionDate = prescription.PrescriptionDate.Local()
+	prescription.Invoice.InvoiceDate = prescription.Invoice.InvoiceDate.Local()
 
 	return prescription, nil
 }
