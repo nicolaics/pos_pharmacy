@@ -6,13 +6,13 @@ import (
 )
 
 type ProductionStore interface {
-	GetProductionByBatchNumber(int) (*Production, error)
+	GetProductionByNumber(int) (*Production, error)
 	GetProductionByID(int) (*Production, error)
-	GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64) (int, error)
+	GetProductionID(number int, producedMedId int, prodDate time.Time, totalCost float64) (int, error)
 	GetNumberOfProductions() (int, error)
 
 	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]ProductionListsReturnPayload, error)
-	GetProductionsByDateAndBatchNumber(startDate time.Time, endDate time.Time, bn int) ([]ProductionListsReturnPayload, error)
+	GetProductionsByDateAndNumber(startDate time.Time, endDate time.Time, bn int) ([]ProductionListsReturnPayload, error)
 	GetProductionsByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]ProductionListsReturnPayload, error)
 	GetProductionsByDateAndMedicineID(startDate time.Time, endDate time.Time, mid int) ([]ProductionListsReturnPayload, error)
 	GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDate time.Time, uts bool) ([]ProductionListsReturnPayload, error)
@@ -28,7 +28,7 @@ type ProductionStore interface {
 }
 
 type RegisterProductionPayload struct {
-	BatchNumber             int     `json:"batchNumber"`
+	Number                  int     `json:"number"`
 	ProducedMedicineBarcode string  `json:"producedMedicineBarcode" validate:"required"`
 	ProducedMedicineName    string  `json:"producedMedicineName" validate:"required"`
 	ProducedQty             int     `json:"producedQty" validate:"required"`
@@ -57,7 +57,7 @@ type ViewProductionsPayload struct {
 
 // view the detail of the production
 type ViewProductionMedicineItemsPayload struct {
-	BatchNumber int `json:"batchNumber" validate:"required"`
+	Number int `json:"number" validate:"required"`
 }
 
 type ModifyProductionPayload struct {
@@ -77,8 +77,8 @@ type ProductionMedicineItemRow struct {
 
 // data to be sent back to the client after clicking 1 prescription
 type ProductionDetailPayload struct {
-	ID          int `json:"id"`
-	BatchNumber int `json:"batchNumber"`
+	ID     int `json:"id"`
+	Number int `json:"number"`
 
 	ProducedMedicine struct {
 		Barcode string `json:"barcode"`
@@ -107,7 +107,7 @@ type ProductionDetailPayload struct {
 // return to the user when viewing the lists of production
 type ProductionListsReturnPayload struct {
 	ID                   int       `json:"id"`
-	BatchNumber          int       `json:"batchNumber"`
+	Number               int       `json:"number"`
 	ProducedMedicineName string    `json:"producedMedicineName"`
 	ProducedQty          int       `json:"producedQty"`
 	ProductionDate       time.Time `json:"productionDate"`
@@ -133,7 +133,7 @@ type ProductionMedicineItems struct {
 
 type Production struct {
 	ID                   int           `json:"id"`
-	BatchNumber          int           `json:"batchNumber"`
+	Number               int           `json:"number"`
 	ProducedMedicineID   int           `json:"producedMedicineId"`
 	ProducedQty          int           `json:"producedQty"`
 	ProductionDate       time.Time     `json:"productionDate"`

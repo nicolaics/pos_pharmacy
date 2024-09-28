@@ -28,7 +28,7 @@ type RegisterSupplierPayload struct {
 	ContactPersonName   string `json:"contactPersonName"`
 	ContactPersonNumber string `json:"contactPersonNumber"`
 	Terms               string `json:"terms" validate:"required"`
-	VendorIsTaxable     bool   `json:"vendorIsTaxable" validate:"required"`
+	VendorIsTaxable     bool   `json:"vendorIsTaxable"`
 }
 
 type ModifySupplierPayload struct {

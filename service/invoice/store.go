@@ -43,12 +43,12 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 	return invoice, nil
 }
 
-func (s *Store) GetInvoiceID(number int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error) {
+func (s *Store) GetInvoiceID(number int, customerId int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM invoice 
 				WHERE number = ? AND customer_id = ? AND 
-				total_price = ? AND invoice_date = ? AND deleted_at IS NULL`
+				AND invoice_date = ? AND deleted_at IS NULL`
 
-	rows, err := s.db.Query(query, number, customerId, totalPrice, invoiceDate)
+	rows, err := s.db.Query(query, number, customerId, invoiceDate)
 	if err != nil {
 		return 0, err
 	}

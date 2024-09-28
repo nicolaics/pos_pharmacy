@@ -31,7 +31,6 @@ type RegisterPrescriptionPayload struct {
 	Invoice struct {
 		Number       int       `json:"number" validate:"required"`
 		CustomerName string    `json:"customerName" validate:"required"`
-		TotalPrice   float64   `json:"totalPrice" validate:"required"`
 		InvoiceDate  string `json:"invoiceDate" validate:"required"`
 	} `json:"invoice" validate:"required"`
 

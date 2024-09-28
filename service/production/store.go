@@ -18,8 +18,8 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetProductionByBatchNumber(number int) (*types.Production, error) {
-	query := "SELECT * FROM production WHERE batch_number = ? AND deleted_at IS NULL"
+func (s *Store) GetProductionByNumber(number int) (*types.Production, error) {
+	query := "SELECT * FROM production WHERE number = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (s *Store) GetProductionByID(id int) (*types.Production, error) {
 
 func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64) (int, error) {
 	query := `SELECT id FROM production 
-				WHERE batch_number = ? AND produced_medicine_id = ? AND production_date = ? 
+				WHERE number = ? AND produced_medicine_id = ? AND production_date = ? 
 				AND total_cost = ? 
 				AND deleted_at IS NULL`
 
@@ -97,7 +97,7 @@ func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate tim
 }
 
 func (s *Store) GetProductionsByDate(startDate time.Time, endDate time.Time) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -131,8 +131,8 @@ func (s *Store) GetProductionsByDate(startDate time.Time, endDate time.Time) ([]
 	return productions, nil
 }
 
-func (s *Store) GetProductionsByDateAndBatchNumber(startDate time.Time, endDate time.Time, bn int) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+func (s *Store) GetProductionsByDateAndNumber(startDate time.Time, endDate time.Time, bn int) ([]types.ProductionListsReturnPayload, error) {
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -143,7 +143,7 @@ func (s *Store) GetProductionsByDateAndBatchNumber(startDate time.Time, endDate 
 					JOIN user ON prod.user_id = user.id 
 					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
 					AND prod.deleted_at IS NULL 
-					AND prod.batch_number LIKE ? 
+					AND prod.number LIKE ? 
 					ORDER BY prod.production_date DESC`
 
 	searchVal := "%"
@@ -175,7 +175,7 @@ func (s *Store) GetProductionsByDateAndBatchNumber(startDate time.Time, endDate 
 }
 
 func (s *Store) GetProductionsByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -211,7 +211,7 @@ func (s *Store) GetProductionsByDateAndUserID(startDate time.Time, endDate time.
 }
 
 func (s *Store) GetProductionsByDateAndMedicineID(startDate time.Time, endDate time.Time, mid int) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -247,7 +247,7 @@ func (s *Store) GetProductionsByDateAndMedicineID(startDate time.Time, endDate t
 }
 
 func (s *Store) GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDate time.Time, uts bool) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -283,7 +283,7 @@ func (s *Store) GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDa
 }
 
 func (s *Store) GetProductionsByDateAndUpdatedToAccount(startDate time.Time, endDate time.Time, uta bool) ([]types.ProductionListsReturnPayload, error) {
-	query := `SELECT prod.id, prod.batch_number, 
+	query := `SELECT prod.id, prod.number, 
 					med.name AS produced_medicine_name, 
 					prod.produced_qty, prod.production_date, 
 					prod.description, prod.updated_to_stock, 
@@ -344,12 +344,12 @@ func (s *Store) CreateProduction(production types.Production) error {
 	}
 
 	query := `INSERT INTO production (
-		batch_number, produced_medicine_id, produced_qty, production_date, description,  
+		number, produced_medicine_id, produced_qty, production_date, description,  
 		updated_to_stock, updated_to_account, total_cost, user_id, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
-		production.BatchNumber, production.ProducedMedicineID, production.ProducedQty,
+		production.Number, production.ProducedMedicineID, production.ProducedQty,
 		production.ProductionDate, production.Description, production.UpdatedToStock,
 		production.UpdatedToAccount, production.TotalCost, production.UserID, production.LastModifiedByUserID)
 	if err != nil {
@@ -474,13 +474,13 @@ func (s *Store) ModifyProduction(id int, production types.Production, user *type
 	}
 
 	query := `UPDATE production SET 
-				batch_number = ?, produced_medicine_id = ?, produced_qty = ?, production_date = ?, 
+				number = ?, produced_medicine_id = ?, produced_qty = ?, production_date = ?, 
 				description = ?, updated_to_stock = ?, updated_to_account = ?, total_cost = ?, 
 				last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
 	_, err = s.db.Exec(query,
-		production.BatchNumber, production.ProducedMedicineID, production.ProducedQty,
+		production.Number, production.ProducedMedicineID, production.ProducedQty,
 		production.ProductionDate, production.Description, production.UpdatedToStock,
 		production.UpdatedToAccount, production.TotalCost, time.Now(), production.LastModifiedByUserID, id)
 	if err != nil {
@@ -495,7 +495,7 @@ func scanRowIntoProduction(rows *sql.Rows) (*types.Production, error) {
 
 	err := rows.Scan(
 		&production.ID,
-		&production.BatchNumber,
+		&production.Number,
 		&production.ProducedMedicineID,
 		&production.ProducedQty,
 		&production.ProductionDate,
@@ -527,7 +527,7 @@ func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPay
 
 	err := rows.Scan(
 		&production.ID,
-		&production.BatchNumber,
+		&production.Number,
 		&production.ProducedMedicineName,
 		&production.ProducedQty,
 		&production.ProductionDate,

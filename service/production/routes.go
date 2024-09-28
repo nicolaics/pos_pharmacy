@@ -81,15 +81,15 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	productionId, err := h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
+	productionId, err := h.productionStore.GetProductionID(payload.Number, producedMedicine.ID,
 		*prodDate, payload.TotalCost)
 	if err == nil || productionId != 0 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d exists", payload.BatchNumber))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d exists", payload.Number))
 		return
 	}
 
 	err = h.productionStore.CreateProduction(types.Production{
-		BatchNumber:          payload.BatchNumber,
+		Number:               payload.Number,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.ProducedQty,
 		ProductionDate:       *prodDate,
@@ -106,10 +106,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get production ID
-	productionId, err = h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
+	productionId, err = h.productionStore.GetProductionID(payload.Number, producedMedicine.ID,
 		*prodDate, payload.TotalCost)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists: %v", payload.BatchNumber, err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists: %v", payload.Number, err))
 		return
 	}
 
@@ -144,12 +144,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("production batch number %d, med %s: %v", payload.BatchNumber, medicine.MedicineName, err))
+				fmt.Errorf("production number %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production batch number %d successfully created by %s", payload.BatchNumber, user.Name))
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production number %d successfully created by %s", payload.Number, user.Name))
 }
 
 // beginning of production page, will request here
@@ -245,7 +245,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 
 		prods = append(prods, types.ProductionListsReturnPayload{
 			ID:                   prod.ID,
-			BatchNumber:          prod.BatchNumber,
+			Number:               prod.Number,
 			ProducedMedicineName: med.Name,
 			ProducedQty:          prod.ProducedQty,
 			ProductionDate:       prod.ProductionDate,
@@ -262,7 +262,7 @@ func (h *Handler) handleGetProductions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		prods, err = h.productionStore.GetProductionsByDateAndBatchNumber(*startDate, *endDate, batchNumber)
+		prods, err = h.productionStore.GetProductionsByDateAndNumber(*startDate, *endDate, batchNumber)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -360,9 +360,9 @@ func (h *Handler) handleGetProductionDetail(w http.ResponseWriter, r *http.Reque
 	}
 
 	// get production data
-	production, err := h.productionStore.GetProductionByBatchNumber(payload.BatchNumber)
+	production, err := h.productionStore.GetProductionByNumber(payload.Number)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.BatchNumber))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists", payload.Number))
 		return
 	}
 
@@ -395,8 +395,8 @@ func (h *Handler) handleGetProductionDetail(w http.ResponseWriter, r *http.Reque
 	}
 
 	returnPayload := types.ProductionDetailPayload{
-		ID:          production.ID,
-		BatchNumber: production.BatchNumber,
+		ID:     production.ID,
+		Number: production.Number,
 
 		ProducedMedicine: struct {
 			Barcode string "json:\"barcode\""
@@ -474,7 +474,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("production batch number %d deleted by %s", production.BatchNumber, user.Name))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("production number %d deleted by %s", production.Number, user.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -508,10 +508,10 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check duplicate BatchNumber
-	prod, err := h.productionStore.GetProductionByBatchNumber(payload.NewData.BatchNumber)
+	// check duplicate Number
+	prod, err := h.productionStore.GetProductionByNumber(payload.NewData.Number)
 	if err == nil || prod != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("batch number %d exist already", payload.NewData.BatchNumber))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("number %d exist already", payload.NewData.Number))
 		return
 	}
 
@@ -529,7 +529,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.productionStore.ModifyProduction(payload.ID, types.Production{
-		BatchNumber:          payload.NewData.BatchNumber,
+		Number:               payload.NewData.Number,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.NewData.ProducedQty,
 		ProductionDate:       *prodDate,
@@ -545,10 +545,10 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get production ID
-	productionId, err := h.productionStore.GetProductionID(payload.NewData.BatchNumber, producedMedicine.ID,
+	productionId, err := h.productionStore.GetProductionID(payload.NewData.Number, producedMedicine.ID,
 		*prodDate, payload.NewData.TotalCost)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.NewData.BatchNumber))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists", payload.NewData.Number))
 		return
 	}
 
@@ -589,7 +589,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("production batch number %d, med %s: %v", payload.NewData.BatchNumber, medicine.MedicineName, err))
+				fmt.Errorf("production number %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 			return
 		}
 	}
