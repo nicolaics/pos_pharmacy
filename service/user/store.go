@@ -359,8 +359,6 @@ func (s *Store) ValidateUserToken(w http.ResponseWriter, r *http.Request, needAd
 		}
 	}
 
-	log.Println(userId)
-
 	// check if user exist
 	user, err := s.GetUserByID(userId)
 	if err != nil {
