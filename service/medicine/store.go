@@ -486,6 +486,9 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 		return nil, err
 	}
 
+	medicine.CreatedAt = medicine.CreatedAt.Local()
+	medicine.LastModified = medicine.LastModified.Local()
+
 	return medicine, nil
 }
 
@@ -515,6 +518,9 @@ func scanRowIntoMedicineLists(rows *sql.Rows) (*types.MedicineListsReturnPayload
 	if err != nil {
 		return nil, err
 	}
+
+	medicine.CreatedAt = medicine.CreatedAt.Local()
+	medicine.LastModified = medicine.LastModified.Local()
 
 	return medicine, nil
 }

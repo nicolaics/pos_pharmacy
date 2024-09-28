@@ -575,6 +575,10 @@ func scanRowIntoPrescription(rows *sql.Rows) (*types.Prescription, error) {
 		return nil, err
 	}
 
+	prescription.PrescriptionDate = prescription.PrescriptionDate.Local()
+	prescription.CreatedAt = prescription.CreatedAt.Local()
+	prescription.LastModified = prescription.LastModified.Local()
+
 	return prescription, nil
 }
 

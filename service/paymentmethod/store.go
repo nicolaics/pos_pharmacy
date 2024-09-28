@@ -87,5 +87,7 @@ func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
 		return nil, err
 	}
 
+	paymentMethod.CreatedAt = paymentMethod.CreatedAt.Local()
+
 	return paymentMethod, nil
 }

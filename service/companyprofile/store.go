@@ -177,6 +177,9 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 		return nil, err
 	}
 
+	companyProfile.CreatedAt = companyProfile.CreatedAt.Local()
+	companyProfile.LastModified = companyProfile.LastModified.Local()
+
 	return companyProfile, nil
 }
 
@@ -197,6 +200,8 @@ func scanRowIntoCompanyProfileReturn(rows *sql.Rows) (*types.CompanyProfileRetur
 	if err != nil {
 		return nil, err
 	}
+
+	companyProfile.LastModified = companyProfile.LastModified.Local()
 
 	return companyProfile, nil
 }

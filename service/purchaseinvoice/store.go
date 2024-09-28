@@ -478,6 +478,10 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		return nil, err
 	}
 
+	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
+	purchaseInvoice.CreatedAt = purchaseInvoice.CreatedAt.Local()
+	purchaseInvoice.LastModified = purchaseInvoice.LastModified.Local()
+
 	return purchaseInvoice, nil
 }
 

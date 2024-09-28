@@ -397,5 +397,8 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 		return nil, err
 	}
 
+	user.CreatedAt = user.CreatedAt.Local()
+	user.LastLoggedIn = user.LastLoggedIn.Local()
+
 	return user, nil
 }

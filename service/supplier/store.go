@@ -348,6 +348,9 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 		return nil, err
 	}
 
+	supplier.CreatedAt = supplier.CreatedAt.Local()
+	supplier.LastModified = supplier.LastModified.Local()
+
 
 	return supplier, nil
 }
@@ -372,6 +375,9 @@ func scanRowIntoSupplierInformationReturn(rows *sql.Rows) (*types.SupplierInform
 	if err != nil {
 		return nil, err
 	}
+
+	supplier.CreatedAt = supplier.CreatedAt.Local()
+	supplier.LastModified = supplier.LastModified.Local()
 
 	return supplier, nil
 }

@@ -84,5 +84,7 @@ func scanRowIntoUnit(rows *sql.Rows) (*types.Unit, error) {
 		return nil, err
 	}
 
+	unit.CreatedAt = unit.CreatedAt.Local()
+
 	return unit, nil
 }
