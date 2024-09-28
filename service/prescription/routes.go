@@ -96,10 +96,16 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invoiceDate, err := utils.ParseDate(payload.Invoice.InvoiceDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	// get invoice data
 	invoiceId, err := h.invoiceStore.GetInvoiceID(
 		payload.Invoice.Number, invoiceUser.ID, invoiceCustomer.ID,
-		payload.Invoice.TotalPrice, payload.Invoice.InvoiceDate)
+		payload.Invoice.TotalPrice, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.Invoice.Number))
 		return
@@ -139,10 +145,24 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prescriptionDate, err := utils.ParseDate(payload.PrescriptionDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	// check duplicate
+	prescriptionId, err := h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
+		patient.ID, payload.TotalPrice, doctor.ID)
+	if err == nil || prescriptionId != 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d exists", payload.Number))
+		return
+	}
+
 	err = h.prescriptionStore.CreatePrescription(types.Prescription{
 		InvoiceID:            invoiceId,
 		Number:               payload.Number,
-		PrescriptionDate:     payload.PrescriptionDate,
+		PrescriptionDate:     *prescriptionDate,
 		PatientID:            patient.ID,
 		DoctorID:             doctor.ID,
 		Qty:                  payload.Qty,
@@ -158,8 +178,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get prescription ID
-	prescriptionId, err := h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, payload.PrescriptionDate,
-		payload.PatientName, payload.TotalPrice)
+	prescriptionId, err = h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
+		patient.ID, payload.TotalPrice, doctor.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d doesn't exists", payload.Number))
 		return
@@ -233,10 +253,22 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	params := vars["params"]
 	val := vars["val"]
 
+	startDate, err := utils.ParseStartDate(payload.StartDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	endDate, err := utils.ParseEndDate(payload.EndDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	var prescriptions []types.PrescriptionListsReturnPayload
 
 	if val == "all" {
-		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDate(payload.StartDate, payload.EndDate)
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDate(*startDate, *endDate)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -314,7 +346,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndNumber(*startDate, *endDate, number)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -327,7 +359,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 		}
 
 		for _, user := range users {
-			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndUserID(*startDate, *endDate, user.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -343,7 +375,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 		}
 
 		for _, patient := range patients {
-			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndPatientID(payload.StartDate, payload.EndDate, patient.ID)
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndPatientID(*startDate, *endDate, patient.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -359,7 +391,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 		}
 
 		for _, doctor := range doctors {
-			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndDoctorID(payload.StartDate, payload.EndDate, doctor.ID)
+			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndDoctorID(*startDate, *endDate, doctor.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -374,7 +406,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndInvoiceID(payload.StartDate, payload.EndDate, iid)
+		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndInvoiceID(*startDate, *endDate, iid)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -628,9 +660,15 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prescriptionDate, err := utils.ParseDate(payload.NewData.PrescriptionDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	err = h.prescriptionStore.ModifyPrescription(payload.ID, types.Prescription{
 		Number:               payload.NewData.Number,
-		PrescriptionDate:     payload.NewData.PrescriptionDate,
+		PrescriptionDate:     *prescriptionDate,
 		PatientID:            patient.ID,
 		DoctorID:             doctor.ID,
 		Qty:                  payload.NewData.Qty,

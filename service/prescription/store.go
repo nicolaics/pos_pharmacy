@@ -361,15 +361,15 @@ func (s *Store) GetPrescriptionsByDateAndInvoiceID(startDate time.Time, endDate 
 	return prescriptions, nil
 }
 
-func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, patientName string, totalPrice float64) (int, error) {
+func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, patientId int, totalPrice float64, doctorId int) (int, error) {
 	query := `SELECT id FROM prescription 
 				WHERE invoice_id = ? AND number = ? AND prescription_date = ? 
-				AND patient_name = ? AND total_price = ? 
+				AND patient_id = ? AND total_price = ? AND doctor_id = ? 
 				AND deleted_at IS NULL`
 
-	rows, err := s.db.Query(query, invoiceId, number, date, patientName, totalPrice)
+	rows, err := s.db.Query(query, invoiceId, number, date, patientId, totalPrice, doctorId)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer rows.Close()
 
@@ -378,12 +378,12 @@ func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, pat
 	for rows.Next() {
 		err = rows.Scan(&prescriptionId)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 	}
 
 	if prescriptionId == 0 {
-		return -1, fmt.Errorf("prescription not found")
+		return 0, fmt.Errorf("prescription not found")
 	}
 
 	return prescriptionId, nil
