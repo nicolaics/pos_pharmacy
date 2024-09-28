@@ -1,9 +1,8 @@
-import sys
 import requests as rq
 import random
 
 
-def create_users(BACKEND_ROOT):
+def create_users(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/user/register",
         json={
@@ -11,7 +10,10 @@ def create_users(BACKEND_ROOT):
             "password": "adampassword",
             "admin": True,
             "phoneNumber": "0819288176",
-            "adminPassword": "I4geJeE0kSu5",
+            "adminPassword": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         },
     )
     r = rq.post(
@@ -21,7 +23,10 @@ def create_users(BACKEND_ROOT):
             "password": "bobpassword",
             "admin": False,
             "phoneNumber": "0819288326",
-            "adminPassword": "I4geJeE0kSu5",
+            "adminPassword": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         },
     )
     r = rq.post(
@@ -31,7 +36,10 @@ def create_users(BACKEND_ROOT):
             "password": "charliepassword",
             "admin": False,
             "phoneNumber": "0813318326",
-            "adminPassword": "I4geJeE0kSu5",
+            "adminPassword": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         },
     )
     r = rq.post(
@@ -41,42 +49,15 @@ def create_users(BACKEND_ROOT):
             "password": "deltapassword",
             "admin": True,
             "phoneNumber": "081921296",
-            "adminPassword": "I4geJeE0kSu5",
+            "adminPassword": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         },
     )
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Adam adam Two",
-    #                     "email" : "AdamTwo@gmail.com",
-    #                     "password" : "adamtwopassword"
-    #                   })
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Bob bob Two",
-    #                     "email" : "BobTwo@gmail.com",
-    #                     "password" : "bobtwopassword"
-    #                   })
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Charlie charlie Two",
-    #                     "email" : "CharlieTwo@gmail.com",
-    #                     "password" : "charlietwopassword"
-    #                   })
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Delta delta Two",
-    #                     "email" : "DeltaTwo@gmail.com",
-    #                     "password" : "deltatwopassword"
-    #                   })
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Zeta Zombo",
-    #                     "email" : "ZetaZombo@gmail.com",
-    #                     "password" : "zetazombopassword"
-    #                   })
-    # r = rq.post(f"http://{BACKEND_ROOT}/api/v1/user/register", json={
-    #                     "name" : "Zeta Zombo Two",
-    #                     "email" : "ZetaZomboTwo@gmail.com",
-    #                     "password" : "zetazombotwopassword"
-    #                   })
 
 
-def create_company_profile(BACKEND_ROOT):
+def create_company_profile(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/company-profile",
         json={
@@ -86,75 +67,181 @@ def create_company_profile(BACKEND_ROOT):
             "pharmacsit": "AA",
             "pharmacistLicenseNumber": "1239901",
         },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        },
     )
-    # for i in range(0, 15):
-    #     for i in range(0, 10+1):
-    #         r = rq.post(f"http://{BACKEND_ROOT}/api/v1/transaction/create", json={
-    #                             "userid" : i,
-    #                             "amount" : random.randint(1000, 1000000)
-    #                           })
 
 
-def create_customers(BACKEND_ROOT):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/customer", json={"name": "Graph"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/customer", json={"name": "Alpha"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/customer", json={"name": "Beta"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/customer", json={"name": "Gama"})
-    # print(r.json())
+def create_customers(BACKEND_ROOT, TOKEN):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/customer",
+        json={"name": "Graph"},
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        },
+    )
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/customer",
+        json={"name": "Alpha"},
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        },
+    )
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/customer",
+        json={"name": "Beta"},
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        },
+    )
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/customer",
+        json={"name": "Gama"},
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        },
+    )
 
 
-def create_doctors(BACKEND_ROOT):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Gray"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Jay"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Awesome"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Pole"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Ulala"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Oscar"})
-
-
-def create_patients(BACKEND_ROOT):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Yankee"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Awesome"})
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Two"})
-
-
-def create_medicines(BACKEND_ROOT):
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/medicine", json={
-        "barcode": "1111",
-        "name": "Ativan",
-        "qty": 1000,
-        "firstUnit": "BTL",
-        "firstSubtotal": 11000,
-        "firstDiscount": 1000,
-        "firstPrice": 10000,
-        "secondUnit": "BOX",
-        "secondSubtotal": 112000,
-        "secondPrice": 112000,
-        "description": "test"
+def create_doctors(BACKEND_ROOT, TOKEN):
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Gray"}, headers={
+            "Authorization": "Bearer " + TOKEN,
         })
-    
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/medicine", json={
-        "barcode": "2222",
-        "name": "Panadol",
-        "qty": 500,
-        "firstUnit": "TAB",
-        "firstSubtotal": 3320,
-        "firstPrice": 3320,
-        "description": "test"
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Jay"}, headers={
+            "Authorization": "Bearer " + TOKEN,
         })
-    
-    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/medicine", json={
-        "barcode": "3333",
-        "name": "Rhinos",
-        "qty": 320,
-        "firstUnit": "STP",
-        "firstSubtotal": 19200,
-        "firstDiscount": 200,
-        "firstPrice": 19000
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Awesome"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Pole"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Ulala"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/doctor", json={"name": "Dr. Oscar"}, headers={
+            "Authorization": "Bearer " + TOKEN,
         })
 
 
-def create_invoices(BACKEND_ROOT):
+def create_patients(BACKEND_ROOT, TOKEN):
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Yankee"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Awesome"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+    r = rq.post(f"http://{BACKEND_ROOT}/api/v1/patient", json={"name": "Two"}, headers={
+            "Authorization": "Bearer " + TOKEN,
+        })
+
+
+def create_suppliers(BACKEND_ROOT, TOKEN):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/supplier",
+        json={
+            "name": "Yes",
+            "address": "no",
+            "companyPhoneNumber": str(random.randint(1000000, 5000000)),
+            "contactPersonName": "Al",
+            "contactPersonNumber": str(random.randint(1000000, 5000000)),
+            "terms": "ok",
+            "vendorIsTaxable": True,
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/supplier",
+        json={
+            "name": "No",
+            "address": "nodsafadfadgadsfgafgadsfdas",
+            "companyPhoneNumber": str(random.randint(1000000, 5000000)),
+            "contactPersonName": "Ald",
+            "contactPersonNumber": str(random.randint(1000000, 5000000)),
+            "terms": "no",
+            "vendorIsTaxable": True,
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/supplier",
+        json={
+            "name": "Okay",
+            "address": "dasfdasfasdfasdfasdfadsfwefrf",
+            "companyPhoneNumber": str(random.randint(1000000, 5000000)),
+            "contactPersonName": "Aldde",
+            "contactPersonNumber": str(random.randint(1000000, 5000000)),
+            "terms": "no",
+            "vendorIsTaxable": False,
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+
+def create_medicines(BACKEND_ROOT, TOKEN):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/medicine",
+        json={
+            "barcode": "1111",
+            "name": "Ativan",
+            "qty": 1000,
+            "firstUnit": "BTL",
+            "firstSubtotal": 11000,
+            "firstDiscount": 1000,
+            "firstPrice": 10000,
+            "secondUnit": "BOX",
+            "secondSubtotal": 112000,
+            "secondPrice": 112000,
+            "description": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/medicine",
+        json={
+            "barcode": "2222",
+            "name": "Panadol",
+            "qty": 500,
+            "firstUnit": "TAB",
+            "firstSubtotal": 3320,
+            "firstPrice": 3320,
+            "description": "test",
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/medicine",
+        json={
+            "barcode": "3333",
+            "name": "Rhinos",
+            "qty": 320,
+            "firstUnit": "STP",
+            "firstSubtotal": 19200,
+            "firstDiscount": 200,
+            "firstPrice": 19000,
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+
+def create_invoices(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice",
         json={
@@ -178,6 +265,9 @@ def create_invoices(BACKEND_ROOT):
                 }
             ],
         },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
     )
 
     r = rq.post(
@@ -209,12 +299,16 @@ def create_invoices(BACKEND_ROOT):
                     "price": 19000,
                     "discount": 3000,
                     "subtotal": 7000,
-                }
+                },
             ],
         },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
     )
 
-def create_po_invoices(BACKEND_ROOT):
+
+def create_po_invoices(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
@@ -237,13 +331,41 @@ def create_po_invoices(BACKEND_ROOT):
                     "orderQty": 10,
                     "receivedQty": 10,
                     "unit": "TAB",
-                    "remarks": "dfalks"
-                }
+                    "remarks": "dfalks",
+                },
             ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         }
     )
 
-def create_prescription(BACKEND_ROOT):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
+        json={
+            "number": 2,
+            "companyId": 1,
+            "supplierId": 3,
+            "totalItems": 10,
+            "invoiceDate": "2024-107-12",
+            "purchaseOrderMedicineList": [
+                {
+                    "medicineBarcode": "2222",
+                    "medicineName": "Panadol",
+                    "orderQty": 10,
+                    "receivedQty": 10,
+                    "unit": "TAB",
+                    "remarks": "oke",
+                }
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+
+def create_prescription(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/prescription",
         json={
@@ -252,7 +374,7 @@ def create_prescription(BACKEND_ROOT):
                 "userName": "admin",
                 "customerName": "Alpha",
                 "totalPrice": 30000,
-                "invoiceDate": "2024-07-10"
+                "invoiceDate": "2024-07-10",
             },
             "number": 100,
             "prescriptionDate": "2024-06-30",
@@ -268,7 +390,7 @@ def create_prescription(BACKEND_ROOT):
                     "qty": 7,
                     "unit": "BTL",
                     "price": 46200,
-                    "subtotal": 46200
+                    "subtotal": 46200,
                 },
                 {
                     "medicineBarcode": "3333",
@@ -277,9 +399,12 @@ def create_prescription(BACKEND_ROOT):
                     "unit": "TAB",
                     "price": 2200,
                     "discount": 200,
-                    "subtotal": 2000
-                }
-            ]
+                    "subtotal": 2000,
+                },
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         }
     )
 
@@ -291,7 +416,7 @@ def create_prescription(BACKEND_ROOT):
                 "userName": "admin",
                 "customerName": "Alpha",
                 "totalPrice": 30000,
-                "invoiceDate": "2024-07-10"
+                "invoiceDate": "2024-07-10",
             },
             "number": 100,
             "prescriptionDate": "2024-06-30",
@@ -302,34 +427,190 @@ def create_prescription(BACKEND_ROOT):
             "totalPrice": 100000,
             "prescriptionMedicineList": [
                 {
+                    "medicineBarcode": "2222",
+                    "medicineName": "Panadol",
+                    "qty": 7,
+                    "unit": "TAB",
+                    "price": 12900,
+                    "subtotal": 12900,
+                }
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+
+def create_production(BACKEND_ROOT, TOKEN):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/production",
+        json={
+            "batchNumber": 2,
+            "producedMedicineBarcode": random.randint(1, 10000),
+            "producedMedicineName": "S2",
+            "producedQty": random.randint(1, 200),
+            "productionDate": "2024-01-10",
+            "updatedToStock": False,
+            "updatedToAccount": False,
+            "totalCost": random.randint(1, 100000),
+            "productionMedicineList": [
+                {
                     "medicineBarcode": "1111",
                     "medicineName": "Ativan",
                     "qty": 7,
-                    "unit": "TAB",
-                    "price": 46200,
-                    "subtotal": 46200
+                    "unit": "BTL",
+                    "cost": 46200,
                 },
+                {
+                    "medicineBarcode": "2222",
+                    "medicineName": "Panadol",
+                    "qty": 10,
+                    "unit": "TAB",
+                    "cost": 2200,
+                },
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/production",
+        json={
+            "batchNumber": 210,
+            "producedMedicineBarcode": random.randint(1, 10000),
+            "producedMedicineName": "S1",
+            "producedQty": random.randint(1, 200),
+            "productionDate": "2024-04-20",
+            "updatedToStock": False,
+            "updatedToAccount": False,
+            "totalCost": random.randint(1, 100000),
+            "productionMedicineList": [
                 {
                     "medicineBarcode": "3333",
                     "medicineName": "Rhinos",
                     "qty": 10,
                     "unit": "TAB",
-                    "price": 2200,
-                    "discount": 200,
-                    "subtotal": 2000
-                }
-            ]
+                    "cost": 462000,
+                },
+                {
+                    "medicineBarcode": "2222",
+                    "medicineName": "Panadol",
+                    "qty": 10,
+                    "unit": "TAB",
+                    "cost": 2200,
+                },
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
         }
     )
 
+
+def create_purchase_invoice(BACKEND_ROOT, TOKEN):
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
+        json={
+            "number": random.randint(1, 100),
+            "companyId": 1,
+            "supplierId": random.randint(1, 3),
+            "subtotal": random.randint(1, 100000),
+            "discount": random.randint(1, 10000),
+            "tax": random.randint(1, 200),
+            "totalPrice": random.randint(1, 300000),
+            "description": "test",
+            "invoiceDate": "2024-05-12",
+            "purchaseMedicineList": [
+                {
+                    "medicineBarcode": "1111",
+                    "medicineName": "Ativan",
+                    "qty": random.randint(1, 20),
+                    "unit": "BTL",
+                    "price": random.randint(1, 50000),
+                    "discount": random.randint(1, 500),
+                    "tax": random.randint(1, 500),
+                    "subtotal": random.randint(1, 200000),
+                    "batchNumber": "B1234",
+                    "expDate": "2026-01-10",
+                },
+                {
+                    "medicineBarcode": "3333",
+                    "medicineName": "Rhinos",
+                    "qty": random.randint(1, 20),
+                    "unit": "TAB",
+                    "price": random.randint(1, 50000),
+                    "subtotal": random.randint(1, 200000),
+                    "batchNumber": "B1235",
+                    "expDate": "2026-02-10",
+                },
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+    r = rq.post(
+        f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
+        json={
+            "number": random.randint(1, 100),
+            "companyId": 1,
+            "supplierId": random.randint(1, 3),
+            "subtotal": random.randint(1, 100000),
+            "discount": random.randint(1, 10000),
+            "tax": random.randint(1, 200),
+            "totalPrice": random.randint(1, 300000),
+            "invoiceDate": "2024-06-12",
+            "purchaseMedicineList": [
+                {
+                    "medicineBarcode": "2222",
+                    "medicineName": "Panadol",
+                    "qty": random.randint(1, 20),
+                    "unit": "BTL",
+                    "price": random.randint(1, 50000),
+                    "discount": random.randint(1, 500),
+                    "subtotal": random.randint(1, 200000),
+                    "batchNumber": "B124",
+                    "expDate": "2026-12-06",
+                },
+                {
+                    "medicineBarcode": "3333",
+                    "medicineName": "Rhinos",
+                    "qty": random.randint(1, 20),
+                    "unit": "TAB",
+                    "price": random.randint(1, 50000),
+                    "subtotal": random.randint(1, 200000),
+                    "batchNumber": "B125",
+                    "expDate": "2026-02-10",
+                },
+            ],
+        },
+        headers={
+            "Authorization": "Bearer " + TOKEN,
+        }
+    )
+
+
 def main():
     BACKEND_ROOT = input("enter backend host:port: ")
-    create_users(BACKEND_ROOT)
-    create_company_profile(BACKEND_ROOT)
-    create_customers(BACKEND_ROOT)
-    create_patients(BACKEND_ROOT)
-    create_medicines(BACKEND_ROOT)
-    create_invoices(BACKEND_ROOT)
+    TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiYXV0aG9yaXplZCI6dHJ1ZSwiZXhwaXJlZEF0IjoxNzI3NTQzNzkxLCJ0b2tlblV1aWQiOiIwMTkyMzcwZi0yMDNjLTcxYjMtYTU4Ny04YzIxNWExOTAwMGIiLCJ1c2VySWQiOjR9.XOFxx4RykwJ03oKFt1CMe7qKXQA8AS2jU7b9VIZ7tTs"
+    create_users(BACKEND_ROOT, TOKEN)
+    create_company_profile(BACKEND_ROOT, TOKEN)
+    create_customers(BACKEND_ROOT, TOKEN)
+    create_doctors(BACKEND_ROOT, TOKEN)
+    create_patients(BACKEND_ROOT, TOKEN)
+    create_suppliers(BACKEND_ROOT, TOKEN)
+    create_medicines(BACKEND_ROOT, TOKEN)
+    create_invoices(BACKEND_ROOT, TOKEN)
+    create_po_invoices(BACKEND_ROOT, TOKEN)
+    create_prescription(BACKEND_ROOT, TOKEN)
+    create_production(BACKEND_ROOT, TOKEN)
+    create_purchase_invoice(BACKEND_ROOT, TOKEN)
+
+    print("DONE")
 
 
 if __name__ == "__main__":
