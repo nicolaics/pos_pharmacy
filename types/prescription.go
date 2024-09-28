@@ -30,7 +30,6 @@ type PrescriptionStore interface {
 type RegisterPrescriptionPayload struct {
 	Invoice struct {
 		Number       int       `json:"number" validate:"required"`
-		UserName     string    `json:"userName" validate:"required"`
 		CustomerName string    `json:"customerName" validate:"required"`
 		TotalPrice   float64   `json:"totalPrice" validate:"required"`
 		InvoiceDate  string `json:"invoiceDate" validate:"required"`

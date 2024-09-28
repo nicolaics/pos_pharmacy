@@ -82,13 +82,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get userID info from invoice
-	invoiceUser, err := h.userStore.GetUserByName(payload.Invoice.UserName)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", payload.Invoice.UserName))
-		return
-	}
-
 	// get customerID info from invoice
 	invoiceCustomer, err := h.customerStore.GetCustomerByName(payload.Invoice.CustomerName)
 	if err != nil {
@@ -104,7 +97,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// get invoice data
 	invoiceId, err := h.invoiceStore.GetInvoiceID(
-		payload.Invoice.Number, invoiceUser.ID, invoiceCustomer.ID,
+		payload.Invoice.Number, invoiceCustomer.ID,
 		payload.Invoice.TotalPrice, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.Invoice.Number))
