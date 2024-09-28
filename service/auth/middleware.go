@@ -32,7 +32,6 @@ func AuthMiddleware() mux.MiddlewareFunc {
 				}
 
 				_, ok = claims["userId"]
-				log.Println("userID: ", claims["userId"])
 
 				if !ok {
 					http.Error(w, "error user id", http.StatusForbidden)
