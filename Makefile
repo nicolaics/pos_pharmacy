@@ -36,5 +36,8 @@ init-admin:
 dummy-data:
 	@python3 -u cmd/init/create_dummy_data.py
 
+get-dummy-data:
+	@python3 -u cmd/init/get_dummy_data.py
+
 # deploy:
 # https://medium.com/nerd-for-tech/build-cross-platform-executables-in-go-94b84686fb44
