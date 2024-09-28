@@ -46,7 +46,7 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice float64, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM invoice 
 				WHERE number = ? AND user_id = ? AND customer_id = ? AND 
-				total_price = ? AND invoice_date ? AND deleted_at IS NULL`
+				total_price = ? AND invoice_date = ? AND deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, number, userId, customerId, totalPrice, invoiceDate)
 	if err != nil {
@@ -59,12 +59,12 @@ func (s *Store) GetInvoiceID(number int, userId int, customerId int, totalPrice 
 	for rows.Next() {
 		err = rows.Scan(&invoiceId)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 	}
 
 	if invoiceId == 0 {
-		return -1, fmt.Errorf("invoice not found")
+		return 0, fmt.Errorf("invoice not found")
 	}
 
 	return invoiceId, nil

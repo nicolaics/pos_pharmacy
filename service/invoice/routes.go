@@ -30,6 +30,7 @@ func NewHandler(invoiceStore types.InvoiceStore, userStore types.UserStore,
 		custStore:          custStore,
 		paymentMethodStore: paymentMethodStore,
 		medStore:           medStore,
+		unitStore:          unitStore,
 	}
 }
 
@@ -78,8 +79,30 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// check paymentMethodName
 	paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(payload.PaymentMethodName)
+	if paymentMethod == nil {
+		err = h.paymentMethodStore.CreatePaymentMethod(payload.PaymentMethodName)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create payment method %s", payload.PaymentMethodName))
+			return
+		}
+
+		paymentMethod, err = h.paymentMethodStore.GetPaymentMethodByName(payload.PaymentMethodName)
+	}
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s not found", payload.PaymentMethodName))
+		return
+	}
+
+	invoiceDate, err := utils.ParseDate(payload.InvoiceDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse date"))
+		return
+	}
+
+	// check duplicate
+	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, *invoiceDate)
+	if err == nil || invoiceId != 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d with today's date exists", payload.Number))
 		return
 	}
 
@@ -95,7 +118,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		ChangeAmount:         payload.ChangeAmount,
 		PaymentMethodID:      paymentMethod.ID,
 		Description:          payload.Description,
-		InvoiceDate:          payload.InvoiceDate,
+		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -103,7 +126,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get invoice id
-	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, payload.InvoiceDate)
+	invoiceId, err = h.invoiceStore.GetInvoiceID(payload.Number, user.ID, payload.CustomerID, payload.TotalPrice, *invoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d doesn't exists", payload.Number))
 		return
@@ -197,7 +220,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 	val := vars["val"]
 
 	var invoices []types.InvoiceListsReturnPayload
-	
+
 	if val == "all" {
 		invoices, err = h.invoiceStore.GetInvoicesByDate(payload.StartDate, payload.EndDate)
 		if err != nil {
@@ -216,7 +239,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d not exist", id))
 			return
 		}
-		
+
 		user, err := h.userStore.GetUserByID(invoice.UserID)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user %d not exist", invoice.UserID))
@@ -234,19 +257,19 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("payment method %d not exist", invoice.PaymentMethodID))
 			return
 		}
-		
+
 		invoices = append(invoices, types.InvoiceListsReturnPayload{
-			ID: invoice.ID,
-			Number: invoice.Number,
-			UserName: user.Name,
-			CustomerName: customer.Name,
-			Subtotal: invoice.Subtotal,
-			Discount: invoice.Discount,
-			Tax: invoice.Tax,
-			TotalPrice: invoice.TotalPrice,
+			ID:                invoice.ID,
+			Number:            invoice.Number,
+			UserName:          user.Name,
+			CustomerName:      customer.Name,
+			Subtotal:          invoice.Subtotal,
+			Discount:          invoice.Discount,
+			Tax:               invoice.Tax,
+			TotalPrice:        invoice.TotalPrice,
 			PaymentMethodName: paymentMethod.Name,
-			Description: invoice.Description,
-			InvoiceDate: invoice.InvoiceDate,
+			Description:       invoice.Description,
+			InvoiceDate:       invoice.InvoiceDate,
 		})
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
@@ -288,7 +311,7 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 		paymentMethod, err := h.paymentMethodStore.GetPaymentMethodByName(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("payment method %s not found between %s and %s", val, payload.StartDate, payload.EndDate))
-			return			
+			return
 		}
 
 		invoices, err = h.invoiceStore.GetInvoicesByDateAndPaymentMethodID(payload.StartDate, payload.EndDate, paymentMethod.ID)
@@ -497,6 +520,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invoiceDate, err := utils.ParseDate(payload.NewData.InvoiceDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	err = h.invoiceStore.ModifyInvoice(payload.ID, types.Invoice{
 		Number:               payload.NewData.Number,
 		CustomerID:           payload.NewData.CustomerID,
@@ -508,7 +537,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		ChangeAmount:         payload.NewData.ChangeAmount,
 		PaymentMethodID:      paymentMethod.ID,
 		Description:          payload.NewData.Description,
-		InvoiceDate:          payload.NewData.InvoiceDate,
+		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	}, user)
 	if err != nil {
