@@ -68,13 +68,13 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 
 func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, userId int, totalItems int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM purchase_order_invoice 
-				WHERE number = ? AND company_id ? 
-				AND supplier_id = ? AND userId = ? AND total_items = ? 
-				AND invoice_date ? AND deleted_at IS NULL`
+				WHERE number = ? AND company_id = ? 
+				AND supplier_id = ? AND user_id = ? AND total_items = ? 
+				AND invoice_date = ? AND deleted_at IS NULL`
 
 	rows, err := s.db.Query(query, number, companyId, supplierId, userId, totalItems, invoiceDate)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer rows.Close()
 
@@ -83,12 +83,12 @@ func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId 
 	for rows.Next() {
 		err = rows.Scan(&purchaseOrderInvoiceId)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 	}
 
 	if purchaseOrderInvoiceId == 0 {
-		return -1, fmt.Errorf("purchase order invoice not found")
+		return 0, fmt.Errorf("purchase order invoice not found")
 	}
 
 	return purchaseOrderInvoiceId, nil
@@ -492,6 +492,8 @@ func scanRowIntoPurchaseOrderInvoiceLists(rows *sql.Rows) (*types.PurchaseOrderI
 	if err != nil {
 		return nil, err
 	}
+
+	purchaseOrderInvoice.InvoiceDate = purchaseOrderInvoice.InvoiceDate.Local()
 
 	return purchaseOrderInvoice, nil
 }

@@ -2,6 +2,7 @@ package poinvoice
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -30,6 +31,7 @@ func NewHandler(poInvoiceStore types.PurchaseOrderInvoiceStore, userStore types.
 		supplierStore:       supplierStore,
 		companyProfileStore: companyProfileStore,
 		medStore:            medStore,
+		unitStore:           unitStore,
 	}
 }
 
@@ -70,9 +72,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check companyID
+	log.Println("company id:", payload.CompanyID)
 	_, err = h.companyProfileStore.GetCompanyProfileByID(payload.CompanyID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d not found", payload.CompanyID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d not found: %v", payload.CompanyID, err))
 		return
 	}
 
@@ -83,13 +86,26 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invoiceDate, err := utils.ParseDate(payload.InvoiceDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	// check duplicate
+	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, *invoiceDate)
+	if err == nil || purchaseOrderInvoiceId != 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d exists", payload.Number))
+		return
+	}
+
 	err = h.poInvoiceStore.CreatePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 		Number:               payload.Number,
 		CompanyID:            payload.CompanyID,
 		SupplierID:           payload.SupplierID,
 		UserID:               user.ID,
 		TotalItems:           payload.TotalItems,
-		InvoiceDate:          payload.InvoiceDate,
+		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
@@ -98,9 +114,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoice ID
-	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, payload.InvoiceDate)
+	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, user.ID, payload.TotalItems, *invoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists", payload.Number))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists: %v", payload.Number, err))
 		return
 	}
 
@@ -190,10 +206,22 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 	params := vars["params"]
 	val := vars["val"]
 
+	startDate, err := utils.ParseStartDate(payload.StartDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
+	endDate, err := utils.ParseEndDate(payload.EndDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	var purchaseOrderInvoices []types.PurchaseOrderInvoiceListsReturnPayload
 
 	if val == "all" {
-		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDate(payload.StartDate, payload.EndDate)
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDate(*startDate, *endDate)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -238,7 +266,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 			return
 		}
 
-		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndNumber(payload.StartDate, payload.EndDate, number)
+		purchaseOrderInvoices, err = h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndNumber(*startDate, *endDate, number)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -251,7 +279,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 		}
 
 		for _, user := range users {
-			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(payload.StartDate, payload.EndDate, user.ID)
+			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndUserID(*startDate, *endDate, user.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s doesn't create any po invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -267,7 +295,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 		}
 
 		for _, supplier := range suppliers {
-			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndSupplierID(payload.StartDate, payload.EndDate, supplier.ID)
+			temp, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByDateAndSupplierID(*startDate, *endDate, supplier.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s doesn't create any po invoice between %s and %s", val, payload.StartDate, payload.EndDate))
 				return
@@ -485,12 +513,18 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invoiceDate, err := utils.ParseDate(payload.NewData.InvoiceDate)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
+		return
+	}
+
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.ID, types.PurchaseOrderInvoice{
 		Number:               payload.NewData.Number,
 		CompanyID:            payload.NewData.CompanyID,
 		SupplierID:           payload.NewData.SupplierID,
 		TotalItems:           payload.NewData.TotalItems,
-		InvoiceDate:          payload.NewData.InvoiceDate,
+		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	}, user)
 	if err != nil {
