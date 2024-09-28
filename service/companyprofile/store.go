@@ -69,7 +69,7 @@ func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
 func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error {
 	query := `INSERT INTO self_company_profile 
 				(name, address, business_number, pharmacist, 
-				pharmacist_license_number, last_modified, modified_by_id) 
+				pharmacist_license_number, last_modified, last_modified_by_user_id) 
 				VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := s.db.Exec(query,
