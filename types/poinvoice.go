@@ -33,7 +33,7 @@ type RegisterPurchaseOrderInvoicePayload struct {
 	CompanyID   int       `json:"companyId" validate:"required"`
 	SupplierID  int       `json:"supplierId" validate:"required"`
 	TotalItems  int       `json:"totalItems" validate:"required"`
-	InvoiceDate time.Time `json:"invoiceDate" validate:"required"`
+	InvoiceDate string `json:"invoiceDate" validate:"required"`
 
 	MedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList" validate:"required"`
 }
@@ -49,8 +49,8 @@ type PurchaseOrderMedicineListPayload struct {
 
 // only view the purchase invoice list
 type ViewPurchaseOrderInvoicePayload struct {
-	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
-	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
+	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
+	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 // view the detail of the purchase invoice
