@@ -68,13 +68,13 @@ func (s *Store) GetProductionByID(id int) (*types.Production, error) {
 	return production, nil
 }
 
-func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64, userId int) (int, error) {
+func (s *Store) GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64) (int, error) {
 	query := `SELECT id FROM production 
-				WHERE batch_number = ? AND produced_med_id = ? AND production_date = ? 
-				AND total_cost = ? AND user_id = ? 
+				WHERE batch_number = ? AND produced_medicine_id = ? AND production_date = ? 
+				AND total_cost = ? 
 				AND deleted_at IS NULL`
 
-	rows, err := s.db.Query(query, batchNumber, producedMedId, prodDate, totalCost, userId)
+	rows, err := s.db.Query(query, batchNumber, producedMedId, prodDate, totalCost)
 	if err != nil {
 		return 0, err
 	}

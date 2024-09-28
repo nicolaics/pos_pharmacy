@@ -2,6 +2,7 @@ package production
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -80,9 +81,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("batch:", payload.BatchNumber)
+	log.Println("prod med id:", producedMedicine.ID)
+	log.Println("date:", prodDate)
+	log.Println("total cost:", payload.TotalCost)
+
 	// check duplicate
 	productionId, err := h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
-		*prodDate, payload.TotalCost, user.ID)
+		*prodDate, payload.TotalCost)
 	if err == nil || productionId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d exists", payload.BatchNumber))
 		return
@@ -107,9 +113,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// get production ID
 	productionId, err = h.productionStore.GetProductionID(payload.BatchNumber, producedMedicine.ID,
-		*prodDate, payload.TotalCost, user.ID)
+		*prodDate, payload.TotalCost)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.BatchNumber))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists: %v", payload.BatchNumber, err))
 		return
 	}
 
@@ -546,7 +552,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	// get production ID
 	productionId, err := h.productionStore.GetProductionID(payload.NewData.BatchNumber, producedMedicine.ID,
-		*prodDate, payload.NewData.TotalCost, user.ID)
+		*prodDate, payload.NewData.TotalCost)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production batch number %d doesn't exists", payload.NewData.BatchNumber))
 		return

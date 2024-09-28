@@ -8,7 +8,7 @@ import (
 type ProductionStore interface {
 	GetProductionByBatchNumber(int) (*Production, error)
 	GetProductionByID(int) (*Production, error)
-	GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64, userId int) (int, error)
+	GetProductionID(batchNumber int, producedMedId int, prodDate time.Time, totalCost float64) (int, error)
 	GetNumberOfProductions() (int, error)
 
 	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]ProductionListsReturnPayload, error)
@@ -28,15 +28,15 @@ type ProductionStore interface {
 }
 
 type RegisterProductionPayload struct {
-	BatchNumber             int       `json:"batchNumber"`
-	ProducedMedicineBarcode string    `json:"producedMedicineBarcode" validate:"required"`
-	ProducedMedicineName    string    `json:"producedMedicineName" validate:"required"`
-	ProducedQty             int       `json:"producedQty" validate:"required"`
-	ProductionDate          string `json:"productionDate" validate:"required"`
-	Description             string    `json:"description"`
-	UpdatedToStock          bool      `json:"updatedToStock" validate:"required"`
-	UpdatedToAccount        bool      `json:"updatedToAccount" validate:"required"`
-	TotalCost               float64   `json:"totalCost" validate:"required"`
+	BatchNumber             int     `json:"batchNumber"`
+	ProducedMedicineBarcode string  `json:"producedMedicineBarcode" validate:"required"`
+	ProducedMedicineName    string  `json:"producedMedicineName" validate:"required"`
+	ProducedQty             int     `json:"producedQty" validate:"required"`
+	ProductionDate          string  `json:"productionDate" validate:"required"`
+	Description             string  `json:"description"`
+	UpdatedToStock          bool    `json:"updatedToStock"`
+	UpdatedToAccount        bool    `json:"updatedToAccount"`
+	TotalCost               float64 `json:"totalCost" validate:"required"`
 
 	MedicineLists []ProductionMedicineListPayload `json:"productionMedicineList" validate:"required"`
 }
