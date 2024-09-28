@@ -38,7 +38,6 @@ type RegisterUserPayload struct {
 type RemoveUserPayload struct {
 	AdminPassword string `json:"adminPassword" validate:"required"`
 	ID            int    `json:"id" validate:"required"`
-	Name          string `json:"name" validate:"required"`
 }
 
 // modify the data of the user, requires admin password and admin to do it

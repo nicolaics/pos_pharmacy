@@ -33,8 +33,8 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/detail", h.handleGetOneUser).Methods(http.MethodPost)
 	router.HandleFunc("/user/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/user/delete", h.handleDelete).Methods(http.MethodDelete)
-	router.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/user", h.handleDelete).Methods(http.MethodDelete)
+	router.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user/modify", h.handleModify).Methods(http.MethodPatch)
 	router.HandleFunc("/user/modify", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
@@ -315,7 +315,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", payload.Name))
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", user.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
