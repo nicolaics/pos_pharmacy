@@ -33,7 +33,7 @@ migrate-rm:
 init-admin:
 	@go run cmd/init/InitAdmin.go $(username)
 
-init-data:
+dummy-data:
 	@python3 -u cmd/init/create_dummy_data.py
 
 # deploy:
