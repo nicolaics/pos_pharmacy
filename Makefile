@@ -39,5 +39,8 @@ dummy-data:
 get-dummy-data:
 	@python3 -u cmd/init/get_dummy_data.py
 
+read-log:
+	@go run cmd/readLog/ReadLog.go
+
 # deploy:
 # https://medium.com/nerd-for-tech/build-cross-platform-executables-in-go-94b84686fb44
