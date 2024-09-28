@@ -16,7 +16,7 @@ type PrescriptionStore interface {
 	GetPrescriptionsByDateAndDoctorID(startDate time.Time, endDate time.Time, did int) ([]PrescriptionListsReturnPayload, error)
 	GetPrescriptionsByDateAndInvoiceID(startDate time.Time, endDate time.Time, iid int) ([]PrescriptionListsReturnPayload, error)
 
-	GetPrescriptionID(invoiceId int, number int, date time.Time, patientName string, totalPrice float64) (int, error)
+	GetPrescriptionID(invoiceId int, number int, date time.Time, patientId int, totalPrice float64, doctorId int) (int, error)
 
 	CreatePrescription(Prescription) error
 	CreatePrescriptionMedicineItems(PrescriptionMedicineItems) error
@@ -33,11 +33,11 @@ type RegisterPrescriptionPayload struct {
 		UserName     string    `json:"userName" validate:"required"`
 		CustomerName string    `json:"customerName" validate:"required"`
 		TotalPrice   float64   `json:"totalPrice" validate:"required"`
-		InvoiceDate  time.Time `json:"invoiceDate" validate:"required"`
+		InvoiceDate  string `json:"invoiceDate" validate:"required"`
 	} `json:"invoice" validate:"required"`
 
 	Number           int                               `json:"number" validate:"required"`
-	PrescriptionDate time.Time                         `json:"prescriptionDate" validate:"required"`
+	PrescriptionDate string                         `json:"prescriptionDate" validate:"required"`
 	PatientName      string                            `json:"patientName" validate:"required"`
 	DoctorName       string                            `json:"doctorName" validate:"required"`
 	Qty              float64                           `json:"qty" validate:"required"`
@@ -80,8 +80,8 @@ type PrescriptionListsReturnPayload struct {
 
 // only view the purchase invoice list
 type ViewPrescriptionsPayload struct {
-	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
-	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
+	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
+	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 // view the detail of the purchase invoice
