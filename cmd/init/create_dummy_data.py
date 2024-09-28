@@ -944,18 +944,18 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
 def main():
     # BACKEND_ROOT = input("enter backend host:port: ")
     BACKEND_ROOT = "localhost:9988"
-    TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiYXV0aG9yaXplZCI6dHJ1ZSwiZXhwaXJlZEF0IjoxNzI3NTQzNzkxLCJ0b2tlblV1aWQiOiIwMTkyMzcwZi0yMDNjLTcxYjMtYTU4Ny04YzIxNWExOTAwMGIiLCJ1c2VySWQiOjR9.XOFxx4RykwJ03oKFt1CMe7qKXQA8AS2jU7b9VIZ7tTs"
-    # create_users(BACKEND_ROOT, TOKEN)
-    # create_company_profile(BACKEND_ROOT, TOKEN)
-    # create_customers(BACKEND_ROOT, TOKEN)
-    # create_doctors(BACKEND_ROOT, TOKEN)
-    # create_patients(BACKEND_ROOT, TOKEN)
-    # create_suppliers(BACKEND_ROOT, TOKEN)
-    # create_medicines(BACKEND_ROOT, TOKEN)
-    # create_invoices(BACKEND_ROOT, TOKEN)
-    # create_po_invoices(BACKEND_ROOT, TOKEN)
-    # create_prescription(BACKEND_ROOT, TOKEN)
-    # create_production(BACKEND_ROOT, TOKEN)
+    TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiYXV0aG9yaXplZCI6dHJ1ZSwiZXhwaXJlZEF0IjoxNzI3NTI1MjE2LCJ0b2tlblV1aWQiOiIwMTkyMzg4NS1mN2JlLTdkZTMtYTBhYi01NDQ0YWRmYjhmZTAiLCJ1c2VySWQiOjJ9.LeORetCOQ0hs6Lw1eCHsbE-YZ2Kt5SjF2wKzSMKLBJw"
+    create_users(BACKEND_ROOT, TOKEN)
+    create_company_profile(BACKEND_ROOT, TOKEN)
+    create_customers(BACKEND_ROOT, TOKEN)
+    create_doctors(BACKEND_ROOT, TOKEN)
+    create_patients(BACKEND_ROOT, TOKEN)
+    create_suppliers(BACKEND_ROOT, TOKEN)
+    create_medicines(BACKEND_ROOT, TOKEN)
+    create_invoices(BACKEND_ROOT, TOKEN)
+    create_po_invoices(BACKEND_ROOT, TOKEN)
+    create_prescription(BACKEND_ROOT, TOKEN)
+    create_production(BACKEND_ROOT, TOKEN)
     create_purchase_invoice(BACKEND_ROOT, TOKEN)
 
     print("DONE")
