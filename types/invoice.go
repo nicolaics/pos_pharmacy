@@ -39,10 +39,10 @@ type RegisterInvoicePayload struct {
 	Tax               float64   `json:"tax"`
 	TotalPrice        float64   `json:"totalPrice" validate:"required"`
 	PaidAmount        float64   `json:"paidAmount" validate:"required"`
-	ChangeAmount      float64   `json:"changeAmount" validate:"required"`
+	ChangeAmount      float64   `json:"changeAmount"`
 	PaymentMethodName string    `json:"paymentMethodName" validate:"required"`
 	Description       string    `json:"description"`
-	InvoiceDate       time.Time `json:"invoiceDate" validate:"required"`
+	InvoiceDate       string `json:"invoiceDate" validate:"required"`
 
 	MedicineLists []MedicineListsPayload `json:"medicineLists" validate:"required"`
 }
