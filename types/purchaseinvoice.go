@@ -8,7 +8,7 @@ import (
 type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByNumber(number int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
-	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (int, error)
+	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
 
 	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoiceListsReturnPayload, error)
@@ -34,27 +34,27 @@ type PurchaseInvoicePayload struct {
 	Tax           float64                       `json:"tax" validate:"required"`
 	TotalPrice    float64                       `json:"totalPrice" validate:"required"`
 	Description   string                        `json:"description"`
-	InvoiceDate   time.Time                     `json:"invoiceDate" validate:"required"`
+	InvoiceDate   string                        `json:"invoiceDate" validate:"required"`
 	MedicineLists []PurchaseMedicineListPayload `json:"purchaseMedicineList" validate:"required"`
 }
 
 type PurchaseMedicineListPayload struct {
-	MedicineBarcode string    `json:"medicineBarcode" validate:"required"`
-	MedicineName    string    `json:"medicineName" validate:"required"`
-	Qty             float64   `json:"qty" validate:"required"`
-	Unit            string    `json:"unit" validate:"required"`
-	Price           float64   `json:"price" validate:"required"`
-	Discount        float64   `json:"discount"`
-	Tax             float64   `json:"tax"`
-	Subtotal        float64   `json:"subtotal" validate:"required"`
-	BatchNumber     string    `json:"batchNumber" validate:"required"`
-	ExpDate         time.Time `json:"expDate" validate:"required"`
+	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
+	MedicineName    string  `json:"medicineName" validate:"required"`
+	Qty             float64 `json:"qty" validate:"required"`
+	Unit            string  `json:"unit" validate:"required"`
+	Price           float64 `json:"price" validate:"required"`
+	Discount        float64 `json:"discount"`
+	Tax             float64 `json:"tax"`
+	Subtotal        float64 `json:"subtotal" validate:"required"`
+	BatchNumber     string  `json:"batchNumber" validate:"required"`
+	ExpDate         string  `json:"expDate" validate:"required"`
 }
 
 // only view the purchase invoice list
 type ViewPurchaseInvoicePayload struct {
-	StartDate time.Time `json:"startDate" validate:"required"` // if empty, just give today's date from morning
-	EndDate   time.Time `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
+	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
+	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
 // view the detail of the purchase invoice

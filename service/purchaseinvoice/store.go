@@ -66,15 +66,15 @@ func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
 	return purchaseInvoice, nil
 }
 
-func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, userId int, invoiceDate time.Time) (int, error) {
+func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM purchase_invoice 
 				WHERE number = ? AND company_id = ? AND supplier_id = ? 
-				AND subtotal = ? AND total_price = ? AND user_id = ? AND invoice_date = ? 
+				AND subtotal = ? AND total_price = ? AND invoice_date = ? 
 				AND deleted_at IS NULL`
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, userId, invoiceDate)
+	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, invoiceDate)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer rows.Close()
 
@@ -83,12 +83,12 @@ func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, 
 	for rows.Next() {
 		err = rows.Scan(&purchaseInvoiceId)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 	}
 
 	if purchaseInvoiceId == 0 {
-		return -1, fmt.Errorf("purchase invoice not found")
+		return 0, fmt.Errorf("purchase invoice not found")
 	}
 
 	return purchaseInvoiceId, nil
@@ -498,6 +498,8 @@ func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceList
 		return nil, err
 	}
 
+	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
+
 	return purchaseInvoice, nil
 }
 
@@ -521,6 +523,8 @@ func scanRowIntoPurchaseMedicineItems(rows *sql.Rows) (*types.PurchaseMedicineIt
 	if err != nil {
 		return nil, err
 	}
+
+	purchaseMedicineItem.ExpDate = purchaseMedicineItem.ExpDate.Local()
 	
 	return purchaseMedicineItem, nil
 }
