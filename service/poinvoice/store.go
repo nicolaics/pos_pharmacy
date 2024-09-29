@@ -495,6 +495,40 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 	return nil
 }
 
+func (s *Store) AbsoluteDeletePurchaseOrderInvoice(poi types.PurchaseOrderInvoice) error {
+	query := `SELECT id FROM purchase_order_invoice 
+				WHERE number = ? AND company_id = ? 
+				AND supplier_id = ? AND total_items = ? 
+				AND invoice_date = ?`
+
+	rows, err := s.db.Query(query, poi.Number, poi.CompanyID, poi.SupplierID, poi.TotalItems, poi.InvoiceDate)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var id int
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if id == 0 {
+		return nil
+	}
+
+	query = "DELETE FROM purchase_order_items WHERE purchase_order_invoice_id = ?"
+	_, _ = s.db.Exec(query, id)
+
+	query = `DELETE FROM purchase_order_invoice WHERE id = ?`
+	_, _ = s.db.Exec(query, id)
+
+	return nil
+}
+
 func scanRowIntoPurchaseOrderInvoice(rows *sql.Rows) (*types.PurchaseOrderInvoice, error) {
 	purchaseOrderInvoice := new(types.PurchaseOrderInvoice)
 

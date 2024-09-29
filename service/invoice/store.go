@@ -536,7 +536,7 @@ func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
 		}
 	}
 
-	if invoice.ID == 0 {
+	if id == 0 {
 		return nil
 	}
 

@@ -116,6 +116,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get purchaseInvoice ID
 	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItems, *invoiceDate)
 	if err != nil {
+		err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
+			Number:               payload.Number,
+			CompanyID:            payload.CompanyID,
+			SupplierID:           payload.SupplierID,
+			UserID:               user.ID,
+			TotalItems:           payload.TotalItems,
+			InvoiceDate:          *invoiceDate,
+		})
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
+			return	
+		}
+
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists: %v", payload.Number, err))
 		return
 	}
@@ -123,6 +136,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	for _, medicine := range payload.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
+			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
+				Number:               payload.Number,
+				CompanyID:            payload.CompanyID,
+				SupplierID:           payload.SupplierID,
+				UserID:               user.ID,
+				TotalItems:           payload.TotalItems,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 			return
 		}
@@ -131,6 +157,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if unit == nil {
 			err = h.unitStore.CreateUnit(medicine.Unit)
 			if err != nil {
+				err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
+					Number:               payload.Number,
+					CompanyID:            payload.CompanyID,
+					SupplierID:           payload.SupplierID,
+					UserID:               user.ID,
+					TotalItems:           payload.TotalItems,
+					InvoiceDate:          *invoiceDate,
+				})
+				if err != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
+					return	
+				}
+
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -138,6 +177,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
 		}
 		if err != nil {
+			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
+				Number:               payload.Number,
+				CompanyID:            payload.CompanyID,
+				SupplierID:           payload.SupplierID,
+				UserID:               user.ID,
+				TotalItems:           payload.TotalItems,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -151,6 +203,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Remarks:                medicine.Remarks,
 		})
 		if err != nil {
+			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
+				Number:               payload.Number,
+				CompanyID:            payload.CompanyID,
+				SupplierID:           payload.SupplierID,
+				UserID:               user.ID,
+				TotalItems:           payload.TotalItems,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
+				return	
+			}
+			
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return

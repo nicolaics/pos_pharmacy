@@ -27,6 +27,9 @@ type PurchaseOrderInvoiceStore interface {
 	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, *User) error
 
 	UpdtaeReceivedQty(poinid int, newQty float64, user *User, mid int) error
+
+	// delete entirely from the db if there's error
+	AbsoluteDeletePurchaseOrderInvoice(poi PurchaseOrderInvoice) error
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
