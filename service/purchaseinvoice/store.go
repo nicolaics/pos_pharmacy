@@ -381,6 +381,42 @@ func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate 
 	return purchaseInvoices, nil
 }
 
+func (s *Store) GetPurchaseInvoicesByDateAndPOINumber(startDate time.Time, endDate time.Time, poiNumber int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT pi.id, pi.number, 
+				supplier.name, 
+				pi.purchase_order_invoice_number, 
+				pi.total_price, pi.description, 
+				user.name, 
+				pi.invoice_date 
+				FROM purchase_invoice AS pi 
+				JOIN supplier ON supplier.id = pi.supplier_id 
+				JOIN user ON user.id = pi.user_id 
+				WHERE (pi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				AND pi.purchase_order_invoice_number = ? 
+				AND pi.deleted_at IS NULL 
+				ORDER BY pi.invoice_date DESC`
+
+	rows, err := s.db.Query(query, startDate, endDate, poiNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	purchaseInvoices := make([]types.PurchaseInvoiceListsReturnPayload, 0)
+
+	for rows.Next() {
+		purchaseInvoice, err := scanRowIntoPurchaseInvoiceLists(rows)
+
+		if err != nil {
+			return nil, err
+		}
+
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
+	}
+
+	return purchaseInvoices, nil
+}
+
 func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, user *types.User) error {
 	query := "UPDATE purchase_invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
 	_, err := s.db.Exec(query, time.Now(), user.ID, purchaseInvoice.ID)

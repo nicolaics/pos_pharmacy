@@ -15,6 +15,7 @@ type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseInvoiceListsReturnPayload, error)
 	GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseInvoiceListsReturnPayload, error)
 	GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseInvoiceListsReturnPayload, error)
+	GetPurchaseInvoicesByDateAndPOINumber(startDate time.Time, endDate time.Time, poiNumber int) ([]PurchaseInvoiceListsReturnPayload, error)
 
 	CreatePurchaseInvoice(PurchaseInvoice) error
 	CreatePurchaseMedicineItems(PurchaseMedicineItem) error

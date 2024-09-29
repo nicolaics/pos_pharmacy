@@ -316,6 +316,18 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 
 			purchaseInvoices = append(purchaseInvoices, temp...)
 		}
+	} else if params == "purchase-order-invoice" {
+		poiNumber, err := strconv.Atoi(val)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		purchaseInvoices, err = h.purchaseInvoiceStore.GetPurchaseInvoicesByDateAndPOINumber(*startDate, *endDate, poiNumber)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
 	} else {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"))
 		return
