@@ -486,6 +486,27 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get produced medicine
+	tempProducedMedicine, err := h.medStore.GetMedicineByID(production.ProducedMedicineID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d doesn't exists", production.ProducedMedicineID))
+		return
+	}
+
+	producedMedicine, err := h.medStore.GetMedicineByBarcode(tempProducedMedicine.Barcode)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d doesn't exists", production.ProducedMedicineID))
+		return
+	}
+
+	// get produced unit ID
+	producedUnit, err := h.unitStore.GetUnitByID(production.ProducedUnitID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("old produced unit id %d not found", production.ProducedUnitID))
+		return
+	}
+	
+
 	err = h.productionStore.DeleteProductionMedicineItems(production, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -496,6 +517,15 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	// reset the previous stock
+	if production.UpdatedToStock {
+		err = subtractStock(h, producedMedicine, producedUnit, float64(production.ProducedQty), user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error subtracting stock: %v", err))
+			return
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("production number %d deleted by %s", production.Number, user.Name))
