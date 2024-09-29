@@ -124,22 +124,24 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.medStore.CreateMedicine(types.Medicine{
-		Barcode:        payload.Barcode,
-		Name:           payload.Name,
-		Qty:            payload.Qty,
-		FirstUnitID:    firstUnit.ID,
-		FirstSubtotal:  payload.FirstSubtotal,
-		FirstDiscount:  payload.FirstDiscount,
-		FirstPrice:     payload.FirstPrice,
-		SecondUnitID:   secondUnit.ID,
-		SecondSubtotal: payload.SecondSubtotal,
-		SecondDiscount: payload.SecondDiscount,
-		SecondPrice:    payload.SecondPrice,
-		ThirdUnitID:    thirdUnit.ID,
-		ThirdSubtotal:  payload.ThirdSubtotal,
-		ThirdDiscount:  payload.ThirdDiscount,
-		ThirdPrice:     payload.ThirdPrice,
-		Description:    payload.Description,
+		Barcode:                    payload.Barcode,
+		Name:                       payload.Name,
+		Qty:                        payload.Qty,
+		FirstUnitID:                firstUnit.ID,
+		FirstSubtotal:              payload.FirstSubtotal,
+		FirstDiscount:              payload.FirstDiscount,
+		FirstPrice:                 payload.FirstPrice,
+		SecondUnitID:               secondUnit.ID,
+		SecondUnitToFirstUnitRatio: payload.SecondUnitToFirstUnitRatio,
+		SecondSubtotal:             payload.SecondSubtotal,
+		SecondDiscount:             payload.SecondDiscount,
+		SecondPrice:                payload.SecondPrice,
+		ThirdUnitID:                thirdUnit.ID,
+		ThirdUnitToFirstUnitRatio:  payload.ThirdUnitToFirstUnitRatio,
+		ThirdSubtotal:              payload.ThirdSubtotal,
+		ThirdDiscount:              payload.ThirdDiscount,
+		ThirdPrice:                 payload.ThirdPrice,
+		Description:                payload.Description,
 	}, user.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -232,7 +234,6 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: return medicine lists return payload instead
 	// get medicine data
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
 	if medicine == nil || err != nil {
@@ -276,9 +277,9 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.medStore.DeleteMedicine(&types.Medicine{
-		ID: medicine.ID,
+		ID:      medicine.ID,
 		Barcode: medicine.Barcode,
-		Name: medicine.Name,
+		Name:    medicine.Name,
 	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -397,22 +398,24 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.medStore.ModifyMedicine(medicine.ID, types.Medicine{
-		Barcode:        payload.NewData.Barcode,
-		Name:           payload.NewData.Name,
-		Qty:            payload.NewData.Qty,
-		FirstUnitID:    firstUnit.ID,
-		FirstSubtotal:  payload.NewData.FirstSubtotal,
-		FirstDiscount:  payload.NewData.FirstDiscount,
-		FirstPrice:     payload.NewData.FirstPrice,
-		SecondUnitID:   secondUnit.ID,
-		SecondSubtotal: payload.NewData.SecondSubtotal,
-		SecondDiscount: payload.NewData.SecondDiscount,
-		SecondPrice:    payload.NewData.SecondPrice,
-		ThirdUnitID:    thirdUnit.ID,
-		ThirdSubtotal:  payload.NewData.ThirdSubtotal,
-		ThirdDiscount:  payload.NewData.ThirdDiscount,
-		ThirdPrice:     payload.NewData.ThirdPrice,
-		Description:    payload.NewData.Description,
+		Barcode:                    payload.NewData.Barcode,
+		Name:                       payload.NewData.Name,
+		Qty:                        payload.NewData.Qty,
+		FirstUnitID:                firstUnit.ID,
+		FirstSubtotal:              payload.NewData.FirstSubtotal,
+		FirstDiscount:              payload.NewData.FirstDiscount,
+		FirstPrice:                 payload.NewData.FirstPrice,
+		SecondUnitID:               secondUnit.ID,
+		SecondUnitToFirstUnitRatio: payload.NewData.SecondUnitToFirstUnitRatio,
+		SecondSubtotal:             payload.NewData.SecondSubtotal,
+		SecondDiscount:             payload.NewData.SecondDiscount,
+		SecondPrice:                payload.NewData.SecondPrice,
+		ThirdUnitID:                thirdUnit.ID,
+		ThirdUnitToFirstUnitRatio:  payload.NewData.ThirdUnitToFirstUnitRatio,
+		ThirdSubtotal:              payload.NewData.ThirdSubtotal,
+		ThirdDiscount:              payload.NewData.ThirdDiscount,
+		ThirdPrice:                 payload.NewData.ThirdPrice,
+		Description:                payload.NewData.Description,
 	}, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
