@@ -123,7 +123,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// add to stock
 	if payload.UpdatedToStock {
-		err = addStock(h, producedMedicine, producedUnit, float64(payload.ProducedQty), user)
+		err = utils.AddStock(h.medStore, producedMedicine, producedUnit, float64(payload.ProducedQty), user)
 		if err != nil {
 			err = h.productionStore.AbsoluteDeleteProduction(types.Production{
 				Number:               payload.Number,
@@ -601,7 +601,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 	// reset the previous stock
 	if production.UpdatedToStock {
-		err = subtractStock(h, producedMedicine, producedUnit, float64(production.ProducedQty), user)
+		err = utils.SubtractStock(h.medStore, producedMedicine, producedUnit, float64(production.ProducedQty), user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error subtracting stock: %v", err))
 			return
@@ -671,7 +671,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	// reset the previous stock
 	if oldProduction.UpdatedToStock {
-		err = subtractStock(h, oldProducedMedicine, oldProducedUnit, float64(oldProduction.ProducedQty), user)
+		err = utils.SubtractStock(h.medStore, oldProducedMedicine, oldProducedUnit, float64(oldProduction.ProducedQty), user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error subtracting stock: %v", err))
 			return
@@ -732,7 +732,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	// add to stock
 	if payload.NewData.UpdatedToStock {
-		err = addStock(h, newProducedMedicine, newProducedUnit, float64(payload.NewData.ProducedQty), user)
+		err = utils.AddStock(h.medStore, newProducedMedicine, newProducedUnit, float64(payload.NewData.ProducedQty), user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
@@ -789,46 +789,4 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production modified by %s", user.Name))
-}
-
-func addStock(h *Handler, medData *types.Medicine, producedUnit *types.Unit, additionalQty float64, user *types.User) error {
-	var updatedQty float64
-
-	if medData.FirstUnitID == producedUnit.ID {
-		updatedQty = (additionalQty + medData.Qty)
-	} else if medData.SecondUnitID == producedUnit.ID {
-		updatedQty = (additionalQty * medData.SecondUnitToFirstUnitRatio) + medData.Qty
-	} else if medData.ThirdUnitID == producedUnit.ID {
-		updatedQty = (additionalQty * medData.ThirdUnitToFirstUnitRatio) + medData.Qty
-	} else {
-		return fmt.Errorf("unknown unit name for %s", medData.Name)
-	}
-
-	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func subtractStock(h *Handler, medData *types.Medicine, producedUnit *types.Unit, subtractionQty float64, user *types.User) error {
-	var updatedQty float64
-
-	if medData.FirstUnitID == producedUnit.ID {
-		updatedQty = (medData.Qty - subtractionQty)
-	} else if medData.SecondUnitID == producedUnit.ID {
-		updatedQty = medData.Qty - (subtractionQty * medData.SecondUnitToFirstUnitRatio)
-	} else if medData.ThirdUnitID == producedUnit.ID {
-		updatedQty = medData.Qty - (subtractionQty * medData.ThirdUnitToFirstUnitRatio)
-	} else {
-		return fmt.Errorf("unknown unit name for %s", medData.Name)
-	}
-
-	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
