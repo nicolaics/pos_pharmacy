@@ -166,6 +166,34 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				fmt.Errorf("purchase invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return
 		}
+
+		err = addStock(h, medData, unit, medicine.Qty, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			return
+		}
+
+		// if medData.FirstUnitID == unit.ID {
+		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (medicine.Qty + medData.Qty), user)
+		// 	if err != nil {
+		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+		// 		return
+		// 	}
+		// } else if medData.SecondUnitID == unit.ID {
+		// 	qtyInFirstUnit := medicine.Qty * medData.SecondUnitToFirstUnitRatio
+		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
+		// 	if err != nil {
+		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+		// 		return
+		// 	}
+		// } else if medData.ThirdUnitID == unit.ID {
+		// 	qtyInFirstUnit := medicine.Qty * medData.ThirdUnitToFirstUnitRatio
+		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
+		// 	if err != nil {
+		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+		// 		return
+		// 	}
+		// }
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice %d successfully created by %s", payload.Number, user.Name))
@@ -465,10 +493,45 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine items don't exist: %v", err))
+		return
+	}
+
 	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	for _, purchaseMedicine := range(purchaseMedicineItems) {
+		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
+			return
+		}
+
+		unit, err := h.unitStore.GetUnitByName(purchaseMedicine.Unit)
+		if unit == nil {
+			err = h.unitStore.CreateUnit(purchaseMedicine.Unit)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, err)
+				return
+			}
+
+			unit, err = h.unitStore.GetUnitByName(purchaseMedicine.Unit)
+		}
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = subtractStock(h, medData, unit, purchaseMedicine.Qty, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			return
+		}
 	}
 
 	err = h.purchaseInvoiceStore.DeletePurchaseInvoice(purchaseInvoice, user)
@@ -534,10 +597,46 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine items don't exist: %v", err))
+		return
+	}
+
 	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	// subtract the stock
+	for _, purchaseMedicine := range(purchaseMedicineItems) {
+		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
+			return
+		}
+
+		unit, err := h.unitStore.GetUnitByName(purchaseMedicine.Unit)
+		if unit == nil {
+			err = h.unitStore.CreateUnit(purchaseMedicine.Unit)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, err)
+				return
+			}
+
+			unit, err = h.unitStore.GetUnitByName(purchaseMedicine.Unit)
+		}
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = subtractStock(h, medData, unit, purchaseMedicine.Qty, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			return
+		}
 	}
 
 	for _, medicine := range payload.NewData.MedicineLists {
@@ -585,7 +684,60 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				fmt.Errorf("purchase invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 			return
 		}
+
+		// add the stock with the new value
+		err = addStock(h, medData, unit, medicine.Qty, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			return
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice modified by %s", user.Name))
+}
+
+func addStock(h *Handler, medData *types.Medicine, unit *types.Unit, additionalQty float64, user *types.User) error {
+	if medData.FirstUnitID == unit.ID {
+		err := h.medStore.UpdateMedicineStock(medData.ID, (additionalQty + medData.Qty), user)
+		if err != nil {
+			return err
+		}
+	} else if medData.SecondUnitID == unit.ID {
+		qtyInFirstUnit := additionalQty * medData.SecondUnitToFirstUnitRatio
+		err := h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
+		if err != nil {
+			return err
+		}
+	} else if medData.ThirdUnitID == unit.ID {
+		qtyInFirstUnit := additionalQty * medData.ThirdUnitToFirstUnitRatio
+		err := h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
+		if err != nil {
+			return err
+		}
+	}
+	
+	return nil
+}
+
+func subtractStock(h *Handler, medData *types.Medicine, unit *types.Unit, subtractionQty float64, user *types.User) error {
+	if medData.FirstUnitID == unit.ID {
+		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - subtractionQty), user)
+		if err != nil {
+			return err
+		}
+	} else if medData.SecondUnitID == unit.ID {
+		qtyInFirstUnit := subtractionQty * medData.SecondUnitToFirstUnitRatio
+		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - qtyInFirstUnit), user)
+		if err != nil {
+			return err
+		}
+	} else if medData.ThirdUnitID == unit.ID {
+		qtyInFirstUnit := subtractionQty * medData.ThirdUnitToFirstUnitRatio
+		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - qtyInFirstUnit), user)
+		if err != nil {
+			return err
+		}
+	}
+	
+	return nil
 }
