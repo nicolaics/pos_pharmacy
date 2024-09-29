@@ -25,6 +25,9 @@ type InvoiceStore interface {
 	DeleteMedicineItems(*Invoice, *User) error
 	DeleteInvoice(*Invoice, *User) error
 	ModifyInvoice(int, Invoice, *User) error
+
+	// delete entirely from the db if there's error
+	AbsoluteDeleteInvoice(invoice Invoice) error
 }
 
 type ViewInvoiceDetailPayload struct {

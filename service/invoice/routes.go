@@ -129,6 +129,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get invoice id
 	invoiceId, err = h.invoiceStore.GetInvoiceID(payload.Number, payload.CustomerID, *invoiceDate)
 	if err != nil {
+		err = h.invoiceStore.AbsoluteDeleteInvoice(types.Invoice{
+			Number:               payload.Number,
+			UserID:               user.ID,
+			CustomerID:           payload.CustomerID,
+			Subtotal:             payload.Subtotal,
+			Discount:             payload.Discount,
+			Tax:                  payload.Tax,
+			TotalPrice:           payload.TotalPrice,
+			PaidAmount:           payload.PaidAmount,
+			ChangeAmount:         payload.ChangeAmount,
+			PaymentMethodID:      paymentMethod.ID,
+			Description:          payload.Description,
+			InvoiceDate:          *invoiceDate,
+		})
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", err))
+			return	
+		}
+		
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d doesn't exists", payload.Number))
 		return
 	}
@@ -136,6 +155,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	for _, medicine := range payload.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
+			err = h.invoiceStore.AbsoluteDeleteInvoice(types.Invoice{
+				Number:               payload.Number,
+				UserID:               user.ID,
+				CustomerID:           payload.CustomerID,
+				Subtotal:             payload.Subtotal,
+				Discount:             payload.Discount,
+				Tax:                  payload.Tax,
+				TotalPrice:           payload.TotalPrice,
+				PaidAmount:           payload.PaidAmount,
+				ChangeAmount:         payload.ChangeAmount,
+				PaymentMethodID:      paymentMethod.ID,
+				Description:          payload.Description,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 			return
 		}
@@ -144,6 +182,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if unit == nil {
 			err = h.unitStore.CreateUnit(medicine.Unit)
 			if err != nil {
+				err = h.invoiceStore.AbsoluteDeleteInvoice(types.Invoice{
+					Number:               payload.Number,
+					UserID:               user.ID,
+					CustomerID:           payload.CustomerID,
+					Subtotal:             payload.Subtotal,
+					Discount:             payload.Discount,
+					Tax:                  payload.Tax,
+					TotalPrice:           payload.TotalPrice,
+					PaidAmount:           payload.PaidAmount,
+					ChangeAmount:         payload.ChangeAmount,
+					PaymentMethodID:      paymentMethod.ID,
+					Description:          payload.Description,
+					InvoiceDate:          *invoiceDate,
+				})
+				if err != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", err))
+					return	
+				}
+
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -151,6 +208,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
 		}
 		if err != nil {
+			err = h.invoiceStore.AbsoluteDeleteInvoice(types.Invoice{
+				Number:               payload.Number,
+				UserID:               user.ID,
+				CustomerID:           payload.CustomerID,
+				Subtotal:             payload.Subtotal,
+				Discount:             payload.Discount,
+				Tax:                  payload.Tax,
+				TotalPrice:           payload.TotalPrice,
+				PaidAmount:           payload.PaidAmount,
+				ChangeAmount:         payload.ChangeAmount,
+				PaymentMethodID:      paymentMethod.ID,
+				Description:          payload.Description,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -165,6 +241,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Subtotal:   medicine.Subtotal,
 		})
 		if err != nil {
+			err = h.invoiceStore.AbsoluteDeleteInvoice(types.Invoice{
+				Number:               payload.Number,
+				UserID:               user.ID,
+				CustomerID:           payload.CustomerID,
+				Subtotal:             payload.Subtotal,
+				Discount:             payload.Discount,
+				Tax:                  payload.Tax,
+				TotalPrice:           payload.TotalPrice,
+				PaidAmount:           payload.PaidAmount,
+				ChangeAmount:         payload.ChangeAmount,
+				PaymentMethodID:      paymentMethod.ID,
+				Description:          payload.Description,
+				InvoiceDate:          *invoiceDate,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", err))
+				return	
+			}
+			
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return

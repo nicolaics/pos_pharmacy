@@ -512,6 +512,43 @@ func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice, user *types.
 	return nil
 }
 
+func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
+	query := `SELECT id FROM invoice WHERE number = ? AND user_id = ? 
+				AND customer_id = ? AND subtotal = ? AND discount = ? 
+				AND tax = ? AND total_price = ? AND paid_amount = ? 
+				AND change_amount = ? AND payment_method_id = ? 
+				AND description = ? AND invoice_date = ?`
+
+	rows, err := s.db.Query(query, invoice.Number, invoice.UserID, invoice.CustomerID, invoice.Subtotal, invoice.Discount,
+									invoice.Tax, invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount, 
+									invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var id int
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if invoice.ID == 0 {
+		return nil
+	}
+
+	query = "DELETE FROM medicine_items WHERE invoice_id = ?"
+	_, _ = s.db.Exec(query, id)
+
+	query = `DELETE FROM invoice WHERE id = ?`
+	_, _ = s.db.Exec(query, id)
+
+	return nil
+}
+
 func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 	invoice := new(types.Invoice)
 
