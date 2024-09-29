@@ -24,6 +24,9 @@ type PurchaseInvoiceStore interface {
 	DeletePurchaseMedicineItems(*PurchaseInvoice, *User) error
 
 	ModifyPurchaseInvoice(int, PurchaseInvoice, *User) error
+
+	// delete entirely from the db if there's error
+	AbsoluteDeletePurchaseInvoice(pi PurchaseInvoice) error
 }
 
 type PurchaseInvoicePayload struct {

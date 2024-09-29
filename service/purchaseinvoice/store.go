@@ -495,6 +495,43 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 	return nil
 }
 
+func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
+	query := `SELECT id FROM purchase_invoice 
+				WHERE number = ? AND company_id = ? AND supplier_id = ? 
+				AND purchase_order_invoice_number = ? AND subtotal = ? 
+				AND discount = ? AND tax = ? AND total_price = ? 
+				AND description = ? AND invoice_date = ?`
+
+	rows, err := s.db.Query(query, pi.Number, pi.CompanyID, pi.SupplierID, pi.PurchaseOrderInvoiceNumber, 
+									pi.Subtotal, pi.Discount, pi.Tax, pi.TotalPrice, 
+									pi.Description, pi.InvoiceDate)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var id int
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if id == 0 {
+		return nil
+	}
+
+	query = "DELETE FROM purchase_medicine_items WHERE purchase_invoice_id = ?"
+	_, _ = s.db.Exec(query, id)
+
+	query = `DELETE FROM purchase_invoice WHERE id = ?`
+	_, _ = s.db.Exec(query, id)
+
+	return nil
+}
+
 func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) {
 	purchaseInvoice := new(types.PurchaseInvoice)
 

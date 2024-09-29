@@ -25,6 +25,9 @@ type PrescriptionStore interface {
 	DeletePrescription(*Prescription, *User) error
 	DeletePrescriptionMedicineItems(*Prescription, *User) error
 	ModifyPrescription(int, Prescription, *User) error
+
+	// delete entirely from the db if there's error
+	AbsoluteDeletePrescription(presc Prescription) error
 }
 
 type RegisterPrescriptionPayload struct {

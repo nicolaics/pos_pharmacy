@@ -480,6 +480,44 @@ func (s *Store) ModifyProduction(id int, production types.Production, user *type
 	return nil
 }
 
+func (s *Store) AbsoluteDeleteProduction(prod types.Production) error {
+	query := `SELECT id FROM production 
+				WHERE number = ? AND produced_medicine_id = ? 
+				AND produced_qty = ? AND produced_unit_id = ? 
+				AND production_date = ? AND description = ? 
+				AND updated_to_stock = ? AND updated_to_account = ? 
+				AND total_cost = ?`
+
+	rows, err := s.db.Query(query, prod.Number, prod.ProducedMedicineID, prod.ProducedQty, prod.ProducedUnitID,
+									prod.ProductionDate, prod.Description, prod.UpdatedToStock, prod.UpdatedToAccount,
+									prod.TotalCost)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var id int
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if id == 0 {
+		return nil
+	}
+
+	query = "DELETE FROM production_medicine_items WHERE production_id = ?"
+	_, _ = s.db.Exec(query, id)
+
+	query = `DELETE FROM production WHERE id = ?`
+	_, _ = s.db.Exec(query, id)
+
+	return nil
+}
+
 func scanRowIntoProduction(rows *sql.Rows) (*types.Production, error) {
 	production := new(types.Production)
 

@@ -24,6 +24,9 @@ type ProductionStore interface {
 	DeleteProduction(*Production, *User) error
 	DeleteProductionMedicineItems(*Production, *User) error
 	ModifyProduction(int, Production, *User) error
+
+	// delete entirely from the db if there's error
+	AbsoluteDeleteProduction(prod Production) error
 }
 
 type RegisterProductionPayload struct {

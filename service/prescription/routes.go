@@ -172,6 +172,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	prescriptionId, err = h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
 		patient.ID, payload.TotalPrice, doctor.ID)
 	if err != nil {
+		err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+			InvoiceID:            invoiceId,
+			Number:               payload.Number,
+			PrescriptionDate:     *prescriptionDate,
+			PatientID:            patient.ID,
+			DoctorID:             doctor.ID,
+			Qty:                  payload.Qty,
+			Price:                payload.Price,
+			TotalPrice:           payload.TotalPrice,
+			Description:          payload.Description,
+			UserID:               user.ID,
+		})
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+			return	
+		}
+
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d doesn't exists", payload.Number))
 		return
 	}
@@ -179,6 +196,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	for _, medicine := range payload.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
+			err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+				InvoiceID:            invoiceId,
+				Number:               payload.Number,
+				PrescriptionDate:     *prescriptionDate,
+				PatientID:            patient.ID,
+				DoctorID:             doctor.ID,
+				Qty:                  payload.Qty,
+				Price:                payload.Price,
+				TotalPrice:           payload.TotalPrice,
+				Description:          payload.Description,
+				UserID:               user.ID,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 			return
 		}
@@ -187,6 +221,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if unit == nil {
 			err = h.unitStore.CreateUnit(medicine.Unit)
 			if err != nil {
+				err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+					InvoiceID:            invoiceId,
+					Number:               payload.Number,
+					PrescriptionDate:     *prescriptionDate,
+					PatientID:            patient.ID,
+					DoctorID:             doctor.ID,
+					Qty:                  payload.Qty,
+					Price:                payload.Price,
+					TotalPrice:           payload.TotalPrice,
+					Description:          payload.Description,
+					UserID:               user.ID,
+				})
+				if err != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+					return	
+				}
+
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -194,6 +245,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
 		}
 		if err != nil {
+			err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+				InvoiceID:            invoiceId,
+				Number:               payload.Number,
+				PrescriptionDate:     *prescriptionDate,
+				PatientID:            patient.ID,
+				DoctorID:             doctor.ID,
+				Qty:                  payload.Qty,
+				Price:                payload.Price,
+				TotalPrice:           payload.TotalPrice,
+				Description:          payload.Description,
+				UserID:               user.ID,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -208,6 +276,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Subtotal:       medicine.Subtotal,
 		})
 		if err != nil {
+			err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+				InvoiceID:            invoiceId,
+				Number:               payload.Number,
+				PrescriptionDate:     *prescriptionDate,
+				PatientID:            patient.ID,
+				DoctorID:             doctor.ID,
+				Qty:                  payload.Qty,
+				Price:                payload.Price,
+				TotalPrice:           payload.TotalPrice,
+				Description:          payload.Description,
+				UserID:               user.ID,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+				return	
+			}
+			
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("prescription %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return

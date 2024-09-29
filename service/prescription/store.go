@@ -549,6 +549,42 @@ func (s *Store) ModifyPrescription(id int, prescription types.Prescription, user
 	return nil
 }
 
+func (s *Store) AbsoluteDeletePrescription(presc types.Prescription) error {
+	query := `SELECT id FROM prescription 
+				WHERE number = ? AND prescription_date = ? 
+				AND patient_id = ? AND doctor_id = ? 
+				AND qty = ? AND price = ? AND total_price = ? 
+				AND description = ? AND invoice_id = ?`
+
+	rows, err := s.db.Query(query, presc.Number, presc.PrescriptionDate, presc.PatientID, presc.DoctorID,
+									presc.Qty, presc.Price, presc.TotalPrice, presc.Description, presc.InvoiceID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var id int
+
+	for rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if id == 0 {
+		return nil
+	}
+
+	query = "DELETE FROM prescription_medicine_items WHERE prescription_id = ?"
+	_, _ = s.db.Exec(query, id)
+
+	query = `DELETE FROM prescription WHERE id = ?`
+	_, _ = s.db.Exec(query, id)
+
+	return nil
+}
+
 func scanRowIntoPrescription(rows *sql.Rows) (*types.Prescription, error) {
 	prescription := new(types.Prescription)
 

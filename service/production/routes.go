@@ -125,6 +125,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if payload.UpdatedToStock {
 		err = addStock(h, producedMedicine, producedUnit, float64(payload.ProducedQty), user)
 		if err != nil {
+			err = h.productionStore.AbsoluteDeleteProduction(types.Production{
+				Number:               payload.Number,
+				ProducedMedicineID:   producedMedicine.ID,
+				ProducedQty:          payload.ProducedQty,
+				ProducedUnitID:       producedUnit.ID,
+				ProductionDate:       *prodDate,
+				Description:          payload.Description,
+				UpdatedToStock:       payload.UpdatedToStock,
+				UpdatedToAccount:     payload.UpdatedToAccount,
+				TotalCost:            payload.TotalCost,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete production: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
@@ -133,6 +149,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get production ID
 	production, err = h.productionStore.GetProductionByNumber(payload.Number)
 	if err != nil {
+		err = h.productionStore.AbsoluteDeleteProduction(types.Production{
+			Number:               payload.Number,
+			ProducedMedicineID:   producedMedicine.ID,
+			ProducedQty:          payload.ProducedQty,
+			ProducedUnitID:       producedUnit.ID,
+			ProductionDate:       *prodDate,
+			Description:          payload.Description,
+			UpdatedToStock:       payload.UpdatedToStock,
+			UpdatedToAccount:     payload.UpdatedToAccount,
+			TotalCost:            payload.TotalCost,
+		})
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete production: %v", err))
+			return	
+		}
+
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists: %v", payload.Number, err))
 		return
 	}
@@ -140,6 +172,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	for _, medicine := range payload.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
+			err = h.productionStore.AbsoluteDeleteProduction(types.Production{
+				Number:               payload.Number,
+				ProducedMedicineID:   producedMedicine.ID,
+				ProducedQty:          payload.ProducedQty,
+				ProducedUnitID:       producedUnit.ID,
+				ProductionDate:       *prodDate,
+				Description:          payload.Description,
+				UpdatedToStock:       payload.UpdatedToStock,
+				UpdatedToAccount:     payload.UpdatedToAccount,
+				TotalCost:            payload.TotalCost,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete production: %v", err))
+				return	
+			}
+
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 			return
 		}
@@ -148,6 +196,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if unit == nil {
 			err = h.unitStore.CreateUnit(medicine.Unit)
 			if err != nil {
+				err = h.productionStore.AbsoluteDeleteProduction(types.Production{
+					Number:               payload.Number,
+					ProducedMedicineID:   producedMedicine.ID,
+					ProducedQty:          payload.ProducedQty,
+					ProducedUnitID:       producedUnit.ID,
+					ProductionDate:       *prodDate,
+					Description:          payload.Description,
+					UpdatedToStock:       payload.UpdatedToStock,
+					UpdatedToAccount:     payload.UpdatedToAccount,
+					TotalCost:            payload.TotalCost,
+				})
+				if err != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete production: %v", err))
+					return	
+				}
+
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -167,6 +231,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Cost:         medicine.Cost,
 		})
 		if err != nil {
+			err = h.productionStore.AbsoluteDeleteProduction(types.Production{
+				Number:               payload.Number,
+				ProducedMedicineID:   producedMedicine.ID,
+				ProducedQty:          payload.ProducedQty,
+				ProducedUnitID:       producedUnit.ID,
+				ProductionDate:       *prodDate,
+				Description:          payload.Description,
+				UpdatedToStock:       payload.UpdatedToStock,
+				UpdatedToAccount:     payload.UpdatedToAccount,
+				TotalCost:            payload.TotalCost,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete production: %v", err))
+				return	
+			}
+			
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("production number %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return
