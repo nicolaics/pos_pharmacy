@@ -8,7 +8,6 @@ import (
 type ProductionStore interface {
 	GetProductionByNumber(int) (*Production, error)
 	GetProductionByID(int) (*Production, error)
-	GetProductionID(number int, producedMedId int, prodDate time.Time, totalCost float64) (int, error)
 	GetNumberOfProductions() (int, error)
 
 	GetProductionsByDate(startDate time.Time, endDate time.Time) ([]ProductionListsReturnPayload, error)
@@ -32,6 +31,7 @@ type RegisterProductionPayload struct {
 	ProducedMedicineBarcode string  `json:"producedMedicineBarcode" validate:"required"`
 	ProducedMedicineName    string  `json:"producedMedicineName" validate:"required"`
 	ProducedQty             int     `json:"producedQty" validate:"required"`
+	ProducedUnit            string  `json:"producedUnit" validate:"required"`
 	ProductionDate          string  `json:"productionDate" validate:"required"`
 	Description             string  `json:"description"`
 	UpdatedToStock          bool    `json:"updatedToStock"`
@@ -86,6 +86,7 @@ type ProductionDetailPayload struct {
 	} `json:"producedMedicine"`
 
 	ProducedQty      int       `json:"producedQty"`
+	ProducedUnit     string    `json:"producedUnit"`
 	ProductionDate   time.Time `json:"productionDate"`
 	Description      string    `json:"description"`
 	UpdatedToStock   bool      `json:"updatedToStock"`
@@ -110,6 +111,7 @@ type ProductionListsReturnPayload struct {
 	Number               int       `json:"number"`
 	ProducedMedicineName string    `json:"producedMedicineName"`
 	ProducedQty          int       `json:"producedQty"`
+	ProducedUnit         string    `json:"producedUnit"`
 	ProductionDate       time.Time `json:"productionDate"`
 	Description          string    `json:"description"`
 	UpdatedToStock       bool      `json:"updatedToStock"`
@@ -136,6 +138,7 @@ type Production struct {
 	Number               int           `json:"number"`
 	ProducedMedicineID   int           `json:"producedMedicineId"`
 	ProducedQty          int           `json:"producedQty"`
+	ProducedUnitID       int           `json:"producedUnitId"`
 	ProductionDate       time.Time     `json:"productionDate"`
 	Description          string        `json:"description"`
 	UpdatedToStock       bool          `json:"updatedToStock"`
