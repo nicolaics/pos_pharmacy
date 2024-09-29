@@ -19,11 +19,12 @@ type Handler struct {
 	companyProfileStore  types.CompanyProfileStore
 	medStore             types.MedicineStore
 	unitStore            types.UnitStore
+	poInvoiceStore       types.PurchaseOrderInvoiceStore
 }
 
 func NewHandler(purchaseInvoiceStore types.PurchaseInvoiceStore, userStore types.UserStore,
 	supplierStore types.SupplierStore, companyProfileStore types.CompanyProfileStore,
-	medStore types.MedicineStore, unitStore types.UnitStore) *Handler {
+	medStore types.MedicineStore, unitStore types.UnitStore, poInvoiceStore types.PurchaseOrderInvoiceStore) *Handler {
 	return &Handler{
 		purchaseInvoiceStore: purchaseInvoiceStore,
 		userStore:            userStore,
@@ -31,6 +32,7 @@ func NewHandler(purchaseInvoiceStore types.PurchaseInvoiceStore, userStore types
 		companyProfileStore:  companyProfileStore,
 		medStore:             medStore,
 		unitStore:            unitStore,
+		poInvoiceStore:       poInvoiceStore,
 	}
 }
 
@@ -97,17 +99,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.purchaseInvoiceStore.CreatePurchaseInvoice(types.PurchaseInvoice{
-		Number:               payload.Number,
-		CompanyID:            payload.CompanyID,
-		SupplierID:           payload.SupplierID,
-		Subtotal:             payload.Subtotal,
-		Discount:             payload.Discount,
-		Tax:                  payload.Tax,
-		TotalPrice:           payload.TotalPrice,
-		Description:          payload.Description,
-		UserID:               user.ID,
-		InvoiceDate:          *invoiceDate,
-		LastModifiedByUserID: user.ID,
+		Number:                     payload.Number,
+		CompanyID:                  payload.CompanyID,
+		SupplierID:                 payload.SupplierID,
+		PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
+		Subtotal:                   payload.Subtotal,
+		Discount:                   payload.Discount,
+		Tax:                        payload.Tax,
+		TotalPrice:                 payload.TotalPrice,
+		Description:                payload.Description,
+		UserID:                     user.ID,
+		InvoiceDate:                *invoiceDate,
+		LastModifiedByUserID:       user.ID,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -167,33 +170,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// update stock
 		err = addStock(h, medData, unit, medicine.Qty, user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 
-		// if medData.FirstUnitID == unit.ID {
-		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (medicine.Qty + medData.Qty), user)
-		// 	if err != nil {
-		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
-		// 		return
-		// 	}
-		// } else if medData.SecondUnitID == unit.ID {
-		// 	qtyInFirstUnit := medicine.Qty * medData.SecondUnitToFirstUnitRatio
-		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
-		// 	if err != nil {
-		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
-		// 		return
-		// 	}
-		// } else if medData.ThirdUnitID == unit.ID {
-		// 	qtyInFirstUnit := medicine.Qty * medData.ThirdUnitToFirstUnitRatio
-		// 	err = h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
-		// 	if err != nil {
-		// 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
-		// 		return
-		// 	}
-		// }
+		// update received qty
+		if payload.PurchaseOrderInvoiceNumber != 0 {
+			err = updateReceivedQty(h, payload.PurchaseOrderInvoiceNumber, medData, medicine.Qty, unit, user, 1)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
+				return
+			}
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice %d successfully created by %s", payload.Number, user.Name))
@@ -505,7 +496,8 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, purchaseMedicine := range(purchaseMedicineItems) {
+	// subtract stock and received qty
+	for _, purchaseMedicine := range purchaseMedicineItems {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
@@ -531,6 +523,15 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
+		}
+
+		// update received qty
+		if purchaseInvoice.PurchaseOrderInvoiceNumber != 0 {
+			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderInvoiceNumber, medData, purchaseMedicine.Qty, unit, user, 0)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
+				return
+			}
 		}
 	}
 
@@ -609,8 +610,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// subtract the stock
-	for _, purchaseMedicine := range(purchaseMedicineItems) {
+	// subtract the stock and received qty
+	for _, purchaseMedicine := range purchaseMedicineItems {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
@@ -636,6 +637,15 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
+		}
+
+		// update received qty
+		if purchaseInvoice.PurchaseOrderInvoiceNumber != 0 {
+			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderInvoiceNumber, medData, purchaseMedicine.Qty, unit, user, 0)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
+				return
+			}
 		}
 	}
 
@@ -691,57 +701,182 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
+
+		// update received qty
+		if purchaseInvoice.PurchaseOrderInvoiceNumber != 0 {
+			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderInvoiceNumber, medData, medicine.Qty, unit, user, 1)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
+				return
+			}
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice modified by %s", user.Name))
 }
 
 func addStock(h *Handler, medData *types.Medicine, unit *types.Unit, additionalQty float64, user *types.User) error {
+	var updatedQty float64
+
 	if medData.FirstUnitID == unit.ID {
-		err := h.medStore.UpdateMedicineStock(medData.ID, (additionalQty + medData.Qty), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = (additionalQty + medData.Qty)
 	} else if medData.SecondUnitID == unit.ID {
-		qtyInFirstUnit := additionalQty * medData.SecondUnitToFirstUnitRatio
-		err := h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = (additionalQty * medData.SecondUnitToFirstUnitRatio) + medData.Qty
 	} else if medData.ThirdUnitID == unit.ID {
-		qtyInFirstUnit := additionalQty * medData.ThirdUnitToFirstUnitRatio
-		err := h.medStore.UpdateMedicineStock(medData.ID, (qtyInFirstUnit + medData.Qty), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = (additionalQty * medData.ThirdUnitToFirstUnitRatio) + medData.Qty
 	} else {
 		return fmt.Errorf("unknown unit name for %s", medData.Name)
 	}
-	
+
+	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func subtractStock(h *Handler, medData *types.Medicine, unit *types.Unit, subtractionQty float64, user *types.User) error {
+	var updatedQty float64
+
 	if medData.FirstUnitID == unit.ID {
-		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - subtractionQty), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = (medData.Qty - subtractionQty)
 	} else if medData.SecondUnitID == unit.ID {
-		qtyInFirstUnit := subtractionQty * medData.SecondUnitToFirstUnitRatio
-		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - qtyInFirstUnit), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = medData.Qty - (subtractionQty * medData.SecondUnitToFirstUnitRatio)
 	} else if medData.ThirdUnitID == unit.ID {
-		qtyInFirstUnit := subtractionQty * medData.ThirdUnitToFirstUnitRatio
-		err := h.medStore.UpdateMedicineStock(medData.ID, (medData.Qty - qtyInFirstUnit), user)
-		if err != nil {
-			return err
-		}
+		updatedQty = medData.Qty - (subtractionQty * medData.ThirdUnitToFirstUnitRatio)
 	} else {
 		return fmt.Errorf("unknown unit name for %s", medData.Name)
 	}
-	
+
+	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// req_type == 0, means subtract
+// req_typ == 1, means add
+func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty float64, receivedPurchasedUnit *types.Unit, user *types.User, req_type int) error {
+	purchaseOrderInvoice, err := h.poInvoiceStore.GetPurchaseOrderInvoicesByNumber(poinn)
+	if err != nil {
+		return fmt.Errorf("purchase order invoice %d not found: %v", poinn, err)
+	}
+
+	purchaseOrderMeds, err := h.poInvoiceStore.GetPurchaseOrderItems(purchaseOrderInvoice.ID)
+	if err != nil {
+		return fmt.Errorf("purchase order items not found: %v", err)
+	}
+
+	for _, purchaseOrderMed := range purchaseOrderMeds {
+		medPurchaseData, err := h.medStore.GetMedicineByBarcode(purchaseOrderMed.MedicineBarcode)
+		if err != nil {
+			return fmt.Errorf("medicine %s doesn't exists", purchaseOrderMed.MedicineName)
+		}
+
+		if medPurchaseData.ID == medData.ID {
+			poUnit, err := h.unitStore.GetUnitByName(purchaseOrderMed.Unit)
+			if err != nil {
+				return fmt.Errorf("po unit error: %v", err)
+			}
+			
+			if req_type == 0 {
+				if purchaseOrderMed.ReceivedQty == 0 {
+					return nil
+				}
+
+				err = subtractReceivedQty(h, medData, &purchaseOrderMed, addQty, poUnit, receivedPurchasedUnit, purchaseOrderInvoice.ID, user)
+			} else {
+				// update received qty
+				err = addReceivedQty(h, medData, &purchaseOrderMed, addQty, poUnit, receivedPurchasedUnit, purchaseOrderInvoice.ID, user)
+			}
+			if err != nil {
+				return fmt.Errorf("update received qty error: %v", err)
+			}
+
+			return nil
+		}
+	}
+	return nil
+	// return fmt.Errorf("medicine not found in purchase order invoice")
+}
+
+func addReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemsReturn, additionalReceivedQty float64,
+	poUnit *types.Unit, purchasedUnit *types.Unit, poiid int, user *types.User) error {
+	var purchasedOrderQty float64
+	var purchasedReceivedQty float64
+	var updatedQty float64
+
+	if medData.FirstUnitID == poUnit.ID {
+		purchasedOrderQty = purchaseOrderMed.OrderQty
+		purchasedReceivedQty = purchaseOrderMed.ReceivedQty
+	} else if medData.SecondUnitID == poUnit.ID {
+		purchasedOrderQty = (purchaseOrderMed.OrderQty * medData.SecondUnitToFirstUnitRatio)
+		purchasedReceivedQty = (purchaseOrderMed.ReceivedQty * medData.SecondUnitToFirstUnitRatio)
+	} else if medData.ThirdUnitID == poUnit.ID {
+		purchasedOrderQty = (purchaseOrderMed.OrderQty * medData.ThirdUnitToFirstUnitRatio)
+		purchasedReceivedQty = (purchaseOrderMed.ReceivedQty * medData.ThirdUnitToFirstUnitRatio)
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	if medData.FirstUnitID == purchasedUnit.ID {
+		updatedQty = (additionalReceivedQty + purchasedReceivedQty)
+	} else if medData.SecondUnitID == purchasedUnit.ID {
+		updatedQty = (additionalReceivedQty * medData.SecondUnitToFirstUnitRatio) + purchasedReceivedQty
+	} else if medData.ThirdUnitID == purchasedUnit.ID {
+		updatedQty = (additionalReceivedQty * medData.ThirdUnitToFirstUnitRatio) + purchasedReceivedQty
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	if updatedQty > purchasedOrderQty {
+		return fmt.Errorf("received medicine is larger than ordered")
+	}
+
+	err := h.poInvoiceStore.UpdtaeReceivedQty(poiid, updatedQty, user, medData.ID)
+	if err != nil {
+		return fmt.Errorf("update error: %v", err)
+	}
+
+	return nil
+}
+
+func subtractReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemsReturn, additionalReceivedQty float64,
+	poUnit *types.Unit, purchasedUnit *types.Unit, poiid int, user *types.User) error {
+	var purchasedReceivedQty float64
+	var updatedQty float64
+
+	if medData.FirstUnitID == poUnit.ID {
+		purchasedReceivedQty = purchaseOrderMed.ReceivedQty
+	} else if medData.SecondUnitID == poUnit.ID {
+		purchasedReceivedQty = (purchaseOrderMed.ReceivedQty * medData.SecondUnitToFirstUnitRatio)
+	} else if medData.ThirdUnitID == poUnit.ID {
+		purchasedReceivedQty = (purchaseOrderMed.ReceivedQty * medData.ThirdUnitToFirstUnitRatio)
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	if medData.FirstUnitID == purchasedUnit.ID {
+		updatedQty = (purchasedReceivedQty - additionalReceivedQty)
+	} else if medData.SecondUnitID == purchasedUnit.ID {
+		updatedQty = purchasedReceivedQty - (additionalReceivedQty * medData.SecondUnitToFirstUnitRatio)
+	} else if medData.ThirdUnitID == purchasedUnit.ID {
+		updatedQty = purchasedReceivedQty - (additionalReceivedQty * medData.ThirdUnitToFirstUnitRatio)
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	if updatedQty < 0 {
+		return fmt.Errorf("received medicine is smaller than 0")
+	}
+
+	err := h.poInvoiceStore.UpdtaeReceivedQty(poiid, updatedQty, user, medData.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

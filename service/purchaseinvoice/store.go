@@ -96,20 +96,21 @@ func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, 
 
 func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) error {
 	values := "?"
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 11; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_invoice (
-		number, company_id, supplier_id, subtotal, discount, tax, total_price, 
-		description, user_id, invoice_date, last_modified_by_user_id
+		number, company_id, supplier_id, purchase_order_invoice_number, subtotal, discount, tax, 
+		total_price, description, user_id, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
-		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.UserID,
-		purchaseInvoice.InvoiceDate, purchaseInvoice.UserID)
+		purchaseInvoice.PurchaseOrderInvoiceNumber, purchaseInvoice.Subtotal, 
+		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice, 
+		purchaseInvoice.Description, purchaseInvoice.UserID, purchaseInvoice.InvoiceDate, 
+		purchaseInvoice.UserID)
 	if err != nil {
 		return err
 	}
@@ -180,6 +181,7 @@ func (s *Store) GetPurchaseMedicineItems(purchaseInvoiceId int) ([]types.Purchas
 func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
+				pi.purchase_order_invoice_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -236,6 +238,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 	if count == 0 {
 		query = `SELECT pi.id, pi.number, 
 					supplier.name, 
+					pi.purchase_order_invoice_number, 
 					pi.total_price, pi.description, 
 					user.name, 
 					pi.invoice_date 
@@ -275,6 +278,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 
 	query = `SELECT pi.id, pi.number, 
 					supplier.name, 
+					pi.purchase_order_invoice_number, 
 					pi.total_price, pi.description, 
 					user.name, 
 					pi.invoice_date 
@@ -308,6 +312,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
+				pi.purchase_order_invoice_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -343,6 +348,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endD
 func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
+				pi.purchase_order_invoice_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -435,15 +441,16 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 	}
 
 	query := `UPDATE purchase_invoice SET 
-				number = ?, company_id = ?, supplier_id = ?, subtotal = ?, discount = ?, 
-				tax = ?, total_price = ?, description = ?, invoice_date = ?, last_modified = ?,
-				last_modified_by_user_id = ? 
+				number = ?, company_id = ?, supplier_id = ?, purchase_order_invoice_number = ?, 
+				subtotal = ?, discount = ?, tax = ?, total_price = ?, description = ?, 
+				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				 WHERE id = ?`
 
 	_, err = s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
-		purchaseInvoice.Subtotal, purchaseInvoice.Discount, purchaseInvoice.Tax,
-		purchaseInvoice.TotalPrice, purchaseInvoice.Description, purchaseInvoice.InvoiceDate,
+		purchaseInvoice.PurchaseOrderInvoiceNumber, purchaseInvoice.Subtotal, 
+		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice, 
+		purchaseInvoice.Description, purchaseInvoice.InvoiceDate, 
 		time.Now(), purchaseInvoice.LastModifiedByUserID, piid)
 	if err != nil {
 		return err
@@ -460,6 +467,7 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.Number,
 		&purchaseInvoice.CompanyID,
 		&purchaseInvoice.SupplierID,
+		&purchaseInvoice.PurchaseOrderInvoiceNumber,
 		&purchaseInvoice.Subtotal,
 		&purchaseInvoice.Discount,
 		&purchaseInvoice.Tax,
@@ -492,6 +500,7 @@ func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceList
 		&purchaseInvoice.ID,
 		&purchaseInvoice.Number,
 		&purchaseInvoice.SupplierName,
+		&purchaseInvoice.PurchaseOrderInvoiceNumber,
 		&purchaseInvoice.TotalPrice,
 		&purchaseInvoice.Description,
 		&purchaseInvoice.UserName,

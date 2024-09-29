@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) ([]types.PurchaseOrderInvoice, error) {
+func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) (*types.PurchaseOrderInvoice, error) {
 	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND deleted_at IS NULL"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
@@ -26,19 +26,21 @@ func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) ([]types.PurchaseOr
 	}
 	defer rows.Close()
 
-	purchaseOrderInvoices := make([]types.PurchaseOrderInvoice, 0)
+	purchaseOrderInvoice := new(types.PurchaseOrderInvoice)
 
 	for rows.Next() {
-		purchaseOrderInvoice, err := scanRowIntoPurchaseOrderInvoice(rows)
+		purchaseOrderInvoice, err = scanRowIntoPurchaseOrderInvoice(rows)
 
 		if err != nil {
 			return nil, err
 		}
-
-		purchaseOrderInvoices = append(purchaseOrderInvoices, *purchaseOrderInvoice)
 	}
 
-	return purchaseOrderInvoices, nil
+	if purchaseOrderInvoice.ID == 0 {
+		return nil, fmt.Errorf("purchase order invoice not found")
+	}
+
+	return purchaseOrderInvoice, nil
 }
 
 func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice, error) {
@@ -350,7 +352,7 @@ func (s *Store) GetPurchaseOrderItems(purchaseOrderInvoiceId int) ([]types.Purch
 				poit.remarks  
 				FROM purchase_order_items as poit 
 				JOIN purchase_order_invoice as poin 
-					ON poit.purchase_order_invoice_id = purchase_order_invoice.id 
+					ON poit.purchase_order_invoice_id = poin.id 
 				JOIN medicine ON poit.medicine_id = medicine.id 
 				JOIN unit ON poit.unit_id = unit.id 
 				WHERE poin.id = ? AND poin.deleted_at IS NULL`
@@ -445,6 +447,47 @@ func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types
 		purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
 		purchaseOrderInvoice.TotalItems, purchaseOrderInvoice.InvoiceDate,
 		time.Now(), purchaseOrderInvoice.LastModifiedByUserID, poiid)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, mid int) error {
+	data, err := s.GetPurchaseOrderItems(poinid)
+	if err != nil {
+		return err
+	}
+
+	purchaseOrderInvoice, err := s.GetPurchaseOrderInvoiceByID(poinid)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"purchase_order_invoice": purchaseOrderInvoice,
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("modify", "purchase-order-invoice", user.Name, purchaseOrderInvoice.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	query := `UPDATE purchase_order_items 
+				SET received_qty = ? WHERE purchase_order_invoice_id = ? AND medicine_id = ?`
+
+	_, err = s.db.Exec(query, newQty, poinid, mid)
+	if err != nil {
+		return err
+	}
+
+	query = `UPDATE purchase_order_invoice 
+				SET last_modified = ?, last_modified_by_user_id = ? 
+				WHERE id = ?`
+
+	_, err = s.db.Exec(query, time.Now(), user.ID, poinid)
 	if err != nil {
 		return err
 	}

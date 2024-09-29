@@ -26,16 +26,17 @@ type PurchaseInvoiceStore interface {
 }
 
 type PurchaseInvoicePayload struct {
-	Number        int                           `json:"number" validate:"required"`
-	CompanyID     int                           `json:"companyId" validate:"required"` // can get the ID from the text box
-	SupplierID    int                           `json:"supplierId" validate:"required"`
-	Subtotal      float64                       `json:"subtotal" validate:"required"`
-	Discount      float64                       `json:"discount"`
-	Tax           float64                       `json:"tax" validate:"required"`
-	TotalPrice    float64                       `json:"totalPrice" validate:"required"`
-	Description   string                        `json:"description"`
-	InvoiceDate   string                        `json:"invoiceDate" validate:"required"`
-	MedicineLists []PurchaseMedicineListPayload `json:"purchaseMedicineList" validate:"required"`
+	Number                     int                           `json:"number" validate:"required"`
+	CompanyID                  int                           `json:"companyId" validate:"required"` // can get the ID from the text box
+	SupplierID                 int                           `json:"supplierId" validate:"required"`
+	PurchaseOrderInvoiceNumber int                           `json:"purchaseOrderInvoiceNumber"`
+	Subtotal                   float64                       `json:"subtotal" validate:"required"`
+	Discount                   float64                       `json:"discount"`
+	Tax                        float64                       `json:"tax" validate:"required"`
+	TotalPrice                 float64                       `json:"totalPrice" validate:"required"`
+	Description                string                        `json:"description"`
+	InvoiceDate                string                        `json:"invoiceDate" validate:"required"`
+	MedicineLists              []PurchaseMedicineListPayload `json:"purchaseMedicineList" validate:"required"`
 }
 
 type PurchaseMedicineListPayload struct {
@@ -119,18 +120,21 @@ type PurchaseInvoiceDetailPayload struct {
 		Name string `json:"name"`
 	} `json:"user"`
 
+	PurchaseOrderInvoiceNumber int `json:"purchaseOrderInvoiceNumber"`
+
 	MedicineLists []PurchaseMedicineItemsReturn `json:"medicineLists"`
 }
 
 // view the lists of the purchase invoice
 type PurchaseInvoiceListsReturnPayload struct {
-	ID           int       `json:"id"`
-	Number       int       `json:"number"`
-	SupplierName string    `json:"supplierName"`
-	TotalPrice   float64   `json:"totalPrice"`
-	Description  string    `json:"description"`
-	UserName     string    `json:"userName"`
-	InvoiceDate  time.Time `json:"invoiceDate"`
+	ID                         int       `json:"id"`
+	Number                     int       `json:"number"`
+	SupplierName               string    `json:"supplierName"`
+	PurchaseOrderInvoiceNumber int       `json:"purchaseOrderInvoiceNumber"`
+	TotalPrice                 float64   `json:"totalPrice"`
+	Description                string    `json:"description"`
+	UserName                   string    `json:"userName"`
+	InvoiceDate                time.Time `json:"invoiceDate"`
 }
 
 type DeletePurchaseInvoice struct {
@@ -138,22 +142,23 @@ type DeletePurchaseInvoice struct {
 }
 
 type PurchaseInvoice struct {
-	ID                   int           `json:"id"`
-	Number               int           `json:"number"`
-	CompanyID            int           `json:"companyId"`
-	SupplierID           int           `json:"supplierId"`
-	Subtotal             float64       `json:"subtotal"`
-	Discount             float64       `json:"discount"`
-	Tax                  float64       `json:"tax"`
-	TotalPrice           float64       `json:"totalPrice"`
-	Description          string        `json:"description"`
-	UserID               int           `json:"userId"`
-	InvoiceDate          time.Time     `json:"invoiceDate"`
-	CreatedAt            time.Time     `json:"createdAt"`
-	LastModified         time.Time     `json:"lastModified"`
-	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
-	DeletedAt            sql.NullTime  `json:"deletedAt"`
-	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
+	ID                         int           `json:"id"`
+	Number                     int           `json:"number"`
+	CompanyID                  int           `json:"companyId"`
+	SupplierID                 int           `json:"supplierId"`
+	PurchaseOrderInvoiceNumber int           `json:"purchaseOrderInvoiceNumber"`
+	Subtotal                   float64       `json:"subtotal"`
+	Discount                   float64       `json:"discount"`
+	Tax                        float64       `json:"tax"`
+	TotalPrice                 float64       `json:"totalPrice"`
+	Description                string        `json:"description"`
+	UserID                     int           `json:"userId"`
+	InvoiceDate                time.Time     `json:"invoiceDate"`
+	CreatedAt                  time.Time     `json:"createdAt"`
+	LastModified               time.Time     `json:"lastModified"`
+	LastModifiedByUserID       int           `json:"lastModifiedByUserId"`
+	DeletedAt                  sql.NullTime  `json:"deletedAt"`
+	DeletedByUserID            sql.NullInt64 `json:"deletedByUserId"`
 }
 
 type PurchaseMedicineItem struct {

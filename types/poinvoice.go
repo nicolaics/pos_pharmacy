@@ -6,7 +6,7 @@ import (
 )
 
 type PurchaseOrderInvoiceStore interface {
-	GetPurchaseOrderInvoicesByNumber(int) ([]PurchaseOrderInvoice, error)
+	GetPurchaseOrderInvoicesByNumber(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, totalItems int, invoiceDate time.Time) (int, error)
 	GetNumberOfPurchaseOrderInvoices() (int, error)
@@ -25,6 +25,8 @@ type PurchaseOrderInvoiceStore interface {
 	DeletePurchaseOrderItems(*PurchaseOrderInvoice, *User) error
 
 	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, *User) error
+
+	UpdtaeReceivedQty(poinid int, newQty float64, user *User, mid int) error
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
