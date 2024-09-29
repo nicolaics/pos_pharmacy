@@ -358,7 +358,7 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 
 func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 	values := "?"
-	for i := 0; i < 16; i++ {
+	for i := 0; i < 18; i++ {
 		values += ", ?"
 	}
 
@@ -447,13 +447,13 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, user *types.User) er
 		return fmt.Errorf("error write log file")
 	}
 
-	query := `UPDATE medicine SET (
+	query := `UPDATE medicine SET 
 		barcode = ?, name = ?, qty = ?, 
 		first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, 
 		second_unit_id = ?, second_unit_to_first_unit_ratio = ?, second_subtotal = ?, second_discount = ?, second_price = ?, 
 		third_unit_id = ?, third_unit_to_first_unit_ratio = ?, third_subtotal = ?, third_discount = ?, third_price = ?, description = ?, 
 		last_modified = ?, last_modified_by_user_id = ?
-	) WHERE id = ?`
+	WHERE id = ?`
 
 	_, err = s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
@@ -483,9 +483,9 @@ func (s *Store) UpdateMedicineStock(mid int, newStock float64, user *types.User)
 		return fmt.Errorf("error write log file")
 	}
 
-	query := `UPDATE medicine SET (
+	query := `UPDATE medicine SET 
 		qty = ?, last_modified = ?, last_modified_by_user_id = ?
-	) WHERE id = ?`
+	WHERE id = ?`
 
 	_, err = s.db.Exec(query, newStock, time.Now(), user.ID, mid)
 	if err != nil {
