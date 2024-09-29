@@ -169,7 +169,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 		err = addStock(h, medData, unit, medicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 
@@ -529,7 +529,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 		err = subtractStock(h, medData, unit, purchaseMedicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}
@@ -634,7 +634,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 		err = subtractStock(h, medData, unit, purchaseMedicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}
@@ -688,7 +688,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		// add the stock with the new value
 		err = addStock(h, medData, unit, medicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}
@@ -714,6 +714,8 @@ func addStock(h *Handler, medData *types.Medicine, unit *types.Unit, additionalQ
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
 	}
 	
 	return nil
@@ -737,6 +739,8 @@ func subtractStock(h *Handler, medData *types.Medicine, unit *types.Unit, subtra
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
 	}
 	
 	return nil
