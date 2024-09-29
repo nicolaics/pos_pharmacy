@@ -786,18 +786,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = utils.CheckStock(medData, unit, medicine.Qty)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
-			return
-		}
-
-		err = utils.SubtractStock(h.medStore, medData, unit, medicine.Qty, user)
-		if err != nil {			
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
-			return
-		}
-
 		err = h.invoiceStore.CreateMedicineItems(types.MedicineItems{
 			InvoiceID:  payload.ID,
 			MedicineID: medData.ID,
@@ -810,6 +798,18 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
+			return
+		}
+
+		err = utils.CheckStock(medData, unit, medicine.Qty)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
+			return
+		}
+
+		err = utils.SubtractStock(h.medStore, medData, unit, medicine.Qty, user)
+		if err != nil {			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}

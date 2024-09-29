@@ -286,7 +286,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				Price:                payload.Price,
 				TotalPrice:           payload.TotalPrice,
 				Description:          payload.Description,
-				UserID:               user.ID,
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
@@ -295,6 +294,50 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("prescription %d, med %s: %v", payload.Number, medicine.MedicineName, err))
+			return
+		}
+
+		err = utils.CheckStock(medData, unit, medicine.Qty)
+		if err != nil {
+			err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+				InvoiceID:            invoiceId,
+				Number:               payload.Number,
+				PrescriptionDate:     *prescriptionDate,
+				PatientID:            patient.ID,
+				DoctorID:             doctor.ID,
+				Qty:                  payload.Qty,
+				Price:                payload.Price,
+				TotalPrice:           payload.TotalPrice,
+				Description:          payload.Description,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+				return	
+			}
+			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
+			return
+		}
+
+		err = utils.SubtractStock(h.medStore, medData, unit, medicine.Qty, user)
+		if err != nil {
+			err = h.prescriptionStore.AbsoluteDeletePrescription(types.Prescription{
+				InvoiceID:            invoiceId,
+				Number:               payload.Number,
+				PrescriptionDate:     *prescriptionDate,
+				PatientID:            patient.ID,
+				DoctorID:             doctor.ID,
+				Qty:                  payload.Qty,
+				Price:                payload.Price,
+				TotalPrice:           payload.TotalPrice,
+				Description:          payload.Description,
+			})
+			if err != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", err))
+				return	
+			}
+			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}
@@ -656,6 +699,12 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	medicineItems, err := h.prescriptionStore.GetPrescriptionMedicineItems(prescription.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding medicine items: %v", err))
+		return
+	}
+
 	err = h.prescriptionStore.DeletePrescriptionMedicineItems(prescription, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -666,6 +715,26 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	for _, medicineItem := range(medicineItems) {
+		medData, err := h.medStore.GetMedicineByBarcode(medicineItem.MedicineBarcode)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName))
+			return
+		}
+
+		unit, err := h.unitStore.GetUnitByName(medicineItem.Unit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = utils.AddStock(h.medStore, medData, unit, medicineItem.Qty, user)
+		if err != nil {			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+			return
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("prescription number %d deleted by %s", prescription.Number, user.Name))
@@ -742,6 +811,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oldMedicineItems, err := h.prescriptionStore.GetPrescriptionMedicineItems(prescription.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding medicine items: %v", err))
+		return
+	}
+
 	err = h.prescriptionStore.ModifyPrescription(payload.ID, types.Prescription{
 		Number:               payload.NewData.Number,
 		PrescriptionDate:     *prescriptionDate,
@@ -762,6 +837,26 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	for _, medicineItem := range(oldMedicineItems) {
+		medData, err := h.medStore.GetMedicineByBarcode(medicineItem.MedicineBarcode)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName))
+			return
+		}
+
+		unit, err := h.unitStore.GetUnitByName(medicineItem.Unit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = utils.AddStock(h.medStore, medData, unit, medicineItem.Qty, user)
+		if err != nil {			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+			return
+		}
 	}
 
 	for _, medicine := range payload.NewData.MedicineLists {
@@ -798,6 +893,18 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("prescription id %d, med %s: %v", payload.ID, medicine.MedicineName, err))
+			return
+		}
+
+		err = utils.CheckStock(medData, unit, medicine.Qty)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
+			return
+		}
+
+		err = utils.SubtractStock(h.medStore, medData, unit, medicine.Qty, user)
+		if err != nil {			
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
 	}
