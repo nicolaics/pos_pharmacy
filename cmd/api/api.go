@@ -84,7 +84,7 @@ func (s *APIServer) Run() error {
 	patientHandler.RegisterRoutes(subrouter)
 
 	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore,
-		companyProfileStore, medicineStore, unitStore)
+		companyProfileStore, medicineStore, unitStore, poInvoiceStore)
 	purchaseInvoiceHandler.RegisterRoutes(subrouter)
 
 	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, userStore, supplierStore, companyProfileStore,
