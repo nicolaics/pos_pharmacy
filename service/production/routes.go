@@ -123,7 +123,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// add to stock
 	if payload.UpdatedToStock {
-		// TODO: update to stock
+		err = addStock(h, producedMedicine, producedUnit, float64(payload.ProducedQty), user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+			return
+		}
 	}
 
 	// get production ID
@@ -528,6 +532,26 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get old produced medicine
+	tempOldProducedMedicine, err := h.medStore.GetMedicineByID(oldProduction.ProducedMedicineID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d doesn't exists", oldProduction.ProducedMedicineID))
+		return
+	}
+
+	oldProducedMedicine, err := h.medStore.GetMedicineByBarcode(tempOldProducedMedicine.Barcode)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d doesn't exists", oldProduction.ProducedMedicineID))
+		return
+	}
+	
+	// get old produced unit ID
+	oldProducedUnit, err := h.unitStore.GetUnitByID(oldProduction.ProducedUnitID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("old produced unit id %d not found", oldProduction.ProducedUnitID))
+		return
+	}
+
 	// check duplicate Number
 	prod, err := h.productionStore.GetProductionByNumber(payload.NewData.Number)
 	if err == nil || prod != nil {
@@ -535,16 +559,31 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// reset the previous stock
+	if oldProduction.UpdatedToStock {
+		err = subtractStock(h, oldProducedMedicine, oldProducedUnit, float64(oldProduction.ProducedQty), user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error subtracting stock: %v", err))
+			return
+		}
+	}
+
+	newProducedMedicine, err := h.medStore.GetMedicineByBarcode(payload.NewData.ProducedMedicineBarcode)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", payload.NewData.ProducedMedicineName))
+		return
+	}
+
 	// get produced unit ID
-	producedUnit, err := h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
-	if producedUnit == nil {
+	newProducedUnit, err := h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
+	if newProducedUnit == nil {
 		err = h.unitStore.CreateUnit(payload.NewData.ProducedUnit)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		producedUnit, err = h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
+		newProducedUnit, err = h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
 	}
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -568,7 +607,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Number:               payload.NewData.Number,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.NewData.ProducedQty,
-		ProducedUnitID:       producedUnit.ID,
+		ProducedUnitID:       newProducedUnit.ID,
 		ProductionDate:       *prodDate,
 		Description:          payload.NewData.Description,
 		UpdatedToStock:       payload.NewData.UpdatedToStock,
@@ -579,6 +618,15 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	// add to stock
+	if payload.NewData.UpdatedToStock {
+		err = addStock(h, newProducedMedicine, newProducedUnit, float64(payload.NewData.ProducedQty), user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+			return
+		}
 	}
 
 	// get production
@@ -631,4 +679,46 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production modified by %s", user.Name))
+}
+
+func addStock(h *Handler, medData *types.Medicine, producedUnit *types.Unit, additionalQty float64, user *types.User) error {
+	var updatedQty float64
+
+	if medData.FirstUnitID == producedUnit.ID {
+		updatedQty = (additionalQty + medData.Qty)
+	} else if medData.SecondUnitID == producedUnit.ID {
+		updatedQty = (additionalQty * medData.SecondUnitToFirstUnitRatio) + medData.Qty
+	} else if medData.ThirdUnitID == producedUnit.ID {
+		updatedQty = (additionalQty * medData.ThirdUnitToFirstUnitRatio) + medData.Qty
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func subtractStock(h *Handler, medData *types.Medicine, producedUnit *types.Unit, subtractionQty float64, user *types.User) error {
+	var updatedQty float64
+
+	if medData.FirstUnitID == producedUnit.ID {
+		updatedQty = (medData.Qty - subtractionQty)
+	} else if medData.SecondUnitID == producedUnit.ID {
+		updatedQty = medData.Qty - (subtractionQty * medData.SecondUnitToFirstUnitRatio)
+	} else if medData.ThirdUnitID == producedUnit.ID {
+		updatedQty = medData.Qty - (subtractionQty * medData.ThirdUnitToFirstUnitRatio)
+	} else {
+		return fmt.Errorf("unknown unit name for %s", medData.Name)
+	}
+
+	err := h.medStore.UpdateMedicineStock(medData.ID, updatedQty, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
