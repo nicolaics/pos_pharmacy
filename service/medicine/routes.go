@@ -82,14 +82,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if firstUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(firstUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create first unit error: %v", err))
 			return
 		}
 
 		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("first unit error: %v", err))
 		return
 	}
 
@@ -97,14 +97,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if secondUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(secondUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create second unit error: %v", err))
 			return
 		}
 
 		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("second unit error: %v", err))
 		return
 	}
 
@@ -112,14 +112,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if thirdUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(thirdUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create third unit error: %v", err))
 			return
 		}
 
 		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("third unit error: %v", err))
 		return
 	}
 
@@ -144,7 +144,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:                payload.Description,
 	}, user.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine %s: %v", payload.Name, err))
 		return
 	}
 
