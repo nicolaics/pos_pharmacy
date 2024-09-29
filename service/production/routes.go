@@ -80,10 +80,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get produced unit ID
+	producedUnit, err := h.unitStore.GetUnitByName(payload.ProducedUnit)
+	if producedUnit == nil {
+		err = h.unitStore.CreateUnit(payload.ProducedUnit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		producedUnit, err = h.unitStore.GetUnitByName(payload.ProducedUnit)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
 	// check duplicate
-	productionId, err := h.productionStore.GetProductionID(payload.Number, producedMedicine.ID,
-		*prodDate, payload.TotalCost)
-	if err == nil || productionId != 0 {
+	production, err := h.productionStore.GetProductionByNumber(payload.Number)
+	if err == nil || production != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d exists", payload.Number))
 		return
 	}
@@ -92,6 +107,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Number:               payload.Number,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.ProducedQty,
+		ProducedUnitID:       producedUnit.ID,
 		ProductionDate:       *prodDate,
 		Description:          payload.Description,
 		UpdatedToStock:       payload.UpdatedToStock,
@@ -105,9 +121,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// add to stock
+	if payload.UpdatedToStock {
+		// TODO: update to stock
+	}
+
 	// get production ID
-	productionId, err = h.productionStore.GetProductionID(payload.Number, producedMedicine.ID,
-		*prodDate, payload.TotalCost)
+	production, err = h.productionStore.GetProductionByNumber(payload.Number)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists: %v", payload.Number, err))
 		return
@@ -136,7 +156,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.productionStore.CreateProductionMedicineItems(types.ProductionMedicineItems{
-			ProductionID: productionId,
+			ProductionID: production.ID,
 			MedicineID:   medData.ID,
 			Qty:          medicine.Qty,
 			UnitID:       unit.ID,
@@ -501,7 +521,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the production exists
-	production, err := h.productionStore.GetProductionByID(payload.ID)
+	oldProduction, err := h.productionStore.GetProductionByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("production with id %d doesn't exists", payload.ID))
@@ -512,6 +532,22 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	prod, err := h.productionStore.GetProductionByNumber(payload.NewData.Number)
 	if err == nil || prod != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("number %d exist already", payload.NewData.Number))
+		return
+	}
+
+	// get produced unit ID
+	producedUnit, err := h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
+	if producedUnit == nil {
+		err = h.unitStore.CreateUnit(payload.NewData.ProducedUnit)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		producedUnit, err = h.unitStore.GetUnitByName(payload.NewData.ProducedUnit)
+	}
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -532,6 +568,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Number:               payload.NewData.Number,
 		ProducedMedicineID:   producedMedicine.ID,
 		ProducedQty:          payload.NewData.ProducedQty,
+		ProducedUnitID:       producedUnit.ID,
 		ProductionDate:       *prodDate,
 		Description:          payload.NewData.Description,
 		UpdatedToStock:       payload.NewData.UpdatedToStock,
@@ -544,15 +581,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get production ID
-	productionId, err := h.productionStore.GetProductionID(payload.NewData.Number, producedMedicine.ID,
-		*prodDate, payload.NewData.TotalCost)
+	// get production
+	production, err := h.productionStore.GetProductionByNumber(payload.NewData.Number)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("production number %d doesn't exists", payload.NewData.Number))
 		return
 	}
 
-	err = h.productionStore.DeleteProductionMedicineItems(production, user)
+	err = h.productionStore.DeleteProductionMedicineItems(oldProduction, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -581,7 +617,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.productionStore.CreateProductionMedicineItems(types.ProductionMedicineItems{
-			ProductionID: productionId,
+			ProductionID: production.ID,
 			MedicineID:   medData.ID,
 			Qty:          medicine.Qty,
 			UnitID:       unit.ID,
