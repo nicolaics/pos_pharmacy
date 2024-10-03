@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: add data for the pdf
 type Config struct {
 	PublicHost             string
 	Port                   string

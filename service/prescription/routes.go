@@ -59,6 +59,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/prescription/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
+// TODO: add usage, mf, consume way, consume time
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
 	var payload types.RegisterPrescriptionPayload

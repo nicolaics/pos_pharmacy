@@ -30,28 +30,42 @@ type PrescriptionStore interface {
 	AbsoluteDeletePrescription(presc Prescription) error
 }
 
+// TODO: add usage, mf, consume way, consume time
+// TODO: change medicine lists into medicine sets
 type RegisterPrescriptionPayload struct {
 	Invoice struct {
-		Number       int       `json:"number" validate:"required"`
-		CustomerName string    `json:"customerName" validate:"required"`
+		Number       int    `json:"number" validate:"required"`
+		CustomerName string `json:"customerName" validate:"required"`
 		InvoiceDate  string `json:"invoiceDate" validate:"required"`
 	} `json:"invoice" validate:"required"`
 
-	Number           int                               `json:"number" validate:"required"`
-	PrescriptionDate string                         `json:"prescriptionDate" validate:"required"`
-	PatientName      string                            `json:"patientName" validate:"required"`
-	DoctorName       string                            `json:"doctorName" validate:"required"`
-	Qty              float64                           `json:"qty" validate:"required"`
-	Price            float64                           `json:"price" validate:"required"`
-	TotalPrice       float64                           `json:"totalPrice" validate:"required"`
-	Description      string                            `json:"description"`
-	MedicineLists    []PrescriptionMedicineListPayload `json:"prescriptionMedicineList" validate:"required"`
+	Number           int                              `json:"number" validate:"required"`
+	PrescriptionDate string                           `json:"prescriptionDate" validate:"required"`
+	PatientName      string                           `json:"patientName" validate:"required"`
+	DoctorName       string                           `json:"doctorName" validate:"required"`
+	Qty              float64                          `json:"qty" validate:"required"`
+	Price            float64                          `json:"price" validate:"required"`
+	TotalPrice       float64                          `json:"totalPrice" validate:"required"`
+	Description      string                           `json:"description"`
+	MedicineSets     []PrescriptionMedicineSetPayload `json:"medicineSets" validate:"required"`
+}
+
+type PrescriptionMedicineSetPayload struct {
+	MedicineLists []PrescriptionMedicineListPayload `json:"medicineLists" validate:"required"`
+	Det           string                            `json:"det"`
+	Dose          string                            `json:"dose"`
+	Usage         string                            `json:"usage"`
+	Mf            string                            `json:"mf"`
+	ConsumeTime   string                            `json:"consumeTime"`
+	ConsumeUnit   string                            `json:"consumeUnit"`
+	MustFinish    bool                              `json:"mustFinish"`
+	Eticket       Eticket                           `json:"eticket"`
 }
 
 type PrescriptionMedicineListPayload struct {
 	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
 	MedicineName    string  `json:"medicineName" validate:"required"`
-	Qty             float64 `json:"qty" validate:"required"`
+	Qty             string  `json:"qty" validate:"required"`
 	Unit            string  `json:"unit" validate:"required"`
 	Price           float64 `json:"price" validate:"required"`
 	Discount        float64 `json:"discount"`
@@ -60,16 +74,16 @@ type PrescriptionMedicineListPayload struct {
 
 // prescription list payload returned to user after searching
 type PrescriptionListsReturnPayload struct {
-	ID                   int           `json:"id"`
-	Number               int           `json:"number"`
-	PrescriptionDate     time.Time     `json:"prescriptionDate"`
-	PatientName          string        `json:"patientName"`
-	DoctorName           string        `json:"doctorName"`
-	Qty                  float64       `json:"qty"`
-	Price                float64       `json:"price"`
-	TotalPrice           float64       `json:"totalPrice"`
-	Description          string        `json:"description"`
-	UserName             string        `json:"userName"`
+	ID               int       `json:"id"`
+	Number           int       `json:"number"`
+	PrescriptionDate time.Time `json:"prescriptionDate"`
+	PatientName      string    `json:"patientName"`
+	DoctorName       string    `json:"doctorName"`
+	Qty              float64   `json:"qty"`
+	Price            float64   `json:"price"`
+	TotalPrice       float64   `json:"totalPrice"`
+	Description      string    `json:"description"`
+	UserName         string    `json:"userName"`
 
 	Invoice struct {
 		Number       int       `json:"number"`
@@ -177,4 +191,22 @@ type Prescription struct {
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
+}
+
+type Eticket struct {
+	Print       bool   `json:"print"`
+	PrintQty    int    `json:"printQty"`
+	MedicineQty int    `json:"medicineQty"`
+	Number      int    `json:"number"`
+	Dose        string `json:"dose"`
+}
+
+type PrescriptionMedicineSet struct {
+	MedicineLists []PrescriptionMedicineItems `json:"medicineLists"`
+	DetID         int                         `json:"detId"`
+	DoseID        int                         `json:"doseId"`
+	UsageID       int                         `json:"usageId"`
+	MfID          int                         `json:"mfId"`
+	ConsumeTimeID int                         `json:"consumeTimeId"`
+	ConsumeUnitID int                         `json:"consumeUnitId"`
 }

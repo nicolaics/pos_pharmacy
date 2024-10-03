@@ -495,7 +495,7 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
-            "number": 2,
+            "number": 5,
             "companyId": 1,
             "supplierId": 3,
             "totalItems": 10,
@@ -520,7 +520,7 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
-            "number": 2,
+            "number": 7,
             "companyId": 1,
             "supplierId": 3,
             "totalItems": 10,
@@ -562,7 +562,7 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
                     "medicineBarcode": "2222",
                     "medicineName": "Panadol",
                     "orderQty": 10,
-                    "receivedQty": 10,
+                    "receivedQty": 0,
                     "unit": "TAB",
                     "remarks": "oke",
                 }
@@ -728,9 +728,10 @@ def create_production(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/production",
         json={
             "number": 2,
-            "producedMedicineBarcode": "1111",
+            "producedMedicineBarcode": "3333",
             "producedMedicineName": "S2",
             "producedQty": random.randint(1, 200),
+            "producedUnit": "STP",
             "productionDate": "2024-01-10 +0700GMT",
             "updatedToStock": True,
             "updatedToAccount": False,
@@ -758,107 +759,107 @@ def create_production(BACKEND_ROOT, TOKEN):
     )
     print(r.json())
 
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/production",
-        json={
-            "number": 210,
-            "producedMedicineBarcode": "2222",
-            "producedMedicineName": "S1",
-            "producedQty": random.randint(1, 200),
-            "productionDate": "2024-04-20 +0700GMT",
-            "updatedToStock": False,
-            "updatedToAccount": False,
-            "totalCost": random.randint(1, 100000),
-            "productionMedicineList": [
-                {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "cost": 462000,
-                },
-                {
-                    "medicineBarcode": "2222",
-                    "medicineName": "Panadol",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "cost": 2200,
-                },
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
+    # r = rq.post(
+    #     f"http://{BACKEND_ROOT}/api/v1/production",
+    #     json={
+    #         "number": 210,
+    #         "producedMedicineBarcode": "2222",
+    #         "producedMedicineName": "S1",
+    #         "producedQty": random.randint(1, 200),
+    #         "productionDate": "2024-04-20 +0700GMT",
+    #         "updatedToStock": False,
+    #         "updatedToAccount": False,
+    #         "totalCost": random.randint(1, 100000),
+    #         "productionMedicineList": [
+    #             {
+    #                 "medicineBarcode": "3333",
+    #                 "medicineName": "Rhinos",
+    #                 "qty": 10,
+    #                 "unit": "TAB",
+    #                 "cost": 462000,
+    #             },
+    #             {
+    #                 "medicineBarcode": "2222",
+    #                 "medicineName": "Panadol",
+    #                 "qty": 10,
+    #                 "unit": "TAB",
+    #                 "cost": 2200,
+    #             },
+    #         ],
+    #     },
+    #     headers={
+    #         "Authorization": "Bearer " + TOKEN,
+    #     },
+    # )
+    # print(r.json())
 
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/production",
-        json={
-            "number": 10,
-            "producedMedicineBarcode": "1111",
-            "producedMedicineName": "S2",
-            "producedQty": random.randint(1, 200),
-            "productionDate": "2024-09-28 +0900GMT",
-            "updatedToStock": True,
-            "updatedToAccount": False,
-            "totalCost": random.randint(1, 100000),
-            "productionMedicineList": [
-                {
-                    "medicineBarcode": "1111",
-                    "medicineName": "Ativan",
-                    "qty": 7,
-                    "unit": "BTL",
-                    "cost": 46200,
-                },
-                {
-                    "medicineBarcode": "2222",
-                    "medicineName": "Panadol",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "cost": 2200,
-                },
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
+    # r = rq.post(
+    #     f"http://{BACKEND_ROOT}/api/v1/production",
+    #     json={
+    #         "number": 10,
+    #         "producedMedicineBarcode": "1111",
+    #         "producedMedicineName": "S2",
+    #         "producedQty": random.randint(1, 200),
+    #         "productionDate": "2024-09-28 +0900GMT",
+    #         "updatedToStock": True,
+    #         "updatedToAccount": False,
+    #         "totalCost": random.randint(1, 100000),
+    #         "productionMedicineList": [
+    #             {
+    #                 "medicineBarcode": "1111",
+    #                 "medicineName": "Ativan",
+    #                 "qty": 7,
+    #                 "unit": "BTL",
+    #                 "cost": 46200,
+    #             },
+    #             {
+    #                 "medicineBarcode": "2222",
+    #                 "medicineName": "Panadol",
+    #                 "qty": 10,
+    #                 "unit": "TAB",
+    #                 "cost": 2200,
+    #             },
+    #         ],
+    #     },
+    #     headers={
+    #         "Authorization": "Bearer " + TOKEN,
+    #     },
+    # )
+    # print(r.json())
 
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/production",
-        json={
-            "number": 245,
-            "producedMedicineBarcode": "2222",
-            "producedMedicineName": "S1",
-            "producedQty": random.randint(1, 200),
-            "productionDate": "2024-09-28 +0900GMT",
-            "updatedToStock": False,
-            "updatedToAccount": False,
-            "totalCost": random.randint(1, 100000),
-            "productionMedicineList": [
-                {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "cost": 462000,
-                },
-                {
-                    "medicineBarcode": "2222",
-                    "medicineName": "Panadol",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "cost": 2200,
-                },
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
+    # r = rq.post(
+    #     f"http://{BACKEND_ROOT}/api/v1/production",
+    #     json={
+    #         "number": 245,
+    #         "producedMedicineBarcode": "2222",
+    #         "producedMedicineName": "S1",
+    #         "producedQty": random.randint(1, 200),
+    #         "productionDate": "2024-09-28 +0900GMT",
+    #         "updatedToStock": False,
+    #         "updatedToAccount": False,
+    #         "totalCost": random.randint(1, 100000),
+    #         "productionMedicineList": [
+    #             {
+    #                 "medicineBarcode": "3333",
+    #                 "medicineName": "Rhinos",
+    #                 "qty": 10,
+    #                 "unit": "TAB",
+    #                 "cost": 462000,
+    #             },
+    #             {
+    #                 "medicineBarcode": "2222",
+    #                 "medicineName": "Panadol",
+    #                 "qty": 10,
+    #                 "unit": "TAB",
+    #                 "cost": 2200,
+    #             },
+    #         ],
+    #     },
+    #     headers={
+    #         "Authorization": "Bearer " + TOKEN,
+    #     },
+    # )
+    # print(r.json())
 
 
 def create_purchase_invoice(BACKEND_ROOT, TOKEN):
@@ -946,55 +947,56 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
     # )
     # print(r.json())
 
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
-        json={
-            "number": random.randint(1, 100),
-            "companyId": 1,
-            "supplierId": random.randint(1, 3),
-            "subtotal": random.randint(1, 100000),
-            "discount": random.randint(1, 10000),
-            "tax": random.randint(1, 200),
-            "totalPrice": random.randint(1, 300000),
-            "description": "test",
-            "invoiceDate": "2024-09-28 +0900GMT",
-            "purchaseMedicineList": [
-                {
-                    "medicineBarcode": "1111",
-                    "medicineName": "Ativan",
-                    "qty": random.randint(1, 20),
-                    "unit": "BTL",
-                    "price": random.randint(1, 50000),
-                    "discount": random.randint(1, 500),
-                    "tax": random.randint(1, 500),
-                    "subtotal": random.randint(1, 200000),
-                    "batchNumber": "B1234",
-                    "expDate": "2026-01-10 +0700GMT",
-                },
-                {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": random.randint(1, 20),
-                    "unit": "TAB",
-                    "price": random.randint(1, 50000),
-                    "subtotal": random.randint(1, 200000),
-                    "batchNumber": "B1235",
-                    "expDate": "2026-02-10 +0700GMT",
-                },
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
+    # r = rq.post(
+    #     f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
+    #     json={
+    #         "number": random.randint(1, 100),
+    #         "companyId": 1,
+    #         "supplierId": random.randint(1, 3),
+    #         "subtotal": random.randint(1, 100000),
+    #         "discount": random.randint(1, 10000),
+    #         "tax": random.randint(1, 200),
+    #         "totalPrice": random.randint(1, 300000),
+    #         "description": "test",
+    #         "invoiceDate": "2024-09-28 +0900GMT",
+    #         "purchaseMedicineList": [
+    #             {
+    #                 "medicineBarcode": "1111",
+    #                 "medicineName": "Ativan",
+    #                 "qty": random.randint(1, 20),
+    #                 "unit": "BTL",
+    #                 "price": random.randint(1, 50000),
+    #                 "discount": random.randint(1, 500),
+    #                 "tax": random.randint(1, 500),
+    #                 "subtotal": random.randint(1, 200000),
+    #                 "batchNumber": "B1234",
+    #                 "expDate": "2026-01-10 +0700GMT",
+    #             },
+    #             {
+    #                 "medicineBarcode": "3333",
+    #                 "medicineName": "Rhinos",
+    #                 "qty": random.randint(1, 20),
+    #                 "unit": "TAB",
+    #                 "price": random.randint(1, 50000),
+    #                 "subtotal": random.randint(1, 200000),
+    #                 "batchNumber": "B1235",
+    #                 "expDate": "2026-02-10 +0700GMT",
+    #             },
+    #         ],
+    #     },
+    #     headers={
+    #         "Authorization": "Bearer " + TOKEN,
+    #     },
+    # )
+    # print(r.json())
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase",
         json={
             "number": random.randint(1, 100),
             "companyId": 1,
-            "supplierId": random.randint(1, 3),
+            "supplierId": 3,
+            "purchaseOrderInvoiceNumber": 20,
             "subtotal": random.randint(1, 100000),
             "discount": random.randint(1, 10000),
             "tax": random.randint(1, 200),
@@ -1004,24 +1006,24 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
                 {
                     "medicineBarcode": "2222",
                     "medicineName": "Panadol",
-                    "qty": random.randint(1, 20),
-                    "unit": "BTL",
+                    "qty": 3,
+                    "unit": "TAB",
                     "price": random.randint(1, 50000),
                     "discount": random.randint(1, 500),
                     "subtotal": random.randint(1, 200000),
                     "batchNumber": "B124",
                     "expDate": "2026-12-06 +0700GMT",
                 },
-                {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": random.randint(1, 20),
-                    "unit": "TAB",
-                    "price": random.randint(1, 50000),
-                    "subtotal": random.randint(1, 200000),
-                    "batchNumber": "B125",
-                    "expDate": "2026-02-10 +0700GMT",
-                },
+                # {
+                #     "medicineBarcode": "3333",
+                #     "medicineName": "Rhinos",
+                #     "qty": random.randint(1, 20),
+                #     "unit": "TAB",
+                #     "price": random.randint(1, 50000),
+                #     "subtotal": random.randint(1, 200000),
+                #     "batchNumber": "B125",
+                #     "expDate": "2026-02-10 +0700GMT",
+                # },
             ],
         },
         headers={
@@ -1045,8 +1047,8 @@ def main():
     # create_invoices(BACKEND_ROOT, TOKEN)
     # create_po_invoices(BACKEND_ROOT, TOKEN)
     # create_prescription(BACKEND_ROOT, TOKEN)
-    # create_production(BACKEND_ROOT, TOKEN)
-    create_purchase_invoice(BACKEND_ROOT, TOKEN)
+    create_production(BACKEND_ROOT, TOKEN)
+    # create_purchase_invoice(BACKEND_ROOT, TOKEN)
 
     print("DONE")
 
