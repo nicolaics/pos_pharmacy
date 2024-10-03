@@ -26,6 +26,8 @@ type InvoiceStore interface {
 	DeleteInvoice(*Invoice, *User) error
 	ModifyInvoice(int, Invoice, *User) error
 
+	UpdatePdfURL(invoiceId int, pdfUrl string) error
+
 	// delete entirely from the db if there's error
 	AbsoluteDeleteInvoice(invoice Invoice) error
 }
@@ -35,17 +37,17 @@ type ViewInvoiceDetailPayload struct {
 }
 
 type RegisterInvoicePayload struct {
-	Number            int       `json:"number" validate:"required"`
-	CustomerID        int       `json:"customerId" validate:"required"`
-	Subtotal          float64   `json:"subtotal" validate:"required"`
-	Discount          float64   `json:"discount"`
-	Tax               float64   `json:"tax"`
-	TotalPrice        float64   `json:"totalPrice" validate:"required"`
-	PaidAmount        float64   `json:"paidAmount" validate:"required"`
-	ChangeAmount      float64   `json:"changeAmount"`
-	PaymentMethodName string    `json:"paymentMethodName" validate:"required"`
-	Description       string    `json:"description"`
-	InvoiceDate       string `json:"invoiceDate" validate:"required"`
+	Number            int     `json:"number" validate:"required"`
+	CustomerID        int     `json:"customerId" validate:"required"`
+	Subtotal          float64 `json:"subtotal" validate:"required"`
+	Discount          float64 `json:"discount"`
+	Tax               float64 `json:"tax"`
+	TotalPrice        float64 `json:"totalPrice" validate:"required"`
+	PaidAmount        float64 `json:"paidAmount" validate:"required"`
+	ChangeAmount      float64 `json:"changeAmount"`
+	PaymentMethodName string  `json:"paymentMethodName" validate:"required"`
+	Description       string  `json:"description"`
+	InvoiceDate       string  `json:"invoiceDate" validate:"required"`
 
 	MedicineLists []MedicineListsPayload `json:"medicineLists" validate:"required"`
 }
@@ -110,6 +112,7 @@ type InvoiceDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
+	PdfURL                 string    `json:"pdfUrl"`
 
 	// the one who creates the invoice
 	User struct {
@@ -160,6 +163,7 @@ type Invoice struct {
 	CreatedAt            time.Time     `json:"createdAt"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	PdfURL               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
