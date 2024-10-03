@@ -132,8 +132,8 @@ func (s *Store) GetPatientByID(id int) (*types.Patient, error) {
 }
 
 func (s *Store) CreatePatient(patient types.Patient) error {
-	_, err := s.db.Exec("INSERT INTO patient (name) VALUES (?)",
-		patient.Name)
+	_, err := s.db.Exec("INSERT INTO patient (name, age) VALUES (?, ?)",
+		patient.Name, patient.Age)
 
 	if err != nil {
 		return err
@@ -184,7 +184,7 @@ func (s *Store) DeletePatient(patient *types.Patient, user *types.User) error {
 	return nil
 }
 
-func (s *Store) ModifyPatient(id int, newName string, user *types.User) error {
+func (s *Store) ModifyPatient(id int, patient types.RegisterPatientPayload, user *types.User) error {
 	data, err := s.GetPatientByID(id)
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (s *Store) ModifyPatient(id int, newName string, user *types.User) error {
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("UPDATE patient SET name = ? WHERE id = ? ", newName, id)
+	_, err = s.db.Exec("UPDATE patient SET name = ?, age = ? WHERE id = ? ", patient.Name, patient.Age, id)
 
 	if err != nil {
 		return err
@@ -214,6 +214,7 @@ func scanRowIntoPatient(rows *sql.Rows) (*types.Patient, error) {
 	err := rows.Scan(
 		&patient.ID,
 		&patient.Name,
+		&patient.Age,
 		&patient.CreatedAt,
 	)
 

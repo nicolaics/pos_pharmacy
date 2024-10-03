@@ -15,11 +15,12 @@ type PatientStore interface {
 
 	DeletePatient(*Patient, *User) error
 
-	ModifyPatient(int, string, *User) error
+	ModifyPatient(int, RegisterPatientPayload, *User) error
 }
 
 type RegisterPatientPayload struct {
 	Name string `json:"name" validate:"required"`
+	Age  int    `json:"age"`
 }
 type ModifyPatientPayload struct {
 	ID      int                    `json:"id" validate:"required"`
@@ -38,5 +39,6 @@ type GetOnePatientPayload struct {
 type Patient struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
+	Age       int       `json:"age"`
 	CreatedAt time.Time `json:"createdAt"`
 }

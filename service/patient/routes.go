@@ -65,6 +65,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	err = h.patientStore.CreatePatient(types.Patient{
 		Name: payload.Name,
+		Age: payload.Age,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -227,7 +228,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.patientStore.ModifyPatient(patient.ID, payload.NewData.Name, user)
+	err = h.patientStore.ModifyPatient(patient.ID, payload.NewData, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
