@@ -30,12 +30,12 @@ type ConsumeTimeStore interface {
 }
 type ConsumeTime PaymentMethod
 
-type ConsumeWayStore interface {
-	GetConsumeWayByName(string) (*ConsumeWay, error)
-	GetConsumeWayByID(int) (*ConsumeWay, error)
-	CreateConsumeWay(string) error
+type DoseStore interface {
+	GetDoseByName(string) (*Dose, error)
+	GetDoseByID(int) (*Dose, error)
+	CreateDose(string) error
 }
-type ConsumeWay PaymentMethod
+type Dose PaymentMethod
 
 type DetStore interface {
 	GetDetByName(string) (*Det, error)
