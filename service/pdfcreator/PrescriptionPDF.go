@@ -17,7 +17,7 @@ import (
 	"github.com/go-pdf/fpdf"
 )
 
-func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.PrescriptionStore) (string, error) {
+func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
 	directory := "../static/pdf/prescription"
 	if err := os.MkdirAll(directory, 0755); err != nil {
 		return "", err
@@ -80,17 +80,21 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
         }
     }
 
-    fileName := "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
-    isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
-    if err != nil {
-        return "", err
-    }
-
-    for isExist {
-        fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
-        isExist, err = prescStore.IsPDFUrlExist("prescription", fileName)
+    fileName := prevFileName
+    
+    if prevFileName != "" {
+        fileName := "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
+        isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
         if err != nil {
             return "", err
+        }
+
+        for isExist {
+            fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
+            isExist, err = prescStore.IsPDFUrlExist("prescription", fileName)
+            if err != nil {
+                return "", err
+            }
         }
     }
 
