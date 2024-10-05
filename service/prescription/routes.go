@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
+	"github.com/nicolaics/pos_pharmacy/service/pdfcreator"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
 )
@@ -64,6 +65,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/prescription", h.handleRegister).Methods(http.MethodPost)
 
 	// TODO: add more get prescriptions
+	// TODO: add create pdf alone
 	router.HandleFunc("/prescription/{params}/{val}", h.handleGetPrescriptions).Methods(http.MethodPost)
 
 	router.HandleFunc("/prescription/detail", h.handleGetPrescriptionDetail).Methods(http.MethodPost)
@@ -200,6 +202,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d doesn't exists", payload.Number))
 		return
 	}
+
+	eticketFileNames := make([]string, 0)
 
 	for _, setItem := range payload.SetItems {
 		// get consume time
@@ -399,6 +403,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// TODO: CREATE ETICKET PDF
+			// eticketFileName, err := pdfcreator.CreateEticket7x4()
+			// eticketFileNames = append(eticketFileNames, eticketFileName)
 		}
 
 		for _, medicine := range setItem.MedicineLists {
@@ -501,10 +507,38 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO: create pdf
+	medicineSets, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescriptionId)
+	if err != nil {
+		errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
+		if errDel != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+			return
+		}
+
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err))
+		return
+	}
+
+	prescPDF := types.PrescriptionPDFReturn{
+		Number: payload.Number,
+		Date: *prescriptionDate,
+		Patient: *patient,
+		Doctor: *doctor,
+		MedicineSets: medicineSets,
+	}
+	prescFileName, err := pdfcreator.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
+		return
+	}
 
 	// TODO: return prescription pdf and eticket pdf url
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name))
+	returnPayload := map[string]interface{}{
+		"success": fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name),
+		"prescriptionPDF": prescFileName,
+		"eticketPDF": eticketFileNames,
+	}
+	utils.WriteJSON(w, http.StatusCreated, returnPayload)
 }
 
 // only view the prescription list

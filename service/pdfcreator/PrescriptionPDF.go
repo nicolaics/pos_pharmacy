@@ -51,14 +51,14 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
 
     for _, setItem := range(presc.MedicineSets) {
         if setItem.Usage == "" {
-            for idx, med := range(setItem.MedicineLists) {
+            for idx, med := range(setItem.MedicineItems) {
                 for key, val := range(usage) {
                     r := regexp.MustCompile(val)
-                    use := r.FindAllString(med.Name, -1)
+                    use := r.FindAllString(med.MedicineName, -1)
                     
                     if len(use) != 0 {
                         setItem.Usage = key
-                        setItem.MedicineLists = removeMedicineFromList(setItem.MedicineLists, idx)
+                        setItem.MedicineItems = removeMedicineFromList(setItem.MedicineItems, idx)
                         break
                     }
                 }
@@ -285,7 +285,7 @@ func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPDFReturn) e
 	return nil
 }
 
-func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSetItemPDFReturn) error {
+func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSetItemReturn) error {
 	pdf.SetLineWidth(0.02)
     pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
     pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
@@ -304,7 +304,7 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
         pdf.SetX(0.7)
 
         // add (2 + margin) for safety margin
-        if (pdf.GetY() + (constants.PRESC_STD_CELL_HEIGHT * float64(len(medicineSet.MedicineLists)) + 2.0) + constants.PRESC_MARGIN) > pageBottomMargin {
+        if (pdf.GetY() + (constants.PRESC_STD_CELL_HEIGHT * float64(len(medicineSet.MedicineItems)) + 2.0) + constants.PRESC_MARGIN) > pageBottomMargin {
             pdf.AddPage()
             
             // change top margin into 0.5
@@ -323,15 +323,15 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
         cellWidth := pdf.GetStringWidth("R|") + constants.PRESC_MARGIN
         pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, "R|", "", 0, "L", false, 0, "")
 
-        for _, medicine := range(medicineSet.MedicineLists) {
+        for _, medicine := range(medicineSet.MedicineItems) {
             pdf.SetXY(startMedicineX, pdf.GetY() + 0.1)
 
-            nameSplit := nameRegex.FindAllStringIndex(medicine.Name, -1)
+            nameSplit := nameRegex.FindAllStringIndex(medicine.MedicineName, -1)
             
             if len(nameSplit) == 0 {
                 pdf.SetFont(constants.PRESC_MED_FONT, constants.REGULAR, constants.PRESC_MED_FONT_SZ)
-                cellWidth = pdf.GetStringWidth(medicine.Name) + constants.PRESC_MARGIN
-                pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicine.Name, "", 0, "L", false, 0, "")
+                cellWidth = pdf.GetStringWidth(medicine.MedicineName) + constants.PRESC_MARGIN
+                pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicine.MedicineName, "", 0, "L", false, 0, "")
 
                 pdf.SetX(pdf.GetX() + 0.1)
             } else {
@@ -339,7 +339,7 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
                 for _, idx := range(nameSplit) {
                     if idx[0] == 0 {
                         pdf.SetFont(constants.PRESC_MED_QTY_UNIT_FONT, constants.REGULAR, constants.PRESC_MED_QTY_UNIT_FONT_SZ)
-                        text := medicine.Name[startIdx:idx[1]]
+                        text := medicine.MedicineName[startIdx:idx[1]]
                         cellWidth = pdf.GetStringWidth(text)
                         pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, text, "", 0, "L", false, 0, "")
 
@@ -349,12 +349,12 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
                     }
                     
                     pdf.SetFont(constants.PRESC_MED_FONT, constants.REGULAR, constants.PRESC_MED_FONT_SZ)
-                    text := medicine.Name[startIdx:idx[0]]
+                    text := medicine.MedicineName[startIdx:idx[0]]
                     cellWidth = pdf.GetStringWidth(text)
                     pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, text, "", 0, "L", false, 0, "")
 
                     pdf.SetFont(constants.PRESC_MED_QTY_UNIT_FONT, constants.REGULAR, constants.PRESC_MED_QTY_UNIT_FONT_SZ)
-                    text = medicine.Name[idx[0]:idx[1]]
+                    text = medicine.MedicineName[idx[0]:idx[1]]
                     cellWidth = pdf.GetStringWidth(text)
                     pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, text, "", 0, "L", false, 0, "")
 
@@ -362,15 +362,15 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
                 }
             }
 
-            if medicine.Qty == "" && medicine.Unit == "" {
+            if medicine.QtyString == "" && medicine.Unit == "" {
                 pdf.Ln(-1)
             } else {   
-                fractionIdx := strings.Index(medicine.Qty, "/")
+                fractionIdx := strings.Index(medicine.QtyString, "/")
 
                 pdf.SetX(pdf.GetX() + 0.1)
 
                 if fractionIdx != -1 {
-                    qtySplit := strings.Split(medicine.Qty, "/")
+                    qtySplit := strings.Split(medicine.QtyString, "/")
                     
                     pdf.SetX(pdf.GetX() + 0.3)
                     pdf.SetFont(constants.PRESC_MED_QTY_UNIT_FONT, constants.REGULAR, constants.PRESC_MED_QTY_UNIT_FONT_SZ)
@@ -387,8 +387,8 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
                     pdf.SetXY((pdf.GetX() + 0.1), (pdf.GetY() + 0.05))
                 } else {
                     pdf.SetFont(constants.PRESC_MED_QTY_UNIT_FONT, constants.REGULAR, constants.PRESC_MED_QTY_UNIT_FONT_SZ)
-                    cellWidth = pdf.GetStringWidth(medicine.Qty)
-                    pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicine.Qty, "", 0, "L", false, 0, "")
+                    cellWidth = pdf.GetStringWidth(medicine.QtyString)
+                    pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicine.QtyString, "", 0, "L", false, 0, "")
                 }
 
                 pdf.SetX(pdf.GetX() + 0.1)
@@ -434,8 +434,8 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
         }
 
         pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)
-        cellWidth = pdf.GetStringWidth(medicineSet.ConsumeUnit) + constants.PRESC_MARGIN
-        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicineSet.ConsumeUnit, "", 0, "L", false, 0, "")
+        cellWidth = pdf.GetStringWidth(medicineSet.SetUnit) + constants.PRESC_MARGIN
+        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicineSet.SetUnit, "", 0, "L", false, 0, "")
 
         if medicineSet.ConsumeTime != "" {
             pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)
@@ -498,6 +498,6 @@ func createPrescriptionFooter(pdf *fpdf.Fpdf) error {
     return nil
 }
 
-func removeMedicineFromList(slice []types.PrescriptionMedicineListPDFReturn, s int) []types.PrescriptionMedicineListPDFReturn {
+func removeMedicineFromList(slice []types.PrescriptionMedicineItemReturn, s int) []types.PrescriptionMedicineItemReturn {
     return append(slice[:s], slice[s+1:]...)
 }

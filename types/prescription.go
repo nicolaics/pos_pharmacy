@@ -275,22 +275,5 @@ type PrescriptionPDFReturn struct {
 	Date         time.Time
 	Patient      Patient
 	Doctor       Doctor
-	MedicineSets []PrescriptionSetItemPDFReturn
-}
-
-type PrescriptionSetItemPDFReturn struct {
-	MedicineLists []PrescriptionMedicineListPDFReturn `json:"medicineLists"`
-	Det           string                              `json:"det"`
-	Dose          string                              `json:"dose"`
-	Usage         string                              `json:"usage"`
-	Mf            string                              `json:"mf"`
-	ConsumeTime   string                              `json:"consumeTime"`
-	ConsumeUnit   string                              `json:"consumeUnit"`
-	MustFinish    bool                                `json:"mustFinish"`
-}
-
-type PrescriptionMedicineListPDFReturn struct {
-	Name string
-	Qty  string
-	Unit string
+	MedicineSets []PrescriptionSetItemReturn
 }
