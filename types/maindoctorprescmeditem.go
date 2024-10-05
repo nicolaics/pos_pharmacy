@@ -13,7 +13,7 @@ type MainDoctorPrescMedItemStore interface {
 }
 
 type RegisterMainDoctorPrescMedItemPayload struct {
-	MedicineName     string                      `json:"medicineId" validate:"required"`
+	MedicineName     string                      `json:"medicineName" validate:"required"`
 	MedicineContents []MainDoctorPrescMedContent `json:"medicineContents" validate:"required"`
 }
 
