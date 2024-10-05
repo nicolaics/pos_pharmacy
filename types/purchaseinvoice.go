@@ -9,7 +9,7 @@ type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByNumber(number int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
 	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error)
-	GetPurchaseMedicineItems(purchaseInvoiceId int) ([]PurchaseMedicineItemsReturn, error)
+	GetPurchaseMedicineItem(purchaseInvoiceId int) ([]PurchaseMedicineItemReturn, error)
 
 	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoiceListsReturnPayload, error)
 	GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseInvoiceListsReturnPayload, error)
@@ -18,10 +18,10 @@ type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByDateAndPOINumber(startDate time.Time, endDate time.Time, poiNumber int) ([]PurchaseInvoiceListsReturnPayload, error)
 
 	CreatePurchaseInvoice(PurchaseInvoice) error
-	CreatePurchaseMedicineItems(PurchaseMedicineItem) error
+	CreatePurchaseMedicineItem(PurchaseMedicineItem) error
 
 	DeletePurchaseInvoice(*PurchaseInvoice, *User) error
-	DeletePurchaseMedicineItems(*PurchaseInvoice, *User) error
+	DeletePurchaseMedicineItem(*PurchaseInvoice, *User) error
 
 	ModifyPurchaseInvoice(int, PurchaseInvoice, *User) error
 
@@ -63,7 +63,7 @@ type ViewPurchaseInvoicePayload struct {
 }
 
 // view the detail of the purchase invoice
-type ViewPurchaseMedicineItemsPayload struct {
+type ViewPurchaseMedicineItemPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 
@@ -72,7 +72,7 @@ type ModifyPurchaseInvoicePayload struct {
 	NewData PurchaseInvoicePayload `json:"newData" validate:"required"`
 }
 
-type PurchaseMedicineItemsReturn struct {
+type PurchaseMedicineItemReturn struct {
 	ID              int       `json:"id"`
 	MedicineBarcode string    `json:"medicineBarcode"`
 	MedicineName    string    `json:"medicineName"`
@@ -126,7 +126,7 @@ type PurchaseInvoiceDetailPayload struct {
 
 	PurchaseOrderInvoiceNumber int `json:"purchaseOrderInvoiceNumber"`
 
-	MedicineLists []PurchaseMedicineItemsReturn `json:"medicineLists"`
+	MedicineLists []PurchaseMedicineItemReturn `json:"medicineLists"`
 }
 
 // view the lists of the purchase invoice

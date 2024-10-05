@@ -18,11 +18,11 @@ type ProductionStore interface {
 	GetProductionsByDateAndUpdatedToAccount(startDate time.Time, endDate time.Time, uta bool) ([]ProductionListsReturnPayload, error)
 
 	CreateProduction(Production) error
-	CreateProductionMedicineItems(ProductionMedicineItems) error
+	CreateProductionMedicineItem(ProductionMedicineItem) error
 
-	GetProductionMedicineItems(prescriptionId int) ([]ProductionMedicineItemRow, error)
+	GetProductionMedicineItem(prescriptionId int) ([]ProductionMedicineItemRow, error)
 	DeleteProduction(*Production, *User) error
-	DeleteProductionMedicineItems(*Production, *User) error
+	DeleteProductionMedicineItem(*Production, *User) error
 	ModifyProduction(int, Production, *User) error
 
 	// delete entirely from the db if there's error
@@ -59,7 +59,7 @@ type ViewProductionsPayload struct {
 }
 
 // view the detail of the production
-type ViewProductionMedicineItemsPayload struct {
+type ViewProductionMedicineItemPayload struct {
 	Number int `json:"number" validate:"required"`
 }
 
@@ -127,7 +127,7 @@ type DeleteProduction struct {
 	ID int `json:"id" validate:"required"`
 }
 
-type ProductionMedicineItems struct {
+type ProductionMedicineItem struct {
 	ID           int     `json:"id"`
 	ProductionID int     `json:"prescriptionId"`
 	MedicineID   int     `json:"medicineId"`

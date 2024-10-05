@@ -125,7 +125,7 @@ func (s *Store) GetProductionsByDateAndNumber(startDate time.Time, endDate time.
 					ORDER BY prod.production_date DESC`
 
 	searchVal := "%"
-	for _, val := range(strconv.Itoa(bn)) {
+	for _, val := range strconv.Itoa(bn) {
 		if string(val) != " " {
 			searchVal += (string(val) + "%")
 		}
@@ -349,19 +349,19 @@ func (s *Store) CreateProduction(production types.Production) error {
 	return nil
 }
 
-func (s *Store) CreateProductionMedicineItems(prodMedItems types.ProductionMedicineItems) error {
+func (s *Store) CreateProductionMedicineItem(prodMedItem types.ProductionMedicineItem) error {
 	values := "?"
 	for i := 0; i < 4; i++ {
 		values += ", ?"
 	}
 
-	query := `INSERT INTO production_medicine_items (
+	query := `INSERT INTO production_medicine_item (
 				production_id, medicine_id, qty, unit_id, cost
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
-		prodMedItems.ProductionID, prodMedItems.MedicineID,
-		prodMedItems.Qty, prodMedItems.UnitID, prodMedItems.Cost)
+		prodMedItem.ProductionID, prodMedItem.MedicineID,
+		prodMedItem.Qty, prodMedItem.UnitID, prodMedItem.Cost)
 	if err != nil {
 		return err
 	}
@@ -369,7 +369,7 @@ func (s *Store) CreateProductionMedicineItems(prodMedItems types.ProductionMedic
 	return nil
 }
 
-func (s *Store) GetProductionMedicineItems(productionId int) ([]types.ProductionMedicineItemRow, error) {
+func (s *Store) GetProductionMedicineItem(productionId int) ([]types.ProductionMedicineItemRow, error) {
 	query := `SELECT 
 			pmi.id, 
 			medicine.barcode, medicine.name, 
@@ -377,7 +377,7 @@ func (s *Store) GetProductionMedicineItems(productionId int) ([]types.Production
 			unit.name, 
 			pmi.cost 
 			
-			FROM production_medicine_items as pmi 
+			FROM production_medicine_item as pmi 
 			JOIN production as prod ON pmi.production_id = prod.id 
 			JOIN medicine ON pmi.medicine_id = medicine.id 
 			JOIN unit ON pmi.unit_id = unit.id 
@@ -392,7 +392,7 @@ func (s *Store) GetProductionMedicineItems(productionId int) ([]types.Production
 	prescMedItems := make([]types.ProductionMedicineItemRow, 0)
 
 	for rows.Next() {
-		prescMedItem, err := scanRowIntoProductionMedicineItems(rows)
+		prescMedItem, err := scanRowIntoProductionMedicineItem(rows)
 
 		if err != nil {
 			return nil, err
@@ -424,15 +424,15 @@ func (s *Store) DeleteProduction(production *types.Production, user *types.User)
 	return nil
 }
 
-func (s *Store) DeleteProductionMedicineItems(production *types.Production, user *types.User) error {
-	data, err := s.GetProductionMedicineItems(production.ID)
+func (s *Store) DeleteProductionMedicineItem(production *types.Production, user *types.User) error {
+	data, err := s.GetProductionMedicineItem(production.ID)
 	if err != nil {
 		return err
 	}
 
 	writeData := map[string]interface{}{
-		"production": production,
-		"deleted_medicine_items": data,
+		"production":            production,
+		"deleted_medicine_item": data,
 	}
 
 	err = logger.WriteLog("delete", "prescription", user.Name, production.ID, writeData)
@@ -440,7 +440,7 @@ func (s *Store) DeleteProductionMedicineItems(production *types.Production, user
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("DELETE FROM production_medicine_items WHERE production_id = ? ", production.ID)
+	_, err = s.db.Exec("DELETE FROM production_medicine_item WHERE production_id = ? ", production.ID)
 	if err != nil {
 		return err
 	}
@@ -489,8 +489,8 @@ func (s *Store) AbsoluteDeleteProduction(prod types.Production) error {
 				AND total_cost = ?`
 
 	rows, err := s.db.Query(query, prod.Number, prod.ProducedMedicineID, prod.ProducedQty, prod.ProducedUnitID,
-									prod.ProductionDate, prod.Description, prod.UpdatedToStock, prod.UpdatedToAccount,
-									prod.TotalCost)
+		prod.ProductionDate, prod.Description, prod.UpdatedToStock, prod.UpdatedToAccount,
+		prod.TotalCost)
 	if err != nil {
 		return err
 	}
@@ -509,7 +509,7 @@ func (s *Store) AbsoluteDeleteProduction(prod types.Production) error {
 		return nil
 	}
 
-	query = "DELETE FROM production_medicine_items WHERE production_id = ?"
+	query = "DELETE FROM production_medicine_item WHERE production_id = ?"
 	_, _ = s.db.Exec(query, id)
 
 	query = `DELETE FROM production WHERE id = ?`
@@ -577,7 +577,7 @@ func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPay
 	return production, nil
 }
 
-func scanRowIntoProductionMedicineItems(rows *sql.Rows) (*types.ProductionMedicineItemRow, error) {
+func scanRowIntoProductionMedicineItem(rows *sql.Rows) (*types.ProductionMedicineItemRow, error) {
 	prescMedItem := new(types.ProductionMedicineItemRow)
 
 	err := rows.Scan(

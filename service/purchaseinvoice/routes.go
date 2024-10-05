@@ -134,7 +134,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-			return	
+			return
 		}
 
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice number %d doesn't exists", payload.Number))
@@ -158,7 +158,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
@@ -183,7 +183,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				})
 				if err != nil {
 					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-					return	
+					return
 				}
 
 				utils.WriteError(w, http.StatusInternalServerError, err)
@@ -207,7 +207,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusInternalServerError, err)
@@ -230,14 +230,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
 			return
 		}
 
-		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItems(types.PurchaseMedicineItem{
+		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItem(types.PurchaseMedicineItem{
 			PurchaseInvoiceID: purchaseInvoiceId,
 			MedicineID:        medData.ID,
 			Qty:               medicine.Qty,
@@ -264,7 +264,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusInternalServerError,
@@ -289,7 +289,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
@@ -314,9 +314,9 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				})
 				if err != nil {
 					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", err))
-					return	
+					return
 				}
-				
+
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
 				return
 			}
@@ -475,7 +475,7 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPurchaseMedicineItemsPayload
+	var payload types.ViewPurchaseMedicineItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -503,8 +503,8 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// get medicine items of the purchase invoice
-	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	// get medicine item of the purchase invoice
+	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -595,7 +595,7 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 			Name: inputter.Name,
 		},
 
-		MedicineLists: purchaseMedicineItems,
+		MedicineLists: purchaseMedicineItem,
 	}
 
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
@@ -632,20 +632,20 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine items don't exist: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine item don't exist: %v", err))
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user)
+	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItem(purchaseInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// subtract stock and received qty
-	for _, purchaseMedicine := range purchaseMedicineItems {
+	for _, purchaseMedicine := range purchaseMedicineItem {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
@@ -746,20 +746,20 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	purchaseMedicineItems, err := h.purchaseInvoiceStore.GetPurchaseMedicineItems(purchaseInvoice.ID)
+	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine items don't exist: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine item don't exist: %v", err))
 		return
 	}
 
-	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItems(purchaseInvoice, user)
+	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItem(purchaseInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// subtract the stock and received qty
-	for _, purchaseMedicine := range purchaseMedicineItems {
+	for _, purchaseMedicine := range purchaseMedicineItem {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName))
@@ -825,7 +825,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItems(types.PurchaseMedicineItem{
+		err = h.purchaseInvoiceStore.CreatePurchaseMedicineItem(types.PurchaseMedicineItem{
 			PurchaseInvoiceID: payload.ID,
 			MedicineID:        medData.ID,
 			Qty:               medicine.Qty,
@@ -871,9 +871,9 @@ func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty fl
 		return fmt.Errorf("purchase order invoice %d not found: %v", poinn, err)
 	}
 
-	purchaseOrderMeds, err := h.poInvoiceStore.GetPurchaseOrderItems(purchaseOrderInvoice.ID)
+	purchaseOrderMeds, err := h.poInvoiceStore.GetPurchaseOrderItem(purchaseOrderInvoice.ID)
 	if err != nil {
-		return fmt.Errorf("purchase order items not found: %v", err)
+		return fmt.Errorf("purchase order item not found: %v", err)
 	}
 
 	for _, purchaseOrderMed := range purchaseOrderMeds {
@@ -887,7 +887,7 @@ func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty fl
 			if err != nil {
 				return fmt.Errorf("po unit error: %v", err)
 			}
-			
+
 			if req_type == 0 {
 				if purchaseOrderMed.ReceivedQty == 0 {
 					return nil
@@ -909,7 +909,7 @@ func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty fl
 	// return fmt.Errorf("medicine not found in purchase order invoice")
 }
 
-func addReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemsReturn, additionalReceivedQty float64,
+func addReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemReturn, additionalReceivedQty float64,
 	poUnit *types.Unit, purchasedUnit *types.Unit, poiid int, user *types.User) error {
 	var purchasedOrderQty float64
 	var purchasedReceivedQty float64
@@ -950,7 +950,7 @@ func addReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types
 	return nil
 }
 
-func subtractReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemsReturn, additionalReceivedQty float64,
+func subtractReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types.PurchaseOrderItemReturn, additionalReceivedQty float64,
 	poUnit *types.Unit, purchasedUnit *types.Unit, poiid int, user *types.User) error {
 	var purchasedReceivedQty float64
 	var updatedQty float64
