@@ -3,11 +3,14 @@ package prescription
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/types"
+
+	dectofrac "github.com/av-elier/go-decimal-to-rational"
 )
 
 type Store struct {
@@ -475,12 +478,32 @@ func (s *Store) GetPrescriptionMedicineItems(prescriptionSetItemId int) ([]types
 
 	for rows.Next() {
 		prescMedItem, err := scanRowIntoPrescriptionMedicineItem(rows)
-
 		if err != nil {
 			return nil, err
 		}
 
-		prescMedItems = append(prescMedItems, *prescMedItem)
+		var qty string
+
+		if prescMedItem.Qty < 1.0 {
+			qty = dectofrac.NewRatP(prescMedItem.Qty, 0.01).String()
+		} else {
+			if prescMedItem.Qty == math.Trunc(prescMedItem.Qty) {
+				qty = fmt.Sprintf("%.0f", prescMedItem.Qty)
+			} else {
+				qty = fmt.Sprintf("%.1f", prescMedItem.Qty)
+			}
+		}
+
+		prescMedItems = append(prescMedItems, types.PrescriptionMedicineItemReturn{
+			MedicineBarcode: prescMedItem.MedicineBarcode,
+			MedicineName:    prescMedItem.MedicineName,
+			QtyString:       qty,
+			QtyFloat:        prescMedItem.Qty,
+			Unit:            prescMedItem.Unit,
+			Price:           prescMedItem.Price,
+			Discount:        prescMedItem.Discount,
+			Subtotal:        prescMedItem.Subtotal,
+		})
 	}
 
 	return prescMedItems, nil
@@ -614,7 +637,7 @@ func (s *Store) AbsoluteDeletePrescription(presc types.Prescription) error {
 		return nil
 	}
 
-	for _, setItemId := range(setItemsId) {
+	for _, setItemId := range setItemsId {
 		query = "DELETE FROM prescription_medicine_item WHERE prescription_set_item_id = ?"
 		_, _ = s.db.Exec(query, setItemId)
 	}
@@ -1014,8 +1037,8 @@ func scanRowIntoPrescriptionLists(rows *sql.Rows) (*types.PrescriptionListsRetur
 	return prescription, nil
 }
 
-func scanRowIntoPrescriptionMedicineItem(rows *sql.Rows) (*types.PrescriptionMedicineItemReturn, error) {
-	prescMedItem := new(types.PrescriptionMedicineItemReturn)
+func scanRowIntoPrescriptionMedicineItem(rows *sql.Rows) (*types.PrescriptionMedicineItemTemp, error) {
+	prescMedItem := new(types.PrescriptionMedicineItemTemp)
 
 	err := rows.Scan(
 		&prescMedItem.MedicineBarcode,

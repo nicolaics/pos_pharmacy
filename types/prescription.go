@@ -189,6 +189,17 @@ type PrescriptionSetItemReturn struct {
 type PrescriptionMedicineItemReturn struct {
 	MedicineBarcode string  `json:"medicineBarcode"`
 	MedicineName    string  `json:"medicineName"`
+	QtyString       string  `json:"qtyString"`
+	QtyFloat        float64 `json:"qtyFloat"`
+	Unit            string  `json:"unit"`
+	Price           float64 `json:"price"`
+	Discount        float64 `json:"discount"`
+	Subtotal        float64 `json:"subtotal"`
+}
+
+type PrescriptionMedicineItemTemp struct {
+	MedicineBarcode string  `json:"medicineBarcode"`
+	MedicineName    string  `json:"medicineName"`
 	Qty             float64 `json:"qty"`
 	Unit            string  `json:"unit"`
 	Price           float64 `json:"price"`

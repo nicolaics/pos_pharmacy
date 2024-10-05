@@ -915,7 +915,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = utils.AddStock(h.medStore, medData, unit, medicineItem.Qty, user)
+		err = utils.AddStock(h.medStore, medData, unit, medicineItem.QtyFloat, user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
@@ -1056,7 +1056,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = utils.AddStock(h.medStore, medData, unit, medicineItem.Qty, user)
+			err = utils.AddStock(h.medStore, medData, unit, medicineItem.QtyFloat, user)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 				return
