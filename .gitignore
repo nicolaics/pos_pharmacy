@@ -10,6 +10,7 @@ test_token.json
 *.txt
 *.log
 static/assets
+create_justus_db.py
 
 # FRONTEND
 frontend/node_modules
