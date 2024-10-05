@@ -204,6 +204,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eticketFileNames := make([]string, 0)
+	setNumber := 1
 
 	for _, setItem := range payload.SetItems {
 		// get consume time
@@ -377,7 +378,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
+			eticketId, _, err := h.prescriptionStore.GetEticketIDAndPDFUrl(eticket)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
@@ -402,9 +403,36 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// TODO: CREATE ETICKET PDF
-			// eticketFileName, err := pdfcreator.CreateEticket7x4()
-			// eticketFileNames = append(eticketFileNames, eticketFileName)
+			eticketPDF := types.EticketPDFReturnPayload{
+				Number: setItem.Eticket.Number,
+				PatientName: patient.Name,
+				SetUsage: setUsage.Name,
+				Dose: dose.Name,
+				SetUnit: setUnit.Name,
+				ConsumeTime: consumeTime.Name,
+				MustFinish: setItem.MustFinish,
+				MedicineQty: setItem.Eticket.MedicineQty,
+			}
+			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore, "")
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+				return
+			}
+
+			eticketFileNames = append(eticketFileNames, eticketFileName)
+			setNumber++
+
+			err = h.prescriptionStore.UpdatePDFUrl("eticket", eticketId, eticketFileName)
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket pdf url: %v", err))
+				return
+			}
 		}
 
 		for _, medicine := range setItem.MedicineLists {
@@ -529,6 +557,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	prescFileName, err := pdfcreator.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
+		return
+	}
+
+	err = h.prescriptionStore.UpdatePDFUrl("prescription", prescriptionId, prescFileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update presc pdf url: %v", err))
 		return
 	}
 
@@ -1075,6 +1109,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eticketFileNames := make([]string, 0)
+	setNumber := 1
 
 	// delete set items
 	for _, setItem := range oldPrescriptionSetItems {
@@ -1284,7 +1319,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
+			eticketId, eticketFileName, err := h.prescriptionStore.GetEticketIDAndPDFUrl(eticket)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
 				if errDel != nil {
@@ -1309,7 +1344,24 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// TODO: CREATE ETICKET PDF
+			eticketPDF := types.EticketPDFReturnPayload{
+				Number: setItem.Eticket.Number,
+				PatientName: patient.Name,
+				SetUsage: setUsage.Name,
+				Dose: dose.Name,
+				SetUnit: setUnit.Name,
+				ConsumeTime: consumeTime.Name,
+				MustFinish: setItem.MustFinish,
+				MedicineQty: setItem.Eticket.MedicineQty,
+			}
+			eticketFileName, err = pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore, eticketFileName)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+				return
+			}
+
+			eticketFileNames = append(eticketFileNames, eticketFileName)
+			setNumber++
 		}
 
 		for _, medicine := range setItem.MedicineLists {

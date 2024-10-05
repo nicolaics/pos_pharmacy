@@ -780,31 +780,32 @@ func (s *Store) DeleteEticket(id int) error {
 	return nil
 }
 
-func (s *Store) GetEticketID(eticket types.Eticket) (int, error) {
-	query := `SELECT id FROM eticket 
+func (s *Store) GetEticketIDAndPDFUrl(eticket types.Eticket) (int, string, error) {
+	query := `SELECT id, pdf_url FROM eticket 
 				WHERE prescription_id = ? AND prescription_set_item_id = ? 
 				AND number = ? AND medicine_qty = ?`
 	rows, err := s.db.Query(query, eticket.PrescriptionID, eticket.PrescriptionSetItemID,
 		eticket.Number, eticket.MedicineQty)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	defer rows.Close()
 
 	var id int
+	var pdfUrl string
 
 	for rows.Next() {
-		err = rows.Scan(&id)
+		err = rows.Scan(&id, &pdfUrl)
 		if err != nil {
-			return 0, err
+			return 0, "", err
 		}
 	}
 
 	if id == 0 {
-		return 0, fmt.Errorf("eticket not found")
+		return 0, "", fmt.Errorf("eticket not found")
 	}
 
-	return id, nil
+	return id, pdfUrl, nil
 }
 
 func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) error {

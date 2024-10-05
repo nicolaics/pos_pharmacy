@@ -39,7 +39,7 @@ type PrescriptionStore interface {
 
 	CreateEticket(Eticket) error
 	DeleteEticket(int) error
-	GetEticketID(Eticket) (int, error)
+	GetEticketIDAndPDFUrl(Eticket) (int, string, error)
 
 	// tabla nemae = prescription, eticket
 	UpdatePDFUrl(tableName string, id int, fileName string) error
@@ -266,14 +266,21 @@ type Eticket struct {
 	CreatedAt             time.Time `json:"createdAt"`
 }
 
-type EticketReturnPayload struct {
-	Number int `json:"number"`
-}
-
 type PrescriptionPDFReturn struct {
 	Number       int
 	Date         time.Time
 	Patient      Patient
 	Doctor       Doctor
 	MedicineSets []PrescriptionSetItemReturn
+}
+
+type EticketPDFReturnPayload struct {
+	Number      int     `json:"number"`
+	PatientName string  `json:"patientName"`
+	SetUsage    string  `json:"setUsage"`
+	Dose        string  `json:"dose"`
+	SetUnit     string  `json:"setUnit"`
+	ConsumeTime string  `json:"consumeTime"`
+	MustFinish  bool    `json:"mustFinish"`
+	MedicineQty float64 `json:"medicineQty"`
 }
