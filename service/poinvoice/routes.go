@@ -93,7 +93,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItems, *invoiceDate)
+	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItem, *invoiceDate)
 	if err == nil || purchaseOrderInvoiceId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d exists", payload.Number))
 		return
@@ -104,7 +104,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		CompanyID:            payload.CompanyID,
 		SupplierID:           payload.SupplierID,
 		UserID:               user.ID,
-		TotalItems:           payload.TotalItems,
+		TotalItem:            payload.TotalItem,
 		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	})
@@ -114,19 +114,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoice ID
-	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItems, *invoiceDate)
+	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItem, *invoiceDate)
 	if err != nil {
 		err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-			Number:               payload.Number,
-			CompanyID:            payload.CompanyID,
-			SupplierID:           payload.SupplierID,
-			UserID:               user.ID,
-			TotalItems:           payload.TotalItems,
-			InvoiceDate:          *invoiceDate,
+			Number:      payload.Number,
+			CompanyID:   payload.CompanyID,
+			SupplierID:  payload.SupplierID,
+			UserID:      user.ID,
+			TotalItem:   payload.TotalItem,
+			InvoiceDate: *invoiceDate,
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
-			return	
+			return
 		}
 
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d doesn't exists: %v", payload.Number, err))
@@ -137,16 +137,16 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-				Number:               payload.Number,
-				CompanyID:            payload.CompanyID,
-				SupplierID:           payload.SupplierID,
-				UserID:               user.ID,
-				TotalItems:           payload.TotalItems,
-				InvoiceDate:          *invoiceDate,
+				Number:      payload.Number,
+				CompanyID:   payload.CompanyID,
+				SupplierID:  payload.SupplierID,
+				UserID:      user.ID,
+				TotalItem:   payload.TotalItem,
+				InvoiceDate: *invoiceDate,
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
@@ -158,16 +158,16 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			err = h.unitStore.CreateUnit(medicine.Unit)
 			if err != nil {
 				err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-					Number:               payload.Number,
-					CompanyID:            payload.CompanyID,
-					SupplierID:           payload.SupplierID,
-					UserID:               user.ID,
-					TotalItems:           payload.TotalItems,
-					InvoiceDate:          *invoiceDate,
+					Number:      payload.Number,
+					CompanyID:   payload.CompanyID,
+					SupplierID:  payload.SupplierID,
+					UserID:      user.ID,
+					TotalItem:   payload.TotalItem,
+					InvoiceDate: *invoiceDate,
 				})
 				if err != nil {
 					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
-					return	
+					return
 				}
 
 				utils.WriteError(w, http.StatusInternalServerError, err)
@@ -178,23 +178,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-				Number:               payload.Number,
-				CompanyID:            payload.CompanyID,
-				SupplierID:           payload.SupplierID,
-				UserID:               user.ID,
-				TotalItems:           payload.TotalItems,
-				InvoiceDate:          *invoiceDate,
+				Number:      payload.Number,
+				CompanyID:   payload.CompanyID,
+				SupplierID:  payload.SupplierID,
+				UserID:      user.ID,
+				TotalItem:   payload.TotalItem,
+				InvoiceDate: *invoiceDate,
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
-				return	
+				return
 			}
 
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		err = h.poInvoiceStore.CreatePurchaseOrderItems(types.PurchaseOrderItem{
+		err = h.poInvoiceStore.CreatePurchaseOrderItem(types.PurchaseOrderItem{
 			PurchaseOrderInvoiceID: purchaseOrderInvoiceId,
 			MedicineID:             medData.ID,
 			OrderQty:               medicine.OrderQty,
@@ -204,18 +204,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
-				Number:               payload.Number,
-				CompanyID:            payload.CompanyID,
-				SupplierID:           payload.SupplierID,
-				UserID:               user.ID,
-				TotalItems:           payload.TotalItems,
-				InvoiceDate:          *invoiceDate,
+				Number:      payload.Number,
+				CompanyID:   payload.CompanyID,
+				SupplierID:  payload.SupplierID,
+				UserID:      user.ID,
+				TotalItem:   payload.TotalItem,
+				InvoiceDate: *invoiceDate,
 			})
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", err))
-				return	
+				return
 			}
-			
+
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return
@@ -321,7 +321,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 			Number:       purchaseOrderInvoice.Number,
 			SupplierName: supplier.Name,
 			UserName:     user.Name,
-			TotalItems:   purchaseOrderInvoice.TotalItems,
+			TotalItem:    purchaseOrderInvoice.TotalItem,
 			InvoiceDate:  purchaseOrderInvoice.InvoiceDate,
 		})
 	} else if params == "number" {
@@ -379,7 +379,7 @@ func (h *Handler) handleGetPurchaseOrderInvoices(w http.ResponseWriter, r *http.
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPurchaseOrderItemsPayload
+	var payload types.ViewPurchaseOrderItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -407,8 +407,8 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 		return
 	}
 
-	// get medicine items of the purchase invoice
-	purchaseOrderItems, err := h.poInvoiceStore.GetPurchaseOrderItems(payload.ID)
+	// get medicine item of the purchase invoice
+	purchaseOrderItem, err := h.poInvoiceStore.GetPurchaseOrderItem(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -445,7 +445,7 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 	returnPayload := types.PurchaseOrderInvoiceDetailPayload{
 		ID:                     purchaseOrderInvoice.ID,
 		Number:                 purchaseOrderInvoice.Number,
-		TotalItems:             purchaseOrderInvoice.TotalItems,
+		TotalItem:              purchaseOrderInvoice.TotalItem,
 		InvoiceDate:            purchaseOrderInvoice.InvoiceDate,
 		CreatedAt:              purchaseOrderInvoice.CreatedAt,
 		LastModified:           purchaseOrderInvoice.LastModified,
@@ -495,7 +495,7 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 			Name: inputter.Name,
 		},
 
-		MedicineLists: purchaseOrderItems,
+		MedicineLists: purchaseOrderItem,
 	}
 
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
@@ -532,7 +532,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user)
+	err = h.poInvoiceStore.DeletePurchaseOrderItem(purchaseOrderInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -588,7 +588,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Number:               payload.NewData.Number,
 		CompanyID:            payload.NewData.CompanyID,
 		SupplierID:           payload.NewData.SupplierID,
-		TotalItems:           payload.NewData.TotalItems,
+		TotalItem:            payload.NewData.TotalItem,
 		InvoiceDate:          *invoiceDate,
 		LastModifiedByUserID: user.ID,
 	}, user)
@@ -597,7 +597,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.poInvoiceStore.DeletePurchaseOrderItems(purchaseOrderInvoice, user)
+	err = h.poInvoiceStore.DeletePurchaseOrderItem(purchaseOrderInvoice, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -625,7 +625,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = h.poInvoiceStore.CreatePurchaseOrderItems(types.PurchaseOrderItem{
+		err = h.poInvoiceStore.CreatePurchaseOrderItem(types.PurchaseOrderItem{
 			PurchaseOrderInvoiceID: payload.ID,
 			MedicineID:             medData.ID,
 			OrderQty:               medicine.OrderQty,
