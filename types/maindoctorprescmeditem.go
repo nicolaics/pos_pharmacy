@@ -9,7 +9,7 @@ type MainDoctorPrescMedItemStore interface {
 	IsMedicineContentsExist(medId int) (bool, error)
 	IsMedicineBarcodeExist(barcode string) (bool, error)
 
-	DeleteMainDoctorPrescMedItem(medId int) error
+	DeleteMainDoctorPrescMedItem(medId int, user *User) error
 }
 
 type RegisterMainDoctorPrescMedItemPayload struct {
