@@ -429,6 +429,26 @@ func (s *Store) DeleteMedicine(med *types.Medicine, user *types.User) error {
 		return err
 	}
 
+	query = `SELECT COUNT(*) FROM main_doctor_presc_medicine_item WHERE medicine_id = ?`
+	row := s.db.QueryRow(query, med.ID)
+	if row.Err() != nil {
+		return row.Err()
+	}
+
+	var count int
+	err = row.Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		query = `DELETE FROM main_doctor_presc_medicine_item WHERE medicine_id = ?`
+		_, err = s.db.Exec(query, med.ID)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
