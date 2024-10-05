@@ -16,9 +16,9 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPatientByName(name string) (*types.Patient, error) {
-	query := "SELECT * FROM patient WHERE name = ?"
-	rows, err := s.db.Query(query, name)
+func (s *Store) GetPatientByName(name string, age int) (*types.Patient, error) {
+	query := "SELECT * FROM patient WHERE name = ? AND age = ?"
+	rows, err := s.db.Query(query, name, age)
 	if err != nil {
 		return nil, err
 	}

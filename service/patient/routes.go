@@ -56,7 +56,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the patient exists
-	_, err = h.patientStore.GetPatientByName(payload.Name)
+	_, err = h.patientStore.GetPatientByName(payload.Name, payload.Age)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("patient with name %s already exists", payload.Name))
@@ -221,7 +221,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.patientStore.GetPatientByName(payload.NewData.Name)
+	_, err = h.patientStore.GetPatientByName(payload.NewData.Name, payload.NewData.Age)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("patient with name %s already exist", payload.NewData.Name))

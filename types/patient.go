@@ -5,7 +5,7 @@ import (
 )
 
 type PatientStore interface {
-	GetPatientByName(name string) (*Patient, error)
+	GetPatientByName(name string, age int) (*Patient, error)
 	GetPatientsBySearchName(name string) ([]Patient, error)
 	GetPatientByID(id int) (*Patient, error)
 
