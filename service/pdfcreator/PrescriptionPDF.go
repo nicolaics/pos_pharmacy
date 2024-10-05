@@ -41,6 +41,31 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
 		return "", err
 	}
 
+    usage := map[string]string{
+        "sakit": "[sS][0-9]+.*",
+        "Batuk dan Pilek": "[bB][pP][0-9]+.*",
+        "maag": "[mM][0-9]+.*",
+        "sk": "[sS][kK][0-9]+.*",
+        "pusing": "[pP][0-9]+.*",
+    }
+
+    for _, setItem := range(presc.MedicineSets) {
+        if setItem.Usage == "" {
+            for idx, med := range(setItem.MedicineLists) {
+                for key, val := range(usage) {
+                    r := regexp.MustCompile(val)
+                    use := r.FindAllString(med.Name, -1)
+                    
+                    if len(use) != 0 {
+                        setItem.Usage = key
+                        setItem.MedicineLists = removeMedicineFromList(setItem.MedicineLists, idx)
+                        break
+                    }
+                }
+            }
+        }
+    }
+
     err = createPrescriptionData(pdf, presc.MedicineSets)
     if err != nil {
 		return "", err
@@ -469,119 +494,6 @@ func createPrescriptionFooter(pdf *fpdf.Fpdf) error {
     return nil
 }
 
-/*
-func removeMedicineFromList(slice []types.MedicineList, s int) []types.MedicineList {
+func removeMedicineFromList(slice []types.PrescriptionMedicineListPDFReturn, s int) []types.PrescriptionMedicineListPDFReturn {
     return append(slice[:s], slice[s+1:]...)
 }
-
-func createDummyData() types.Prescription {
-    medicineSets := make([]types.MedicineSet, 0)
-    medicineSets = append(medicineSets, types.MedicineSet{
-        Dose: "3 x 1/2",
-        Det: "3x",
-        ConsumeTime: "",
-        ConsumeUnit: "cth",
-        MedicineLists: []types.MedicineList{
-            {Name: "BP5 BARU"},
-            {Name: "Sinocort 22 mg 2", Qty: "1/2", Unit: "tab"},
-            {Name: "Codein", Qty: "15", Unit: "mg"},
-            {Name: "Tremenza",},
-            {Name: "Braxidin", Qty: "1/3", Unit: "tab"},
-        },
-        Mf: "mf da in cap dtd no. xv",
-    })
-
-    medicineSets = append(medicineSets, types.MedicineSet{
-        Dose: "3 x 1/2",
-        Det: "orig",
-        ConsumeTime: "pc",
-        ConsumeUnit: "cth",
-        MedicineLists: []types.MedicineList{
-            {Name: "Zolistan"},
-        },
-        Mf: "mf da in cap dtd no. x",
-        Usage: "Pusing/Vertigo",
-    })
-
-    medicineSets = append(medicineSets, types.MedicineSet{
-        Dose: "3 x 1/2",
-        Det: "3x",
-        ConsumeTime: "ac",
-        ConsumeUnit: "cth",
-        MedicineLists: []types.MedicineList{
-            {Name: "BP5 BARU"},
-            {Name: "Sinocort 22 mg 2", Qty: "1/2", Unit: "tab"},
-            {Name: "Codein", Qty: "15", Unit: "mg"},
-            {Name: "Tremenza",},
-            {Name: "Braxidin", Qty: "1/3", Unit: "tab"},
-        },
-        Mf: "mf da in cap dtd no. xv",
-    })
-
-    medicineSets = append(medicineSets, types.MedicineSet{
-        Dose: "3 x 1/2",
-        Det: "3x",
-        ConsumeTime: "ac",
-        ConsumeUnit: "cth",
-        MedicineLists: []types.MedicineList{
-            {Name: "BP5 BARU"},
-            {Name: "Sinocort 22 mg 2", Qty: "1/2", Unit: "tab"},
-            {Name: "Codein", Qty: "15", Unit: "mg"},
-            {Name: "Tremenza",},
-            {Name: "Braxidin", Qty: "1/3", Unit: "tab"},
-        },
-        Mf: "mf da in cap dtd no. xv",
-    })
-
-    medicineSets = append(medicineSets, types.MedicineSet{
-        Dose: "3 x 1/2",
-        Det: "3x",
-        ConsumeTime: "ac",
-        ConsumeUnit: "cth",
-        MedicineLists: []types.MedicineList{
-            {Name: "BP5 BARU"},
-            {Name: "Sinocort 22 mg 2", Qty: "1/2", Unit: "tab"},
-            {Name: "Codein", Qty: "15", Unit: "mg"},
-            {Name: "Tremenza",},
-            {Name: "Braxidin", Qty: "1/3", Unit: "tab"},
-        },
-        Mf: "mf da in cap dtd no. xv",
-    })
-
-    usage := map[string]string{
-        "sakit": "[sS][0-9]+.*",
-        "Batuk dan Pilek": "[bB][pP][0-9]+.*",
-        "maag": "[mM][0-9]+.*",
-        "sk": "[sS][kK][0-9]+.*",
-        "pusing": "[pP][0-9]+.*",
-    }
-
-    for _, value := range(medicineSets) {
-        if value.Usage == "" {
-            for idx, med := range(value.MedicineLists) {
-                for key, val := range(usage) {
-                    r := regexp.MustCompile(val)
-                    use := r.FindAllString(med.Name, -1)
-                    
-                    if len(use) != 0 {
-                        value.Usage = key
-                        value.MedicineLists = removeMedicineFromList(value.MedicineLists, idx)
-                        break
-                    }
-                }
-            }
-        }
-    }
-    
-    presc := types.Prescription{
-        Number: 1,
-        Date: time.Now(),
-        Patient: "test",
-        // Age: 10,
-        Doctor: "Justus",
-        MedicineSets: medicineSets,
-    }
-
-    return presc
-}
-*/
