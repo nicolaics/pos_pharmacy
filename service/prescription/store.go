@@ -845,7 +845,7 @@ func (s *Store) UpdateEticketID(eticketId int, prescSetItemId int) error {
 	return nil
 }
 
-func (s *Store) GetPrescriptionSetAndPrescriptionMedicineItems(prescriptionId int) ([]types.PrescriptionSetItemReturn, error) {
+func (s *Store) GetPrescriptionSetAndMedicineItems(prescriptionId int) ([]types.PrescriptionSetItemReturn, error) {
 	query := `SELECT psi.id, 
 					mf.name, dose.name, unit.name AS set_unit, 
 					consume_time.name, det.name, psu.name, 
