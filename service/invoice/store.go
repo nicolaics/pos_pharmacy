@@ -185,7 +185,6 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 		}
 		defer rows.Close()
 
-
 		for rows.Next() {
 			invoice, err := scanRowIntoInvoiceLists(rows)
 			if err != nil {
@@ -212,7 +211,7 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					AND invoice.number = ? 
 					AND invoice.deleted_at IS NULL 
 					ORDER BY invoice.invoice_date DESC`
-	
+
 	rows, err := s.db.Query(query, startDate, endDate, number)
 	if err != nil {
 		return nil, err
@@ -379,13 +378,13 @@ func (s *Store) CreateInvoice(invoice types.Invoice) error {
 	return nil
 }
 
-func (s *Store) CreateMedicineItems(medicineItem types.MedicineItems) error {
+func (s *Store) CreateMedicineItem(medicineItem types.InvoiceMedicineItem) error {
 	values := "?"
 	for i := 0; i < 6; i++ {
 		values += ", ?"
 	}
 
-	query := `INSERT INTO medicine_items (
+	query := `INSERT INTO medicine_item (
 		invoice_id, medicine_id, qty, unit_id, price, discount, subtotal
 	) VALUES (` + values + `)`
 	_, err := s.db.Exec(query,
@@ -399,14 +398,14 @@ func (s *Store) CreateMedicineItems(medicineItem types.MedicineItems) error {
 	return nil
 }
 
-func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPayload, error) {
+func (s *Store) GetMedicineItem(invoiceId int) ([]types.InvoiceMedicineItemReturnPayload, error) {
 	query := `SELECT 
 				mi.id, 
 				medicine.barcode, medicine.name, 
 				mi.qty, 
 				unit.name, 
 				mi.price, mi.discount, mi.subtotal 
-				FROM medicine_items as mi 
+				FROM medicine_item as mi 
 				JOIN invoice ON mi.invoice_id = invoice.id 
 				JOIN medicine ON mi.medicine_id = medicine.id 
 				JOIN unit ON mi.unit_id = unit.id 
@@ -418,10 +417,10 @@ func (s *Store) GetMedicineItems(invoiceId int) ([]types.MedicineItemReturnPaylo
 	}
 	defer rows.Close()
 
-	medicineItems := make([]types.MedicineItemReturnPayload, 0)
+	medicineItems := make([]types.InvoiceMedicineItemReturnPayload, 0)
 
 	for rows.Next() {
-		medicineItem, err := scanRowIntoMedicineItems(rows)
+		medicineItem, err := scanRowIntoMedicineItem(rows)
 
 		if err != nil {
 			return nil, err
@@ -453,15 +452,15 @@ func (s *Store) DeleteInvoice(invoice *types.Invoice, user *types.User) error {
 	return nil
 }
 
-func (s *Store) DeleteMedicineItems(invoice *types.Invoice, user *types.User) error {
-	data, err := s.GetMedicineItems(invoice.ID)
+func (s *Store) DeleteMedicineItem(invoice *types.Invoice, user *types.User) error {
+	data, err := s.GetMedicineItem(invoice.ID)
 	if err != nil {
 		return err
 	}
 
 	writeData := map[string]interface{}{
-		"invoice":                invoice,
-		"deleted_medicine_items": data,
+		"invoice":               invoice,
+		"deleted_medicine_item": data,
 	}
 
 	err = logger.WriteLog("delete", "invoice", user.Name, invoice.ID, writeData)
@@ -469,7 +468,7 @@ func (s *Store) DeleteMedicineItems(invoice *types.Invoice, user *types.User) er
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("DELETE FROM medicine_items WHERE invoice_id = ? ", invoice.ID)
+	_, err = s.db.Exec("DELETE FROM medicine_item WHERE invoice_id = ? ", invoice.ID)
 	if err != nil {
 		return err
 	}
@@ -530,8 +529,8 @@ func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
 				AND description = ? AND invoice_date = ?`
 
 	rows, err := s.db.Query(query, invoice.Number, invoice.UserID, invoice.CustomerID, invoice.Subtotal, invoice.Discount,
-									invoice.Tax, invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount, 
-									invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate)
+		invoice.Tax, invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
+		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate)
 	if err != nil {
 		return err
 	}
@@ -550,7 +549,7 @@ func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
 		return nil
 	}
 
-	query = "DELETE FROM medicine_items WHERE invoice_id = ?"
+	query = "DELETE FROM medicine_item WHERE invoice_id = ?"
 	_, _ = s.db.Exec(query, id)
 
 	query = `DELETE FROM invoice WHERE id = ?`
@@ -621,8 +620,8 @@ func scanRowIntoInvoiceLists(rows *sql.Rows) (*types.InvoiceListsReturnPayload, 
 	return invoice, nil
 }
 
-func scanRowIntoMedicineItems(rows *sql.Rows) (*types.MedicineItemReturnPayload, error) {
-	medicineItem := new(types.MedicineItemReturnPayload)
+func scanRowIntoMedicineItem(rows *sql.Rows) (*types.InvoiceMedicineItemReturnPayload, error) {
+	medicineItem := new(types.InvoiceMedicineItemReturnPayload)
 
 	err := rows.Scan(
 		&medicineItem.ID,

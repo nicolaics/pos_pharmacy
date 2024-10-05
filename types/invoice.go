@@ -20,9 +20,9 @@ type InvoiceStore interface {
 	GetNumberOfInvoices() (int, error)
 
 	CreateInvoice(Invoice) error
-	CreateMedicineItems(MedicineItems) error
-	GetMedicineItems(int) ([]MedicineItemReturnPayload, error)
-	DeleteMedicineItems(*Invoice, *User) error
+	CreateMedicineItem(InvoiceMedicineItem) error
+	GetMedicineItem(int) ([]InvoiceMedicineItemReturnPayload, error)
+	DeleteMedicineItem(*Invoice, *User) error
 	DeleteInvoice(*Invoice, *User) error
 	ModifyInvoice(int, Invoice, *User) error
 
@@ -49,7 +49,7 @@ type RegisterInvoicePayload struct {
 	Description       string  `json:"description"`
 	InvoiceDate       string  `json:"invoiceDate" validate:"required"`
 
-	MedicineLists []MedicineListsPayload `json:"medicineLists" validate:"required"`
+	MedicineLists []InvoiceMedicineListsPayload `json:"medicineLists" validate:"required"`
 }
 
 type ModifyInvoicePayload struct {
@@ -62,7 +62,7 @@ type ViewInvoicePayload struct {
 	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
-type MedicineListsPayload struct {
+type InvoiceMedicineListsPayload struct {
 	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
 	MedicineName    string  `json:"medicineName" validate:"required"`
 	Qty             float64 `json:"qty" validate:"required"`
@@ -72,7 +72,7 @@ type MedicineListsPayload struct {
 	Subtotal        float64 `json:"subtotal" validate:"required"`
 }
 
-type MedicineItemReturnPayload struct {
+type InvoiceMedicineItemReturnPayload struct {
 	ID              int     `json:"id"`
 	MedicineBarcode string  `json:"medicineBarcode"`
 	MedicineName    string  `json:"medicineName"`
@@ -130,12 +130,12 @@ type InvoiceDetailPayload struct {
 		Name string `json:"name"`
 	} `json:"paymentMethod"`
 
-	MedicineLists []MedicineItemReturnPayload `json:"medicineLists"`
+	MedicineLists []InvoiceMedicineItemReturnPayload `json:"medicineLists"`
 }
 
 type DeleteInvoicePayload ViewInvoiceDetailPayload
 
-type MedicineItems struct {
+type InvoiceMedicineItem struct {
 	ID         int     `json:"id"`
 	InvoiceID  int     `json:"invoiceId"`
 	MedicineID int     `json:"medicineId"`
