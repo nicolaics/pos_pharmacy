@@ -10,14 +10,19 @@ import (
 
 // TODO: add data for the pdf
 type Config struct {
-	PublicHost             string
-	Port                   string
-	DBUser                 string
-	DBPassword             string
-	DBAddress              string
-	DBName                 string
-	JWTExpirationInSeconds int64
-	JWTSecret              string
+	PublicHost              string
+	Port                    string
+	DBUser                  string
+	DBPassword              string
+	DBAddress               string
+	DBName                  string
+	JWTExpirationInSeconds  int64
+	JWTSecret               string
+	CompanyName             string
+	Pharmacist              string
+	PharmacistLicenseNumber string
+	MainDoctor              string
+	MainDoctorLicenseNumber string
 }
 
 var Envs = initConfig()
@@ -32,9 +37,14 @@ func initConfig() Config {
 		DBPassword: getEnv("DB_PASSWORD", ""),
 		DBAddress: fmt.Sprintf("%s:%s", getEnv("DB_HOST", "127.0.0.1"),
 			getEnv("DB_PORT", "3306")),
-		DBName:                        getEnv("DB_NAME", "pos_pharmacy"),
-		JWTExpirationInSeconds:        getEnvAsInt("JWT_EXP", (3600 * 12)),         // for 12 hours
-		JWTSecret:                     getEnv("JWT_SECRET", "access-secret"),
+		DBName:                  getEnv("DB_NAME", "pos_pharmacy"),
+		JWTExpirationInSeconds:  getEnvAsInt("JWT_EXP", (3600 * 12)), // for 12 hours
+		JWTSecret:               getEnv("JWT_SECRET", "access-secret"),
+		CompanyName:             getEnv("COMPANY_NAME", "Apotek"),
+		Pharmacist:              getEnv("PHARMACIST", ""),
+		PharmacistLicenseNumber: getEnv("PHARMACIST_LICENSE_NUMBER", ""),
+		MainDoctor:              getEnv("MAIN_DOCTOR", "Justus Kadirman"),
+		MainDoctorLicenseNumber: getEnv("MAIN_DOCTOR_LICENSE_NUMBER", ""),
 	}
 }
 
