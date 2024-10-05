@@ -532,7 +532,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: return prescription pdf and eticket pdf url
 	returnPayload := map[string]interface{}{
 		"success": fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name),
 		"prescriptionPDF": prescFileName,
@@ -1075,6 +1074,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	eticketFileNames := make([]string, 0)
+
 	// delete set items
 	for _, setItem := range oldPrescriptionSetItems {
 		for _, medicineItem := range setItem.MedicineItems {
@@ -1110,6 +1111,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// create new set items
 	for _, setItem := range payload.NewData.SetItems {
 		// get consume time
 		consumeTime, err := h.consumeTimeStore.GetConsumeTimeByName(setItem.ConsumeTime)
@@ -1410,6 +1412,35 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO: return the pdf url
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("prescription modified by %s", user.Name))
+	medicineSets, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescription.ID)
+	if err != nil {
+		errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
+		if errDel != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+			return
+		}
+
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err))
+		return
+	}
+
+	prescPDF := types.PrescriptionPDFReturn{
+		Number: payload.NewData.Number,
+		Date: *prescriptionDate,
+		Patient: *patient,
+		Doctor: *doctor,
+		MedicineSets: medicineSets,
+	}
+	prescFileName, err := pdfcreator.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, prescription.PDFUrl)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
+		return
+	}
+
+	returnPayload := map[string]interface{}{
+		"success": fmt.Sprintf("prescription modified by %s", user.Name),
+		"prescriptionPDF": prescFileName,
+		"eticketPDF": eticketFileNames,
+	}
+	utils.WriteJSON(w, http.StatusOK, returnPayload)
 }
