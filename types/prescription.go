@@ -19,19 +19,35 @@ type PrescriptionStore interface {
 	GetPrescriptionID(invoiceId int, number int, date time.Time, patientId int, totalPrice float64, doctorId int) (int, error)
 
 	CreatePrescription(Prescription) error
-	CreatePrescriptionMedicineItems(PrescriptionMedicineItems) error
-
-	GetPrescriptionMedicineItems(prescriptionId int) ([]PrescriptionMedicineItemRow, error)
 	DeletePrescription(*Prescription, *User) error
-	DeletePrescriptionMedicineItems(*Prescription, *User) error
 	ModifyPrescription(int, Prescription, *User) error
 
 	// delete entirely from the db if there's error
 	AbsoluteDeletePrescription(presc Prescription) error
+
+	CreatePrescriptionMedicineItem(PrescriptionMedicineItem) error
+	GetPrescriptionMedicineItems(setItemId int) ([]PrescriptionMedicineItemReturn, error)
+	GetPrescriptionMedicineItemID(PrescriptionMedicineItem) (int, error)
+	DeletePrescriptionMedicineItem(pres *Prescription, setItemId int, user *User) error
+
+	GetSetItemByID(int) (*PrescriptionSetItem, error)
+	GetSetItemsByPrescriptionID(int) ([]PrescriptionSetItem, error)
+	GetSetItemID(PrescriptionSetItem) (int, error)
+	GetPrescriptionSetAndMedicineItems(prescriptionId int) ([]PrescriptionSetItemReturn, error)
+	CreateSetItem(PrescriptionSetItem) error
+	DeleteSetItem(*Prescription, *User) error
+
+	CreateEticket(Eticket) error
+	DeleteEticket(int) error
+	GetEticketID(Eticket) (int, error)
+
+	// tabla nemae = prescription, eticket
+	UpdatePDFUrl(tableName string, id int, fileName string) error
+	IsPDFUrlExist(tableName string, fileName string) (bool, error)
+
+	UpdateEticketID(eticketId int, prescSetItemId int) error
 }
 
-// TODO: add usage, mf, consume way, consume time
-// TODO: change medicine lists into medicine sets
 type RegisterPrescriptionPayload struct {
 	Invoice struct {
 		Number       int    `json:"number" validate:"required"`
@@ -39,27 +55,32 @@ type RegisterPrescriptionPayload struct {
 		InvoiceDate  string `json:"invoiceDate" validate:"required"`
 	} `json:"invoice" validate:"required"`
 
-	Number           int                              `json:"number" validate:"required"`
-	PrescriptionDate string                           `json:"prescriptionDate" validate:"required"`
-	PatientName      string                           `json:"patientName" validate:"required"`
-	DoctorName       string                           `json:"doctorName" validate:"required"`
-	Qty              float64                          `json:"qty" validate:"required"`
-	Price            float64                          `json:"price" validate:"required"`
-	TotalPrice       float64                          `json:"totalPrice" validate:"required"`
-	Description      string                           `json:"description"`
-	MedicineSets     []PrescriptionMedicineSetPayload `json:"medicineSets" validate:"required"`
+	Number           int                          `json:"number" validate:"required"`
+	PrescriptionDate string                       `json:"prescriptionDate" validate:"required"`
+	PatientName      string                       `json:"patientName" validate:"required"`
+	PatientAge       int                          `json:"patientAge"`
+	DoctorName       string                       `json:"doctorName" validate:"required"`
+	Qty              float64                      `json:"qty" validate:"required"`
+	Price            float64                      `json:"price" validate:"required"`
+	TotalPrice       float64                      `json:"totalPrice" validate:"required"`
+	Description      string                       `json:"description"`
+	SetItems         []PrescriptionSetItemPayload `json:"setItems" validate:"required"`
 }
 
-type PrescriptionMedicineSetPayload struct {
+type PrescriptionSetItemPayload struct {
 	MedicineLists []PrescriptionMedicineListPayload `json:"medicineLists" validate:"required"`
-	Det           string                            `json:"det"`
-	Dose          string                            `json:"dose"`
-	Usage         string                            `json:"usage"`
 	Mf            string                            `json:"mf"`
+	Dose          string                            `json:"dose"`
+	SetUnit       string                            `json:"setUnit"`
 	ConsumeTime   string                            `json:"consumeTime"`
-	ConsumeUnit   string                            `json:"consumeUnit"`
+	Det           string                            `json:"det"`
+	Usage         string                            `json:"usage"`
 	MustFinish    bool                              `json:"mustFinish"`
-	Eticket       Eticket                           `json:"eticket"`
+	PrintEticket  bool                              `json:"printEticket"`
+	Eticket       struct {
+		Number      int     `json:"number"`
+		MedicineQty float64 `json:"medicineQty"`
+	} `json:"eticket"`
 }
 
 type PrescriptionMedicineListPayload struct {
@@ -78,6 +99,7 @@ type PrescriptionListsReturnPayload struct {
 	Number           int       `json:"number"`
 	PrescriptionDate time.Time `json:"prescriptionDate"`
 	PatientName      string    `json:"patientName"`
+	PatientAge       int       `json:"patientAge"`
 	DoctorName       string    `json:"doctorName"`
 	Qty              float64   `json:"qty"`
 	Price            float64   `json:"price"`
@@ -99,26 +121,14 @@ type ViewPrescriptionsPayload struct {
 	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
 
-// view the detail of the purchase invoice
-type ViewPrescriptionMedicineItemsPayload struct {
+// view the detail of the prescription
+type ViewPrescriptionDetailPayload struct {
 	PrescriptionID int `json:"prescriptionId" validate:"required"`
 }
 
 type ModifyPrescriptionPayload struct {
 	ID      int                         `json:"id" validate:"required"`
 	NewData RegisterPrescriptionPayload `json:"newData" validate:"required"`
-}
-
-// data of the medicine per row in the prescription
-type PrescriptionMedicineItemRow struct {
-	ID              int     `json:"id"`
-	MedicineBarcode string  `json:"medicineBarcode"`
-	MedicineName    string  `json:"medicineName"`
-	Qty             float64 `json:"qty"`
-	Unit            string  `json:"unit"`
-	Price           float64 `json:"price"`
-	Discount        float64 `json:"discount"`
-	Subtotal        float64 `json:"subtotal"`
 }
 
 // data to be sent back to the client after clicking 1 prescription
@@ -133,6 +143,7 @@ type PrescriptionDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastLastModifiedByUserName"`
+	PDFUrl                 string    `json:"prescPdfUrl"`
 
 	Invoice struct {
 		Number       int       `json:"number"`
@@ -144,6 +155,7 @@ type PrescriptionDetailPayload struct {
 	Patient struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
+		Age  int    `json:"age"`
 	} `json:"patient"`
 
 	Doctor struct {
@@ -156,22 +168,47 @@ type PrescriptionDetailPayload struct {
 		Name string `json:"name"`
 	} `json:"user"`
 
-	MedicineLists []PrescriptionMedicineItemRow `json:"medicineLists"`
+	MedicineSets []PrescriptionSetItemReturn `json:"medicineSets"`
+}
+
+type PrescriptionSetItemReturn struct {
+	ID            int                              `json:"id"`
+	Mf            string                           `json:"mf"`
+	Dose          string                           `json:"dose"`
+	SetUnit       string                           `json:"setUnit"`
+	ConsumeTime   string                           `json:"consumeTime"`
+	Det           string                           `json:"det"`
+	Usage         string                           `json:"usage"`
+	MustFinish    bool                             `json:"mustFinish"`
+	PrintEticket  bool                             `json:"printEticket"`
+	EticketID     int                              `json:"eticketId"`
+	MedicineItems []PrescriptionMedicineItemReturn `json:"medicineItems"`
+}
+
+// data of the medicine per row in the prescription
+type PrescriptionMedicineItemReturn struct {
+	MedicineBarcode string  `json:"medicineBarcode"`
+	MedicineName    string  `json:"medicineName"`
+	Qty             float64 `json:"qty"`
+	Unit            string  `json:"unit"`
+	Price           float64 `json:"price"`
+	Discount        float64 `json:"discount"`
+	Subtotal        float64 `json:"subtotal"`
 }
 
 type DeletePrescription struct {
 	ID int `json:"id" validate:"required"`
 }
 
-type PrescriptionMedicineItems struct {
-	ID             int     `json:"id"`
-	PrescriptionID int     `json:"prescriptionId"`
-	MedicineID     int     `json:"medicineId"`
-	Qty            float64 `json:"qty"`
-	UnitID         int     `json:"unitId"`
-	Price          float64 `json:"price"`
-	Discount       float64 `json:"discount"`
-	Subtotal       float64 `json:"subtotal"`
+type PrescriptionMedicineItem struct {
+	ID                    int     `json:"id"`
+	PrescriptionSetItemID int     `json:"prescriptionSetItemId"`
+	MedicineID            int     `json:"medicineId"`
+	Qty                   float64 `json:"qty"`
+	UnitID                int     `json:"unitId"`
+	Price                 float64 `json:"price"`
+	Discount              float64 `json:"discount"`
+	Subtotal              float64 `json:"subtotal"`
 }
 
 type Prescription struct {
@@ -189,24 +226,60 @@ type Prescription struct {
 	UserID               int           `json:"userId"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
+	PDFUrl               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
 
-type Eticket struct {
-	Print       bool   `json:"print"`
-	PrintQty    int    `json:"printQty"`
-	MedicineQty int    `json:"medicineQty"`
-	Number      int    `json:"number"`
-	Dose        string `json:"dose"`
+type PrescriptionSetItem struct {
+	ID             int  `json:"id"`
+	PrescriptionID int  `json:"prescriptionId"`
+	MfID           int  `json:"mfId"`
+	DoseID         int  `json:"doseId"`
+	SetUnitID      int  `json:"setUnitId"`
+	ConsumeTimeID  int  `json:"consumeTimeId"`
+	DetID          int  `json:"detId"`
+	UsageID        int  `json:"usageId"`
+	MustFinish     bool `json:"mustFinish"`
+	PrintEticket   bool `json:"printEticket"`
+	EticketID      int  `json:"eticketId"`
 }
 
-type PrescriptionMedicineSet struct {
-	MedicineLists []PrescriptionMedicineItems `json:"medicineLists"`
-	DetID         int                         `json:"detId"`
-	DoseID        int                         `json:"doseId"`
-	UsageID       int                         `json:"usageId"`
-	MfID          int                         `json:"mfId"`
-	ConsumeTimeID int                         `json:"consumeTimeId"`
-	ConsumeUnitID int                         `json:"consumeUnitId"`
+type Eticket struct {
+	ID                    int       `json:"id"`
+	PrescriptionID        int       `json:"prescriptionId"`
+	PrescriptionSetItemID int       `json:"prescriptionSetItemId"`
+	Number                int       `json:"number"`
+	MedicineQty           float64   `json:"medicineQty"`
+	PDFUrl                string    `json:"pdfUrl"`
+	CreatedAt             time.Time `json:"createdAt"`
+}
+
+type EticketReturnPayload struct {
+	Number int `json:"number"`
+}
+
+type PrescriptionPDFReturn struct {
+	Number       int
+	Date         time.Time
+	Patient      Patient
+	Doctor       Doctor
+	MedicineSets []PrescriptionSetItemPDFReturn
+}
+
+type PrescriptionSetItemPDFReturn struct {
+	MedicineLists []PrescriptionMedicineListPDFReturn `json:"medicineLists"`
+	Det           string                              `json:"det"`
+	Dose          string                              `json:"dose"`
+	Usage         string                              `json:"usage"`
+	Mf            string                              `json:"mf"`
+	ConsumeTime   string                              `json:"consumeTime"`
+	ConsumeUnit   string                              `json:"consumeUnit"`
+	MustFinish    bool                                `json:"mustFinish"`
+}
+
+type PrescriptionMedicineListPDFReturn struct {
+	Name string
+	Qty  string
+	Unit string
 }
