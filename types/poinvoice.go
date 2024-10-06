@@ -100,9 +100,6 @@ type PurchaseOrderInvoiceDetailPayload struct {
 		ID                      int    `json:"id"`
 		Name                    string `json:"name"`
 		Address                 string `json:"address"`
-		BusinessNumber          string `json:"businessNumber"`
-		Pharmacist              string `json:"pharmacist"`
-		PharmacistLicenseNumber string `json:"pharmacistLicenseNumber"`
 	} `json:"companyProfile"`
 
 	Supplier struct {
