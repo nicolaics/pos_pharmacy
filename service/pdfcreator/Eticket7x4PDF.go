@@ -14,7 +14,7 @@ import (
 	"github.com/nicolaics/pos_pharmacy/utils"
 )
 
-func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
+func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
 	directory := "../static/pdf/eticket"
 	if err := os.MkdirAll(directory, 0755); err != nil {
 		return "", err
@@ -28,28 +28,24 @@ func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, pres
 		return "", err
 	}
 
-    err = createEtix7x4Data(pdf, eticket, setNumber)
-    if err != nil {
+	err = createEtix7x4Data(pdf, eticket, setNumber)
+	if err != nil {
 		return "", err
 	}
 
-	fileName := prevFileName
-    
-    if prevFileName != "" {
-        fileName := "e-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
-        isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
-        if err != nil {
-            return "", err
-        }
+	fileName := "e-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
+	isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
+	if err != nil {
+		return "", err
+	}
 
-        for isExist {
-            fileName = "e-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
-            isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
-            if err != nil {
-                return "", err
-            }
-        }
-    }
+	for isExist {
+		fileName = "e-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
+		isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	err = pdf.OutputFileAndClose(fileName)
 	if err != nil {
@@ -90,36 +86,36 @@ func initEticketPdf() (*fpdf.Fpdf, error) {
 
 func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, setNumber int) error {
 	pdf.SetLineWidth(0.02)
-    pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
-    pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+	pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
 
-    // Number
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
-        number := fmt.Sprintf("No.  %d-%d", eticket.Number, setNumber)
-        pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, number, "", 1, "L", false, 0, "")
-    }
+	// Number
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
+		number := fmt.Sprintf("No.  %d-%d", eticket.Number, setNumber)
+		pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, number, "", 1, "L", false, 0, "")
+	}
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
 
-    // Date and Time
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
-        dateTime := fmt.Sprintf("Tgl.  %s", time.Now().Format("02-01-2006"))
-        pdf.CellFormat(2.8, constants.ETIX_7X4_STD_CELL_HEIGHT, dateTime, "", 0, "L", false, 0, "")
+	// Date and Time
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
+		dateTime := fmt.Sprintf("Tgl.  %s", time.Now().Format("02-01-2006"))
+		pdf.CellFormat(2.8, constants.ETIX_7X4_STD_CELL_HEIGHT, dateTime, "", 0, "L", false, 0, "")
 
-        pdf.SetFont("Arial", constants.REGULAR, (constants.ETIX_7X4_STD_FONT_SZ - 2))
-        pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, time.Now().Format("15:04"), "", 1, "LM", false, 0, "")
-    }
+		pdf.SetFont("Arial", constants.REGULAR, (constants.ETIX_7X4_STD_FONT_SZ - 2))
+		pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, time.Now().Format("15:04"), "", 1, "LM", false, 0, "")
+	}
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
 
-    // Name
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
-        pdf.CellFormat(1.1, (constants.ETIX_7X4_STD_CELL_HEIGHT * 3), "Nama:", "", 0, "LM", false, 0, "")
+	// Name
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
+		pdf.CellFormat(1.1, (constants.ETIX_7X4_STD_CELL_HEIGHT * 3), "Nama:", "", 0, "LM", false, 0, "")
 
 		nameSplit := strings.Split(eticket.PatientName, " ")
 		startName := pdf.GetX()
@@ -141,12 +137,12 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			pdf.SetX(startName)
 			pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, nameSplit[2], "", 1, "CT", false, 0, "")
 		}
-    }
-    
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
+	}
 
-    // Usage
-    {
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
+
+	// Usage
+	{
 
 		usageSplit := strings.Split(eticket.SetUsage, " ")
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
@@ -157,7 +153,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 		} else {
 			pdf.CellFormat(0, (constants.ETIX_7X4_STD_CELL_HEIGHT * 2), eticket.SetUsage, "", 1, "CM", false, 0, "")
 		}
-    }
+	}
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
 
@@ -176,7 +172,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			aDay := strings.Split(doseSplit[0], "x")
 			aDay[0] = strings.TrimSpace(aDay[0])
 			aDay[1] = strings.TrimSpace(aDay[1])
-			
+
 			cellWidth := pdf.GetStringWidth(fmt.Sprintf("%s x ", aDay[0]))
 			pdf.CellFormat(cellWidth, constants.ETIX_7X4_STD_CELL_HEIGHT, fmt.Sprintf("%s x ", aDay[0]), "", 0, "L", false, 0, "")
 
@@ -184,7 +180,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 			pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
 			pdf.CellFormat(pdf.GetStringWidth("/"), constants.ETIX_7X4_STD_CELL_HEIGHT, "/", "", 0, "L", false, 0, "")
-			
+
 			pdf.SubWrite(constants.PRESC_STD_CELL_HEIGHT, doseSplit[1], 4, -3.5, 0, "")
 
 			pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
@@ -201,8 +197,14 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 	// Consume Time
 	{
+		var consumeTime string
+		if eticket.ConsumeTime == "ac" {
+			consumeTime = "Sebelum Makan"
+		} else {
+			consumeTime = "Setelah Makan"
+		}
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, eticket.ConsumeTime, "", 1, "C", false, 0, "")
+		pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, consumeTime, "", 1, "C", false, 0, "")
 	}
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
@@ -226,9 +228,9 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X4_WIDTH, pdf.GetY())
 
-    if pdf.Error() != nil {
-        return fmt.Errorf("error create eticket 7x4 data: %v", pdf.Error())
-    }
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create eticket 7x4 data: %v", pdf.Error())
+	}
 
 	return nil
 }
