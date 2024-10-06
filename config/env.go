@@ -26,6 +26,8 @@ type Config struct {
 	CompanyAddress             string
 	CompanyPhoneNumber         string
 	CompanyWhatsAppNumber      string
+	CompanyLogoURL             string
+	CompanySlogan              string
 }
 
 var Envs = initConfig()
@@ -52,6 +54,8 @@ func initConfig() Config {
 		CompanyAddress:             getEnv("COMPANY_ADDRESS", ""),
 		CompanyPhoneNumber:         getEnv("COMPANY_PHONE_NUMBER", ""),
 		CompanyWhatsAppNumber:      getEnv("COMPANY_WHATSAPP_NUMBER", ""),
+		CompanyLogoURL:             getEnv("COMPANY_LOGO_URL", ""),
+		CompanySlogan:              getEnv("COMPANY_SLOGAN", ""),
 	}
 }
 
