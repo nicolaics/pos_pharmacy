@@ -41,6 +41,7 @@ type PrescriptionStore interface {
 	DeleteEticket(int) error
 	DeleteEticketByPrescriptionID(int) error
 	GetEticketID(Eticket) (int, error)
+	GetEticketsByPrescriptionID(int) ([]Eticket, error)
 
 	// tabla nemae = prescription, eticket
 	UpdatePDFUrl(tableName string, id int, fileName string) error
@@ -124,7 +125,7 @@ type ViewPrescriptionsPayload struct {
 
 // view the detail of the prescription
 type ViewPrescriptionDetailPayload struct {
-	PrescriptionID int `json:"prescriptionId" validate:"required"`
+	PrescriptionID int `json:"id" validate:"required"`
 }
 
 type ModifyPrescriptionPayload struct {
@@ -182,7 +183,6 @@ type PrescriptionSetItemReturn struct {
 	Usage         string                           `json:"usage"`
 	MustFinish    bool                             `json:"mustFinish"`
 	PrintEticket  bool                             `json:"printEticket"`
-	EticketID     int                              `json:"eticketId"`
 	MedicineItems []PrescriptionMedicineItemReturn `json:"medicineItems"`
 }
 
@@ -254,7 +254,6 @@ type PrescriptionSetItem struct {
 	UsageID        int  `json:"usageId"`
 	MustFinish     bool `json:"mustFinish"`
 	PrintEticket   bool `json:"printEticket"`
-	EticketID      int  `json:"eticketId"`
 }
 
 type Eticket struct {
