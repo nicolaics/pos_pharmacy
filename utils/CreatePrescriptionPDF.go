@@ -151,8 +151,7 @@ func initPrescriptionPdf() (*fpdf.Fpdf, error) {
 func createPrescriptionHeader(pdf *fpdf.Fpdf, doctor string) error {
 	pdf.SetXY((constants.PRESC_MARGIN + 0.1), 0.3)
 
-	// s, _ := filepath.Abs("static/assets/logo/Logo Apotik.png")
-	pdf.Image("static/assets/logo/Logo Apotik.png", pdf.GetX(), pdf.GetY(), constants.PRESC_LOGO_WIDTH, constants.PRESC_LOGO_HEIGHT, false, "", 0, "")
+	pdf.Image(config.Envs.CompanyLogoURL, pdf.GetX(), pdf.GetY(), constants.PRESC_LOGO_WIDTH, constants.PRESC_LOGO_HEIGHT, false, "", 0, "")
 
 	pdf.SetTextColor(constants.GREEN_R, constants.GREEN_G, constants.GREEN_B)
 	pdf.SetDrawColor(constants.GREEN_R, constants.GREEN_G, constants.GREEN_B)
@@ -166,11 +165,12 @@ func createPrescriptionHeader(pdf *fpdf.Fpdf, doctor string) error {
 
 	pdf.SetX(1.7)
 	pdf.SetFont("Calibri", constants.REGULAR, 10)
-	pdf.CellFormat(0, constants.PRESC_STD_CELL_HEIGHT, "Citra 3 Blok B5 No. 26, Pegadungan, Kalideres, Jakarta", "", 1, "L", false, 0, "")
+	pdf.CellFormat(0, constants.PRESC_STD_CELL_HEIGHT, config.Envs.CompanyAddress, "", 1, "L", false, 0, "")
 
 	pdf.SetXY(1.7, (pdf.GetY() - 0.05))
 	pdf.SetFont("Calibri", constants.REGULAR, 10)
-	pdf.CellFormat(0, constants.PRESC_STD_CELL_HEIGHT, "No. Telp : 021-5457550 | WhatsApp : 0857-1715-7550", "", 1, "L", false, 0, "")
+    phoneNumber := fmt.Sprintf("No. Telp : %s | WhatsApp : %s", config.Envs.CompanyPhoneNumber, config.Envs.CompanyWhatsAppNumber)
+	pdf.CellFormat(0, constants.PRESC_STD_CELL_HEIGHT, phoneNumber, "", 1, "L", false, 0, "")
 
 	pdf.SetY(pdf.GetY() + 0.1)
 	pdf.SetFont("Calibri", constants.REGULAR, 6)
