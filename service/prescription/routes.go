@@ -1,8 +1,12 @@
 package prescription
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +14,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
+	// "github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/service/pdfcreator"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
@@ -65,16 +70,17 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/prescription", h.handleRegister).Methods(http.MethodPost)
 
 	// TODO: add more get prescriptions
-	// TODO: add create pdf alone
 	router.HandleFunc("/prescription/{params}/{val}", h.handleGetPrescriptions).Methods(http.MethodPost)
 
 	router.HandleFunc("/prescription/detail", h.handleGetPrescriptionDetail).Methods(http.MethodPost)
 	router.HandleFunc("/prescription", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/prescription", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/prescription/print", h.handlePrint).Methods(http.MethodPost)
 
 	router.HandleFunc("/prescription", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-	router.HandleFunc("/prescription/all/date", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/prescription/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/prescription/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/prescription/print", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -1573,4 +1579,78 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		"eticketPDF":      eticketFileNames,
 	}
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
+}
+
+func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.ViewPrescriptionDetailPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// check if the prescription exists
+	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.PrescriptionID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("prescription with id %d doesn't exists", payload.PrescriptionID))
+		return
+	}
+
+	pdfFiles := []string{("static/pdf/prescription/" + prescription.PDFUrl)}
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", "attachment; filename=pdfFiles.zip")
+	w.WriteHeader(http.StatusOK)
+
+	zipWriter := zip.NewWriter(w)
+    defer zipWriter.Close()
+
+	etickets, err := h.prescriptionStore.GetEticketsByPrescriptionID(prescription.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if len(etickets) > 0 {
+		for _, eticket := range(etickets) {
+			pdfFiles = append(pdfFiles, ("static/pdf/eticket/" + eticket.PDFUrl))
+		}
+	}
+
+    for _, fileName := range pdfFiles {
+        file, err := os.Open(fileName)
+        if err != nil {
+            http.Error(w, "File not found: "+fileName, http.StatusNotFound)
+            return
+        }
+        defer file.Close()
+
+        zipFile, err := zipWriter.Create(filepath.Base(fileName))
+        if err != nil {
+            http.Error(w, "Could not create zip", http.StatusInternalServerError)
+            return
+        }
+
+        _, err = io.Copy(zipFile, file)
+        if err != nil {
+            http.Error(w, "Could not copy file content", http.StatusInternalServerError)
+            return
+        }
+    }
 }

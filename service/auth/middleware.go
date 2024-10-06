@@ -50,7 +50,7 @@ func CorsMiddleware() mux.MiddlewareFunc {
 			log.Println("cors middleware ok!")
 
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Response-Type")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PATCH")
 
 			// Handle preflight (OPTIONS) request by returning 200 OK with the necessary headers

@@ -426,12 +426,11 @@ func (s *Store) CreateSetItem(medicineSet types.PrescriptionSetItem) error {
 	query := `INSERT INTO prescription_set_item 
 				(prescription_id, mf_id, dose_id, set_unit_id, 
 				consume_time_id, det_id, prescription_set_usage_id, must_finish, 
-				print_eticket, eticket_id) 
+				print_eticket) 
 				VALUES (` + values + `)`
 	_, err := s.db.Exec(query, medicineSet.PrescriptionID, medicineSet.MfID, medicineSet.DoseID,
 		medicineSet.SetUnitID, medicineSet.ConsumeTimeID, medicineSet.DetID,
-		medicineSet.UsageID, medicineSet.MustFinish, medicineSet.PrintEticket,
-		medicineSet.EticketID)
+		medicineSet.UsageID, medicineSet.MustFinish, medicineSet.PrintEticket)
 	if err != nil {
 		return err
 	}
@@ -837,6 +836,27 @@ func (s *Store) GetEticketID(eticket types.Eticket) (int, error) {
 	return id, nil
 }
 
+func (s *Store) GetEticketsByPrescriptionID(prescId int) ([]types.Eticket, error) {
+	rows, err := s.db.Query("SELECT * FROM eticket WHERE prescription_id = ? ", prescId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	etickets := make([]types.Eticket, 0)
+
+	for rows.Next() {
+		eticket, err := scanRowIntoEticket(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		etickets = append(etickets, *eticket)
+	}
+
+	return etickets, nil
+}
+
 func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) error {
 	var query string
 
@@ -965,7 +985,6 @@ func (s *Store) GetPrescriptionSetAndMedicineItems(prescriptionId int) ([]types.
 			Usage:         setItem.Usage,
 			MustFinish:    setItem.MustFinish,
 			PrintEticket:  setItem.PrintEticket,
-			EticketID:     setItem.EticketID,
 			MedicineItems: medItems,
 		})
 	}
@@ -1011,7 +1030,6 @@ func scanRowIntoSetItem(rows *sql.Rows) (*types.PrescriptionSetItem, error) {
 		medicineSet.UsageID,
 		&medicineSet.MustFinish,
 		&medicineSet.PrintEticket,
-		&medicineSet.EticketID,
 	)
 
 	if err != nil {
@@ -1103,4 +1121,26 @@ func scanRowIntoPrescriptionMedicineItem(rows *sql.Rows) (*types.PrescriptionMed
 	}
 
 	return prescMedItem, nil
+}
+
+func scanRowIntoEticket(rows *sql.Rows) (*types.Eticket, error) {
+	eticket := new(types.Eticket)
+
+	err := rows.Scan(
+		&eticket.ID,
+		&eticket.PrescriptionID,
+		&eticket.PrescriptionSetItemID,
+		&eticket.Number,
+		&eticket.MedicineQty,
+		&eticket.PDFUrl,
+		&eticket.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	eticket.CreatedAt = eticket.CreatedAt.Local()
+
+	return eticket, nil
 }
