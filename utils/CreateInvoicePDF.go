@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
-	
+
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -137,28 +138,23 @@ func initInvoicePdf() (*fpdf.Fpdf, error) {
 func createInvoiceHeader(pdf *fpdf.Fpdf) error {
 	pdf.SetXY((constants.INVOICE_MARGIN + 0.1), 0.3)
 
-	// TODO: get company name from env
-	companyName := strings.ToUpper("APOTEK C M C")
-
 	pdf.SetFont("Bree", constants.BOLD, 20)
-	cellWidth := pdf.GetStringWidth(companyName) + constants.INVOICE_MARGIN
-	pdf.CellFormat(cellWidth, 0.6, companyName, "", 1, "L", false, 0, "")
+	cellWidth := pdf.GetStringWidth(config.Envs.CompanyName) + constants.INVOICE_MARGIN
+	pdf.CellFormat(cellWidth, 0.6, config.Envs.CompanyName, "", 1, "L", false, 0, "")
 
-	// TODO: get address from env
 	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
-	pdf.MultiCell(cellWidth, constants.INVOICE_HEADER_HEIGHT, "Citra 3 Blok B5 No. 26, Pegadungan, Kalideres, Jakarta", "", "C", false)
+	pdf.MultiCell(cellWidth, constants.INVOICE_HEADER_HEIGHT, config.Envs.CompanyAddress, "", "C", false)
 
-	// TODO: get phone number from env
 	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
-	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, "No. Telp: 021-5457550", "", 1, "C", false, 0, "")
+	phoneNumber := fmt.Sprintf("No. Telp: %s", config.Envs.CompanyPhoneNumber)
+	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, phoneNumber, "", 1, "C", false, 0, "")
 
-	// TODO: get address from env
 	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
-	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, "WhatsApp: 0857-1715-7550", "", 1, "C", false, 0, "")
+	whatsApp := fmt.Sprintf("WhatsApp: %s", config.Envs.CompanyWhatsAppNumber)
+	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, whatsApp, "", 1, "C", false, 0, "")
 
-	// TODO: get the data from envs
 	pdf.SetFont("Calibri", constants.REGULAR, 9)
-	pdf.MultiCell(cellWidth, 0.34, "Hati yang Gembira adalah Obat yang Manjur", "", "C", false)
+	pdf.MultiCell(cellWidth, 0.34, config.Envs.CompanySlogan, "", "C", false)
 
 	if pdf.Error() != nil {
 		return fmt.Errorf("error create invoice pdf header: %v", pdf.Error())
