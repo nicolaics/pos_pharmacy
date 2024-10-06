@@ -16,20 +16,18 @@ type Handler struct {
 	purchaseInvoiceStore types.PurchaseInvoiceStore
 	userStore            types.UserStore
 	supplierStore        types.SupplierStore
-	companyProfileStore  types.CompanyProfileStore
 	medStore             types.MedicineStore
 	unitStore            types.UnitStore
 	poInvoiceStore       types.PurchaseOrderInvoiceStore
 }
 
 func NewHandler(purchaseInvoiceStore types.PurchaseInvoiceStore, userStore types.UserStore,
-	supplierStore types.SupplierStore, companyProfileStore types.CompanyProfileStore,
+	supplierStore types.SupplierStore,
 	medStore types.MedicineStore, unitStore types.UnitStore, poInvoiceStore types.PurchaseOrderInvoiceStore) *Handler {
 	return &Handler{
 		purchaseInvoiceStore: purchaseInvoiceStore,
 		userStore:            userStore,
 		supplierStore:        supplierStore,
-		companyProfileStore:  companyProfileStore,
 		medStore:             medStore,
 		unitStore:            unitStore,
 		poInvoiceStore:       poInvoiceStore,
@@ -71,13 +69,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check companyID
-	_, err = h.companyProfileStore.GetCompanyProfileByID(payload.CompanyID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d not found", payload.CompanyID))
-		return
-	}
-
 	// check supplierID
 	_, err = h.supplierStore.GetSupplierByID(payload.SupplierID)
 	if err != nil {
@@ -92,7 +83,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	purchaseInvoiceId, err := h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.Subtotal, payload.TotalPrice, *invoiceDate)
+	purchaseInvoiceId, err := h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.SupplierID, payload.Subtotal, payload.TotalPrice, *invoiceDate)
 	if err == nil || purchaseInvoiceId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice number %d exists", payload.Number))
 		return
@@ -100,7 +91,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	err = h.purchaseInvoiceStore.CreatePurchaseInvoice(types.PurchaseInvoice{
 		Number:                     payload.Number,
-		CompanyID:                  payload.CompanyID,
 		SupplierID:                 payload.SupplierID,
 		PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 		Subtotal:                   payload.Subtotal,
@@ -118,11 +108,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoiceID
-	purchaseInvoiceId, err = h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.Subtotal, payload.TotalPrice, *invoiceDate)
+	purchaseInvoiceId, err = h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.SupplierID, payload.Subtotal, payload.TotalPrice, *invoiceDate)
 	if err != nil {
 		err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 			Number:                     payload.Number,
-			CompanyID:                  payload.CompanyID,
 			SupplierID:                 payload.SupplierID,
 			PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 			Subtotal:                   payload.Subtotal,
@@ -146,7 +135,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:                     payload.Number,
-				CompanyID:                  payload.CompanyID,
 				SupplierID:                 payload.SupplierID,
 				PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 				Subtotal:                   payload.Subtotal,
@@ -171,7 +159,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 					Number:                     payload.Number,
-					CompanyID:                  payload.CompanyID,
 					SupplierID:                 payload.SupplierID,
 					PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 					Subtotal:                   payload.Subtotal,
@@ -195,7 +182,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:                     payload.Number,
-				CompanyID:                  payload.CompanyID,
 				SupplierID:                 payload.SupplierID,
 				PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 				Subtotal:                   payload.Subtotal,
@@ -218,7 +204,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:                     payload.Number,
-				CompanyID:                  payload.CompanyID,
 				SupplierID:                 payload.SupplierID,
 				PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 				Subtotal:                   payload.Subtotal,
@@ -252,7 +237,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:                     payload.Number,
-				CompanyID:                  payload.CompanyID,
 				SupplierID:                 payload.SupplierID,
 				PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 				Subtotal:                   payload.Subtotal,
@@ -277,7 +261,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:                     payload.Number,
-				CompanyID:                  payload.CompanyID,
 				SupplierID:                 payload.SupplierID,
 				PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 				Subtotal:                   payload.Subtotal,
@@ -302,7 +285,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				err = h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 					Number:                     payload.Number,
-					CompanyID:                  payload.CompanyID,
 					SupplierID:                 payload.SupplierID,
 					PurchaseOrderInvoiceNumber: payload.PurchaseOrderInvoiceNumber,
 					Subtotal:                   payload.Subtotal,
@@ -510,13 +492,6 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// get company profile
-	company, err := h.companyProfileStore.GetCompanyProfileByID(purchaseInvoice.CompanyID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d doesn't exists", purchaseInvoice.CompanyID))
-		return
-	}
-
 	// get supplier data
 	supplier, err := h.supplierStore.GetSupplierByID(purchaseInvoice.SupplierID)
 	if err != nil {
@@ -550,16 +525,6 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 		CreatedAt:              purchaseInvoice.CreatedAt,
 		LastModified:           purchaseInvoice.LastModified,
 		LastModifiedByUserName: lastModifiedUser.Name,
-
-		CompanyProfile: struct {
-			ID                      int    "json:\"id\""
-			Name                    string "json:\"name\""
-			Address                 string "json:\"address\""
-		}{
-			ID:                      company.ID,
-			Name:                    company.Name,
-			Address:                 company.Address,
-		},
 
 		Supplier: struct {
 			ID                  int    "json:\"id\""
@@ -725,7 +690,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	err = h.purchaseInvoiceStore.ModifyPurchaseInvoice(payload.ID, types.PurchaseInvoice{
 		Number:               payload.NewData.Number,
-		CompanyID:            payload.NewData.CompanyID,
 		SupplierID:           payload.NewData.SupplierID,
 		Subtotal:             payload.NewData.Subtotal,
 		Discount:             payload.NewData.Discount,

@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/auth"
-	"github.com/nicolaics/pos_pharmacy/service/companyprofile"
 	"github.com/nicolaics/pos_pharmacy/service/consumetime"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
 	"github.com/nicolaics/pos_pharmacy/service/det"
@@ -54,7 +53,6 @@ func (s *APIServer) Run() error {
 	customerStore := customer.NewStore(s.db)
 	supplierStore := supplier.NewStore(s.db)
 	medicineStore := medicine.NewStore(s.db)
-	companyProfileStore := companyprofile.NewStore(s.db)
 	doctorStore := doctor.NewStore(s.db)
 	patientStore := patient.NewStore(s.db)
 	consumeTimeStore := consumetime.NewStore(s.db)
@@ -87,20 +85,16 @@ func (s *APIServer) Run() error {
 	medicineHandler := medicine.NewHandler(medicineStore, userStore, unitStore)
 	medicineHandler.RegisterRoutes(subrouter)
 
-	companyProfileHandler := companyprofile.NewHandler(companyProfileStore, userStore)
-	companyProfileHandler.RegisterRoutes(subrouter)
-
 	doctorHandler := doctor.NewHandler(doctorStore, userStore)
 	doctorHandler.RegisterRoutes(subrouter)
 
 	patientHandler := patient.NewHandler(patientStore, userStore)
 	patientHandler.RegisterRoutes(subrouter)
 
-	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore,
-		companyProfileStore, medicineStore, unitStore, poInvoiceStore)
+	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore, medicineStore, unitStore, poInvoiceStore)
 	purchaseInvoiceHandler.RegisterRoutes(subrouter)
 
-	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, userStore, supplierStore, companyProfileStore,
+	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, userStore, supplierStore,
 		medicineStore, unitStore)
 	poInvoiceHandler.RegisterRoutes(subrouter)
 

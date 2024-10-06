@@ -8,7 +8,7 @@ import (
 type PurchaseInvoiceStore interface {
 	GetPurchaseInvoicesByNumber(number int) ([]PurchaseInvoice, error)
 	GetPurchaseInvoiceByID(int) (*PurchaseInvoice, error)
-	GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error)
+	GetPurchaseInvoiceID(number int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error)
 	GetPurchaseMedicineItem(purchaseInvoiceId int) ([]PurchaseMedicineItemReturn, error)
 
 	GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseInvoiceListsReturnPayload, error)
@@ -31,7 +31,6 @@ type PurchaseInvoiceStore interface {
 
 type PurchaseInvoicePayload struct {
 	Number                     int                           `json:"number" validate:"required"`
-	CompanyID                  int                           `json:"companyId" validate:"required"` // can get the ID from the text box
 	SupplierID                 int                           `json:"supplierId" validate:"required"`
 	PurchaseOrderInvoiceNumber int                           `json:"purchaseOrderInvoiceNumber"`
 	Subtotal                   float64                       `json:"subtotal" validate:"required"`
@@ -99,12 +98,6 @@ type PurchaseInvoiceDetailPayload struct {
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 
-	CompanyProfile struct {
-		ID                      int    `json:"id"`
-		Name                    string `json:"name"`
-		Address                 string `json:"address"`
-	} `json:"companyProfile"`
-
 	Supplier struct {
 		ID                  int    `json:"id"`
 		Name                string `json:"name"`
@@ -145,7 +138,6 @@ type DeletePurchaseInvoice struct {
 type PurchaseInvoice struct {
 	ID                         int           `json:"id"`
 	Number                     int           `json:"number"`
-	CompanyID                  int           `json:"companyId"`
 	SupplierID                 int           `json:"supplierId"`
 	PurchaseOrderInvoiceNumber int           `json:"purchaseOrderInvoiceNumber"`
 	Subtotal                   float64       `json:"subtotal"`

@@ -66,14 +66,14 @@ func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
 	return purchaseInvoice, nil
 }
 
-func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error) {
+func (s *Store) GetPurchaseInvoiceID(number int, supplierId int, subtotal float64, totalPrice float64, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM purchase_invoice 
-				WHERE number = ? AND company_id = ? AND supplier_id = ? 
+				WHERE number = ? AND supplier_id = ? 
 				AND subtotal = ? AND total_price = ? AND invoice_date = ? 
 				AND deleted_at IS NULL 
 				ORDER BY invoice_date DESC`
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, invoiceDate)
+	rows, err := s.db.Query(query, number, supplierId, subtotal, totalPrice, invoiceDate)
 	if err != nil {
 		return 0, err
 	}
@@ -97,17 +97,17 @@ func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, 
 
 func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) error {
 	values := "?"
-	for i := 0; i < 11; i++ {
+	for i := 0; i < 10; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_invoice (
-		number, company_id, supplier_id, purchase_order_invoice_number, subtotal, discount, tax, 
+		number, supplier_id, purchase_order_invoice_number, subtotal, discount, tax, 
 		total_price, description, user_id, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
-		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
+		purchaseInvoice.Number, purchaseInvoice.SupplierID,
 		purchaseInvoice.PurchaseOrderInvoiceNumber, purchaseInvoice.Subtotal,
 		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice,
 		purchaseInvoice.Description, purchaseInvoice.UserID, purchaseInvoice.InvoiceDate,
@@ -476,13 +476,13 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 	}
 
 	query := `UPDATE purchase_invoice SET 
-				number = ?, company_id = ?, supplier_id = ?, purchase_order_invoice_number = ?, 
+				number = ?, supplier_id = ?, purchase_order_invoice_number = ?, 
 				subtotal = ?, discount = ?, tax = ?, total_price = ?, description = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				 WHERE id = ?`
 
 	_, err = s.db.Exec(query,
-		purchaseInvoice.Number, purchaseInvoice.CompanyID, purchaseInvoice.SupplierID,
+		purchaseInvoice.Number, purchaseInvoice.SupplierID,
 		purchaseInvoice.PurchaseOrderInvoiceNumber, purchaseInvoice.Subtotal,
 		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice,
 		purchaseInvoice.Description, purchaseInvoice.InvoiceDate,
@@ -496,12 +496,12 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 
 func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 	query := `SELECT id FROM purchase_invoice 
-				WHERE number = ? AND company_id = ? AND supplier_id = ? 
+				WHERE number = ? AND supplier_id = ? 
 				AND purchase_order_invoice_number = ? AND subtotal = ? 
 				AND discount = ? AND tax = ? AND total_price = ? 
 				AND description = ? AND invoice_date = ?`
 
-	rows, err := s.db.Query(query, pi.Number, pi.CompanyID, pi.SupplierID, pi.PurchaseOrderInvoiceNumber,
+	rows, err := s.db.Query(query, pi.Number, pi.SupplierID, pi.PurchaseOrderInvoiceNumber,
 		pi.Subtotal, pi.Discount, pi.Tax, pi.TotalPrice,
 		pi.Description, pi.InvoiceDate)
 	if err != nil {
@@ -537,7 +537,6 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 	err := rows.Scan(
 		&purchaseInvoice.ID,
 		&purchaseInvoice.Number,
-		&purchaseInvoice.CompanyID,
 		&purchaseInvoice.SupplierID,
 		&purchaseInvoice.PurchaseOrderInvoiceNumber,
 		&purchaseInvoice.Subtotal,

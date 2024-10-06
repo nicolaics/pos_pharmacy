@@ -68,14 +68,14 @@ func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice
 	return purchaseOrderInvoice, nil
 }
 
-func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, totalItem int, invoiceDate time.Time) (int, error) {
+func (s *Store) GetPurchaseOrderInvoiceID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM purchase_order_invoice 
-				WHERE number = ? AND company_id = ? 
+				WHERE number = ? 
 				AND supplier_id = ? AND total_item = ? 
 				AND invoice_date = ? AND deleted_at IS NULL 
 				ORDER BY invoice_date DESC`
 
-	rows, err := s.db.Query(query, number, companyId, supplierId, totalItem, invoiceDate)
+	rows, err := s.db.Query(query, number, supplierId, totalItem, invoiceDate)
 	if err != nil {
 		return 0, err
 	}
@@ -116,17 +116,17 @@ func (s *Store) GetNumberOfPurchaseOrderInvoices() (int, error) {
 
 func (s *Store) CreatePurchaseOrderInvoice(poInvoice types.PurchaseOrderInvoice) error {
 	values := "?"
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 5; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_order_invoice (
-		number, company_id, supplier_id, user_id, total_item, 
+		number, supplier_id, user_id, total_item, 
 		invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
-		poInvoice.Number, poInvoice.CompanyID, poInvoice.SupplierID,
+		poInvoice.Number, poInvoice.SupplierID,
 		poInvoice.UserID, poInvoice.TotalItem, poInvoice.InvoiceDate,
 		poInvoice.LastModifiedByUserID)
 	if err != nil {
@@ -438,12 +438,12 @@ func (s *Store) ModifyPurchaseOrderInvoice(poiid int, purchaseOrderInvoice types
 	}
 
 	query := `UPDATE purchase_order_invoice 
-				SET number = ?, company_id = ?, supplier_id = ?, total_item = ?, 
+				SET number = ?, supplier_id = ?, total_item = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
 	_, err = s.db.Exec(query,
-		purchaseOrderInvoice.Number, purchaseOrderInvoice.CompanyID, purchaseOrderInvoice.SupplierID,
+		purchaseOrderInvoice.Number, purchaseOrderInvoice.SupplierID,
 		purchaseOrderInvoice.TotalItem, purchaseOrderInvoice.InvoiceDate,
 		time.Now(), purchaseOrderInvoice.LastModifiedByUserID, poiid)
 	if err != nil {
@@ -496,11 +496,11 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 
 func (s *Store) AbsoluteDeletePurchaseOrderInvoice(poi types.PurchaseOrderInvoice) error {
 	query := `SELECT id FROM purchase_order_invoice 
-				WHERE number = ? AND company_id = ? 
+				WHERE number = ? 
 				AND supplier_id = ? AND total_item = ? 
 				AND invoice_date = ?`
 
-	rows, err := s.db.Query(query, poi.Number, poi.CompanyID, poi.SupplierID, poi.TotalItem, poi.InvoiceDate)
+	rows, err := s.db.Query(query, poi.Number, poi.SupplierID, poi.TotalItem, poi.InvoiceDate)
 	if err != nil {
 		return err
 	}
@@ -534,7 +534,6 @@ func scanRowIntoPurchaseOrderInvoice(rows *sql.Rows) (*types.PurchaseOrderInvoic
 	err := rows.Scan(
 		&purchaseOrderInvoice.ID,
 		&purchaseOrderInvoice.Number,
-		&purchaseOrderInvoice.CompanyID,
 		&purchaseOrderInvoice.SupplierID,
 		&purchaseOrderInvoice.UserID,
 		&purchaseOrderInvoice.TotalItem,

@@ -23,6 +23,9 @@ type Config struct {
 	MainDoctor                 string
 	MainDoctorLicenseNumber    string
 	BusinessRegistrationNumber string
+	CompanyAddress             string
+	CompanyPhoneNumber         string
+	CompanyWhatsAppNumber      string
 }
 
 var Envs = initConfig()
@@ -46,6 +49,9 @@ func initConfig() Config {
 		MainDoctor:                 getEnv("MAIN_DOCTOR", "Justus Kadirman"),
 		MainDoctorLicenseNumber:    getEnv("MAIN_DOCTOR_LICENSE_NUMBER", ""),
 		BusinessRegistrationNumber: getEnv("BUSINESS_REGISTRATION_NUMBER", ""),
+		CompanyAddress:             getEnv("COMPANY_ADDRESS", ""),
+		CompanyPhoneNumber:         getEnv("COMPANY_PHONE_NUMBER", ""),
+		CompanyWhatsAppNumber:      getEnv("COMPANY_WHATSAPP_NUMBER", ""),
 	}
 }
 

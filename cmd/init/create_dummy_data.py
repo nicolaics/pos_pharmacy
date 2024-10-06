@@ -64,23 +64,6 @@ def create_users(BACKEND_ROOT, TOKEN):
     print(r.json())
 
 
-def create_company_profile(BACKEND_ROOT, TOKEN):
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/company-profile",
-        json={
-            "name": "Zulu",
-            "address": "zulu abc",
-            "businessNumber": "12345",
-            "pharmacist": "AA",
-            "pharmacistLicenseNumber": "1239901",
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
-
-
 def create_customers(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/customer",
@@ -122,7 +105,7 @@ def create_customers(BACKEND_ROOT, TOKEN):
 def create_doctors(BACKEND_ROOT, TOKEN):
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Gray"},
+        json={"name": "Gray"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -131,7 +114,7 @@ def create_doctors(BACKEND_ROOT, TOKEN):
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Jay"},
+        json={"name": "Jay"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -140,7 +123,7 @@ def create_doctors(BACKEND_ROOT, TOKEN):
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Awesome"},
+        json={"name": "Awesome"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -149,7 +132,7 @@ def create_doctors(BACKEND_ROOT, TOKEN):
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Pole"},
+        json={"name": "Pole"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -158,7 +141,7 @@ def create_doctors(BACKEND_ROOT, TOKEN):
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Ulala"},
+        json={"name": "Ulala"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -167,7 +150,7 @@ def create_doctors(BACKEND_ROOT, TOKEN):
 
     r = rq.post(
         f"http://{BACKEND_ROOT}/api/v1/doctor",
-        json={"name": "Dr. Oscar"},
+        json={"name": "Oscar"},
         headers={
             "Authorization": "Bearer " + TOKEN,
         },
@@ -464,9 +447,8 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
             "number": 2,
-            "companyId": 1,
             "supplierId": 3,
-            "totalItems": 10,
+            "totalItem": 10,
             "invoiceDate": "2024-03-12 +0900GMT",
             "purchaseOrderMedicineList": [
                 {
@@ -496,9 +478,8 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
             "number": 5,
-            "companyId": 1,
             "supplierId": 3,
-            "totalItems": 10,
+            "totalItem": 10,
             "invoiceDate": "2024-10-12 +0900GMT",
             "purchaseOrderMedicineList": [
                 {
@@ -521,9 +502,8 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
             "number": 7,
-            "companyId": 1,
             "supplierId": 3,
-            "totalItems": 10,
+            "totalItem": 10,
             "invoiceDate": "2024-09-28 +0900GMT",
             "purchaseOrderMedicineList": [
                 {
@@ -553,9 +533,8 @@ def create_po_invoices(BACKEND_ROOT, TOKEN):
         f"http://{BACKEND_ROOT}/api/v1/invoice/purchase-order",
         json={
             "number": 20,
-            "companyId": 1,
             "supplierId": 3,
-            "totalItems": 10,
+            "totalItem": 10,
             "invoiceDate": "2024-09-28 +0900GMT",
             "purchaseOrderMedicineList": [
                 {
@@ -584,32 +563,49 @@ def create_prescription(BACKEND_ROOT, TOKEN):
                 "customerName": "Graph",
                 "invoiceDate": "2024-09-23 +0900GMT",
             },
-            "number": 100,
+            "number": random.randint(1, 9000),
             "prescriptionDate": "2024-06-30 +0700GMT",
             "patientName": "Yankee",
+            "patientAge": 10,
             "doctorName": "Dr. Play",
             "qty": 1,
             "price": 100000,
             "totalPrice": 100000,
-            "prescriptionMedicineList": [
+            "setItems": [
                 {
-                    "medicineBarcode": "1111",
-                    "medicineName": "Ativan",
-                    "qty": 7,
-                    "unit": "BTL",
-                    "price": 46200,
-                    "subtotal": 46200,
+                    "mf": "mf cap dtd no. xv",
+                    "dose": "3 x 1/2",
+                    "setUnit": "kap",
+                    "consumeTime": "ac",
+                    "det": "orig",
+                    "usage": "Batuk dan Pilek",
+                    "mustFinish": True,
+                    "printEticket": True,
+                    "eticket": {
+                        "number": 12,
+                        "medicineQty": 15
+                    },
+                    "medicineLists": [
+                        {
+                            "medicineBarcode": "1111",
+                            "medicineName": "Ativan",
+                            "qty": "7",
+                            "unit": "BTL",
+                            "price": 46200,
+                            "subtotal": 46200,
+                        },
+                        {
+                            "medicineBarcode": "3333",
+                            "medicineName": "Rhinos",
+                            "qty": "10",
+                            "unit": "STP",
+                            "price": 2200,
+                            "discount": 200,
+                            "subtotal": 2000,
+                        },
+                    ],
                 },
-                {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "price": 2200,
-                    "discount": 200,
-                    "subtotal": 2000,
-                },
-            ],
+            ]
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
@@ -625,96 +621,71 @@ def create_prescription(BACKEND_ROOT, TOKEN):
                 "customerName": "Graph",
                 "invoiceDate": "2024-09-23 +0900GMT",
             },
-            "number": 100,
+            "number": random.randint(1, 9000),
             "prescriptionDate": "2024-06-30 +0700GMT",
             "patientName": "Bpay",
             "doctorName": "Dr. Gray",
             "qty": 1,
             "price": 100000,
             "totalPrice": 100000,
-            "prescriptionMedicineList": [
+            "setItems": [
                 {
-                    "medicineBarcode": "2222",
-                    "medicineName": "Panadol",
-                    "qty": 7,
-                    "unit": "TAB",
-                    "price": 12900,
-                    "subtotal": 12900,
-                }
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
-
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/prescription",
-        json={
-            "invoice": {
-                "number": 2,
-                "customerName": "Alpha",
-                "invoiceDate": "2024-09-21 +0900GMT",
-            },
-            "number": 111,
-            "prescriptionDate": "2024-09-28 +0700GMT",
-            "patientName": "Yankee",
-            "doctorName": "Dr. Play",
-            "qty": 1,
-            "price": 100000,
-            "totalPrice": 100000,
-            "prescriptionMedicineList": [
-                {
-                    "medicineBarcode": "1111",
-                    "medicineName": "Ativan",
-                    "qty": 7,
-                    "unit": "BTL",
-                    "price": 46200,
-                    "subtotal": 46200,
+                    "mf": "mf cap dtd no. xv",
+                    "dose": "3 x 1/2",
+                    "setUnit": "kap",
+                    "det": "3x",
+                    "usage": "Pusing/Vertigo",
+                    "mustFinish": True,
+                    "printEticket": False,
+                    "eticket": {
+                        "number": 211,
+                        "medicineQty": 15
+                    },
+                    "medicineLists": [
+                        {
+                            "medicineBarcode": "1111",
+                            "medicineName": "Ativan",
+                            "qty": "1.5",
+                            "unit": "BTL",
+                            "price": 46200,
+                            "subtotal": 46200,
+                        },
+                        {
+                            "medicineBarcode": "3333",
+                            "medicineName": "Rhinos",
+                            "qty": "1/3",
+                            "unit": "STP",
+                            "price": 2200,
+                            "discount": 200,
+                            "subtotal": 2000,
+                        },
+                    ],
                 },
                 {
-                    "medicineBarcode": "3333",
-                    "medicineName": "Rhinos",
-                    "qty": 10,
-                    "unit": "TAB",
-                    "price": 2200,
-                    "discount": 200,
-                    "subtotal": 2000,
+                    "mf": "mf cap dtd no. xv",
+                    "dose": "3 x 2",
+                    "setUnit": "kap",
+                    "consumeTime": "ac",
+                    "det": "orig",
+                    "usage": "Batuk dan Pilek",
+                    "mustFinish": True,
+                    "printEticket": False,
+                    "eticket": {
+                        "number": 211,
+                        "medicineQty": 15
+                    },
+                    "medicineLists": [
+                        {
+                            "medicineBarcode": "2222",
+                            "medicineName": "Panadol",
+                            "qty": "7",
+                            "unit": "TAB",
+                            "price": 12900,
+                            "subtotal": 12900,
+                        }
+                    ],
                 },
-            ],
-        },
-        headers={
-            "Authorization": "Bearer " + TOKEN,
-        },
-    )
-    print(r.json())
-
-    r = rq.post(
-        f"http://{BACKEND_ROOT}/api/v1/prescription",
-        json={
-            "invoice": {
-                "number": 2,
-                "customerName": "Gama",
-                "invoiceDate": "2024-09-28 +0900GMT",
-            },
-            "number": 100,
-            "prescriptionDate": "2024-09-28 +0700GMT",
-            "patientName": "Bpay",
-            "doctorName": "Dr. Gray",
-            "qty": 1,
-            "price": 100000,
-            "totalPrice": 100000,
-            "prescriptionMedicineList": [
-                {
-                    "medicineBarcode": "2222",
-                    "medicineName": "Panadol",
-                    "qty": 7,
-                    "unit": "TAB",
-                    "price": 12900,
-                    "subtotal": 12900,
-                }
-            ],
+            ]
         },
         headers={
             "Authorization": "Bearer " + TOKEN,
@@ -1038,16 +1009,15 @@ def main():
     BACKEND_ROOT = "localhost:9988"
     TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiYXV0aG9yaXplZCI6dHJ1ZSwiZXhwaXJlZEF0IjoxNzI3NTI1MjE2LCJ0b2tlblV1aWQiOiIwMTkyMzg4NS1mN2JlLTdkZTMtYTBhYi01NDQ0YWRmYjhmZTAiLCJ1c2VySWQiOjJ9.LeORetCOQ0hs6Lw1eCHsbE-YZ2Kt5SjF2wKzSMKLBJw"
     # create_users(BACKEND_ROOT, TOKEN)
-    # create_company_profile(BACKEND_ROOT, TOKEN)
-    # create_customers(BACKEND_ROOT, TOKEN)
-    # create_doctors(BACKEND_ROOT, TOKEN)
-    # create_patients(BACKEND_ROOT, TOKEN)
-    # create_suppliers(BACKEND_ROOT, TOKEN)
-    # create_medicines(BACKEND_ROOT, TOKEN)
-    # create_invoices(BACKEND_ROOT, TOKEN)
+    create_customers(BACKEND_ROOT, TOKEN)
+    create_doctors(BACKEND_ROOT, TOKEN)
+    create_patients(BACKEND_ROOT, TOKEN)
+    create_suppliers(BACKEND_ROOT, TOKEN)
+    create_medicines(BACKEND_ROOT, TOKEN)
+    create_invoices(BACKEND_ROOT, TOKEN)
     # create_po_invoices(BACKEND_ROOT, TOKEN)
-    # create_prescription(BACKEND_ROOT, TOKEN)
-    create_production(BACKEND_ROOT, TOKEN)
+    create_prescription(BACKEND_ROOT, TOKEN)
+    # create_production(BACKEND_ROOT, TOKEN)
     # create_purchase_invoice(BACKEND_ROOT, TOKEN)
 
     print("DONE")

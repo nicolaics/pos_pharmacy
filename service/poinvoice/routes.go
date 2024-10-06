@@ -2,7 +2,6 @@ package poinvoice
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -17,19 +16,17 @@ type Handler struct {
 	poInvoiceStore      types.PurchaseOrderInvoiceStore
 	userStore           types.UserStore
 	supplierStore       types.SupplierStore
-	companyProfileStore types.CompanyProfileStore
 	medStore            types.MedicineStore
 	unitStore           types.UnitStore
 }
 
 func NewHandler(poInvoiceStore types.PurchaseOrderInvoiceStore, userStore types.UserStore,
-	supplierStore types.SupplierStore, companyProfileStore types.CompanyProfileStore,
+	supplierStore types.SupplierStore,
 	medStore types.MedicineStore, unitStore types.UnitStore) *Handler {
 	return &Handler{
 		poInvoiceStore:      poInvoiceStore,
 		userStore:           userStore,
 		supplierStore:       supplierStore,
-		companyProfileStore: companyProfileStore,
 		medStore:            medStore,
 		unitStore:           unitStore,
 	}
@@ -71,14 +68,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check companyID
-	log.Println("company id:", payload.CompanyID)
-	_, err = h.companyProfileStore.GetCompanyProfileByID(payload.CompanyID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d not found: %v", payload.CompanyID, err))
-		return
-	}
-
 	// check supplierID
 	_, err = h.supplierStore.GetSupplierByID(payload.SupplierID)
 	if err != nil {
@@ -93,7 +82,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItem, *invoiceDate)
+	purchaseOrderInvoiceId, err := h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.SupplierID, payload.TotalItem, *invoiceDate)
 	if err == nil || purchaseOrderInvoiceId != 0 {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order invoice number %d exists", payload.Number))
 		return
@@ -101,7 +90,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	err = h.poInvoiceStore.CreatePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 		Number:               payload.Number,
-		CompanyID:            payload.CompanyID,
 		SupplierID:           payload.SupplierID,
 		UserID:               user.ID,
 		TotalItem:            payload.TotalItem,
@@ -114,11 +102,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get purchaseInvoice ID
-	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.CompanyID, payload.SupplierID, payload.TotalItem, *invoiceDate)
+	purchaseOrderInvoiceId, err = h.poInvoiceStore.GetPurchaseOrderInvoiceID(payload.Number, payload.SupplierID, payload.TotalItem, *invoiceDate)
 	if err != nil {
 		err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 			Number:      payload.Number,
-			CompanyID:   payload.CompanyID,
 			SupplierID:  payload.SupplierID,
 			UserID:      user.ID,
 			TotalItem:   payload.TotalItem,
@@ -138,7 +125,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 				Number:      payload.Number,
-				CompanyID:   payload.CompanyID,
 				SupplierID:  payload.SupplierID,
 				UserID:      user.ID,
 				TotalItem:   payload.TotalItem,
@@ -159,7 +145,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 					Number:      payload.Number,
-					CompanyID:   payload.CompanyID,
 					SupplierID:  payload.SupplierID,
 					UserID:      user.ID,
 					TotalItem:   payload.TotalItem,
@@ -179,7 +164,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 				Number:      payload.Number,
-				CompanyID:   payload.CompanyID,
 				SupplierID:  payload.SupplierID,
 				UserID:      user.ID,
 				TotalItem:   payload.TotalItem,
@@ -205,7 +189,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			err = h.poInvoiceStore.AbsoluteDeletePurchaseOrderInvoice(types.PurchaseOrderInvoice{
 				Number:      payload.Number,
-				CompanyID:   payload.CompanyID,
 				SupplierID:  payload.SupplierID,
 				UserID:      user.ID,
 				TotalItem:   payload.TotalItem,
@@ -414,13 +397,6 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 		return
 	}
 
-	// get company profile
-	company, err := h.companyProfileStore.GetCompanyProfileByID(purchaseOrderInvoice.CompanyID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("company id %d doesn't exists", purchaseOrderInvoice.CompanyID))
-		return
-	}
-
 	// get supplier data
 	supplier, err := h.supplierStore.GetSupplierByID(purchaseOrderInvoice.SupplierID)
 	if err != nil {
@@ -450,16 +426,6 @@ func (h *Handler) handleGetPurchaseOrderInvoiceDetail(w http.ResponseWriter, r *
 		CreatedAt:              purchaseOrderInvoice.CreatedAt,
 		LastModified:           purchaseOrderInvoice.LastModified,
 		LastModifiedByUserName: lastModifiedUser.Name,
-
-		CompanyProfile: struct {
-			ID                      int    "json:\"id\""
-			Name                    string "json:\"name\""
-			Address                 string "json:\"address\""
-		}{
-			ID:                      company.ID,
-			Name:                    company.Name,
-			Address:                 company.Address,
-		},
 
 		Supplier: struct {
 			ID                  int    "json:\"id\""
@@ -580,7 +546,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	err = h.poInvoiceStore.ModifyPurchaseOrderInvoice(payload.ID, types.PurchaseOrderInvoice{
 		Number:               payload.NewData.Number,
-		CompanyID:            payload.NewData.CompanyID,
 		SupplierID:           payload.NewData.SupplierID,
 		TotalItem:            payload.NewData.TotalItem,
 		InvoiceDate:          *invoiceDate,

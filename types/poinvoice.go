@@ -8,7 +8,7 @@ import (
 type PurchaseOrderInvoiceStore interface {
 	GetPurchaseOrderInvoicesByNumber(int) (*PurchaseOrderInvoice, error)
 	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoiceID(number int, companyId int, supplierId int, totalItem int, invoiceDate time.Time) (int, error)
+	GetPurchaseOrderInvoiceID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error)
 	GetNumberOfPurchaseOrderInvoices() (int, error)
 
 	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
@@ -35,7 +35,6 @@ type PurchaseOrderInvoiceStore interface {
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
 type RegisterPurchaseOrderInvoicePayload struct {
 	Number      int    `json:"number" validate:"required"`
-	CompanyID   int    `json:"companyId" validate:"required"`
 	SupplierID  int    `json:"supplierId" validate:"required"`
 	TotalItem   int    `json:"totalItem" validate:"required"`
 	InvoiceDate string `json:"invoiceDate" validate:"required"`
@@ -96,12 +95,6 @@ type PurchaseOrderInvoiceDetailPayload struct {
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
 
-	CompanyProfile struct {
-		ID                      int    `json:"id"`
-		Name                    string `json:"name"`
-		Address                 string `json:"address"`
-	} `json:"companyProfile"`
-
 	Supplier struct {
 		ID                  int    `json:"id"`
 		Name                string `json:"name"`
@@ -128,7 +121,6 @@ type DeletePurchaseOrderInvoice struct {
 type PurchaseOrderInvoice struct {
 	ID                   int           `json:"id"`
 	Number               int           `json:"number"`
-	CompanyID            int           `json:"companyId"`
 	SupplierID           int           `json:"supplierId"`
 	UserID               int           `json:"userId"`
 	TotalItem            int           `json:"totalItem"`
