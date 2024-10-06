@@ -181,7 +181,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:          payload.Description,
 		UserID:               user.ID,
 		LastModifiedByUserID: user.ID,
-		PDFUrl: "",
+		PDFUrl:               "",
 	}
 
 	err = h.prescriptionStore.CreatePrescription(presc)
@@ -365,7 +365,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
-				PDFUrl: "",
+				PDFUrl:                "",
 			}
 
 			err = h.prescriptionStore.CreateEticket(eticket)
@@ -406,13 +406,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			}
 
 			eticketPDF := types.EticketPDFReturnPayload{
-				Number: setItem.Eticket.Number,
+				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
-				SetUsage: setUsage.Name,
-				Dose: dose.Name,
-				SetUnit: setUnit.Name,
+				SetUsage:    setUsage.Name,
+				Dose:        dose.Name,
+				SetUnit:     setUnit.Name,
 				ConsumeTime: consumeTime.Name,
-				MustFinish: setItem.MustFinish,
+				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
 			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
@@ -519,19 +519,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
-				return
-			}
-
-			err = utils.SubtractStock(h.medStore, medData, unit, medicineQty, user)
-			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough, need %.2f: %v", medicine.MedicineName, medicineQty, err))
 				return
 			}
 		}
@@ -550,10 +538,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	prescPDF := types.PrescriptionPDFReturn{
-		Number: payload.Number,
-		Date: *prescriptionDate,
-		Patient: *patient,
-		Doctor: *doctor,
+		Number:       payload.Number,
+		Date:         *prescriptionDate,
+		Patient:      *patient,
+		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
 	prescFileName, err := pdfcreator.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
@@ -568,10 +556,57 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// subtract the stock
+	for _, setItem := range medicineSets {
+		for _, medicine := range setItem.MedicineItems {
+			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
+				return
+			}
+
+			unit, err := h.unitStore.GetUnitByName(medicine.Unit)
+			if unit == nil {
+				err = h.unitStore.CreateUnit(medicine.Unit)
+				if err == nil {
+					unit, err = h.unitStore.GetUnitByName(medicine.Unit)
+				}
+			}
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusInternalServerError, err)
+				return
+			}
+
+			err = utils.SubtractStock(h.medStore, medData, unit, medicine.QtyFloat, user)
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+				return
+			}
+		}
+	}
+
 	returnPayload := map[string]interface{}{
-		"success": fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name),
+		"success":         fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name),
 		"prescriptionPDF": prescFileName,
-		"eticketPDF": eticketFileNames,
+		"eticketPDF":      eticketFileNames,
 	}
 	utils.WriteJSON(w, http.StatusCreated, returnPayload)
 }
@@ -1115,6 +1150,18 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	// delete set items
 	for _, setItem := range oldPrescriptionSetItems {
+		err = h.prescriptionStore.DeletePrescriptionMedicineItem(prescription, setItem.ID, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = h.prescriptionStore.DeleteSetItem(prescription, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting set item: %v", err))
+			return
+		}
+
 		for _, medicineItem := range setItem.MedicineItems {
 			medData, err := h.medStore.GetMedicineByBarcode(medicineItem.MedicineBarcode)
 			if err != nil {
@@ -1133,18 +1180,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 				return
 			}
-		}
-
-		err = h.prescriptionStore.DeletePrescriptionMedicineItem(prescription, setItem.ID, user)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		err = h.prescriptionStore.DeleteSetItem(prescription, user)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting set item: %v", err))
-			return
 		}
 	}
 
@@ -1313,7 +1348,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
-				PDFUrl: "",
+				PDFUrl:                "",
 			}
 			err = h.prescriptionStore.CreateEticket(eticket)
 			if err != nil {
@@ -1353,13 +1388,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 
 			eticketPDF := types.EticketPDFReturnPayload{
-				Number: setItem.Eticket.Number,
+				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
-				SetUsage: setUsage.Name,
-				Dose: dose.Name,
-				SetUnit: setUnit.Name,
+				SetUsage:    setUsage.Name,
+				Dose:        dose.Name,
+				SetUnit:     setUnit.Name,
 				ConsumeTime: consumeTime.Name,
-				MustFinish: setItem.MustFinish,
+				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
 			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
@@ -1457,18 +1492,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
 				return
 			}
-
-			err = utils.SubtractStock(h.medStore, medData, unit, medicineQty, user)
-			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
-				return
-			}
 		}
 	}
 
@@ -1485,10 +1508,10 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	prescPDF := types.PrescriptionPDFReturn{
-		Number: payload.NewData.Number,
-		Date: *prescriptionDate,
-		Patient: *patient,
-		Doctor: *doctor,
+		Number:       payload.NewData.Number,
+		Date:         *prescriptionDate,
+		Patient:      *patient,
+		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
 	prescFileName, err := pdfcreator.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, prescription.PDFUrl)
@@ -1497,10 +1520,57 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// subtract the stock
+	for _, setItem := range medicineSets {
+		for _, medicine := range setItem.MedicineItems {
+			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
+				return
+			}
+
+			unit, err := h.unitStore.GetUnitByName(medicine.Unit)
+			if unit == nil {
+				err = h.unitStore.CreateUnit(medicine.Unit)
+				if err == nil {
+					unit, err = h.unitStore.GetUnitByName(medicine.Unit)
+				}
+			}
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusInternalServerError, err)
+				return
+			}
+
+			err = utils.SubtractStock(h.medStore, medData, unit, medicine.QtyFloat, user)
+			if err != nil {
+				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
+				if errDel != nil {
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
+					return
+				}
+
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+				return
+			}
+		}
+	}
+
 	returnPayload := map[string]interface{}{
-		"success": fmt.Sprintf("prescription modified by %s", user.Name),
+		"success":         fmt.Sprintf("prescription modified by %s", user.Name),
 		"prescriptionPDF": prescFileName,
-		"eticketPDF": eticketFileNames,
+		"eticketPDF":      eticketFileNames,
 	}
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
 }

@@ -643,16 +643,30 @@ func (s *Store) AbsoluteDeletePrescription(presc types.Prescription) error {
 		return nil
 	}
 
+	err = s.DeleteEticketByPrescriptionID(prescId)
+	if err != nil {
+		return err
+	}
+	
 	for _, setItemId := range setItemsId {
 		query = "DELETE FROM prescription_medicine_item WHERE prescription_set_item_id = ?"
-		_, _ = s.db.Exec(query, setItemId)
+		_, err = s.db.Exec(query, setItemId)
+		if err != nil {
+			return err
+		}
 	}
 
 	query = "DELETE FROM prescription_set_item WHERE prescription_id = ?"
-	_, _ = s.db.Exec(query, prescId)
+	_, err = s.db.Exec(query, prescId)
+	if err != nil {
+		return err
+	}
 
 	query = `DELETE FROM prescription WHERE id = ?`
-	_, _ = s.db.Exec(query, prescId)
+	_, err = s.db.Exec(query, prescId)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -824,8 +838,17 @@ func (s *Store) GetEticketID(eticket types.Eticket) (int, error) {
 }
 
 func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) error {
-	query := `UPDATE ? SET pdf_url = ? WHERE id = ?`
-	_, err := s.db.Exec(query, tableName, fileName, prescId)
+	var query string
+
+	if tableName == "eticket" {
+		query = `UPDATE eticket SET pdf_url = ? WHERE id = ?`
+	} else if tableName == "prescription" {
+		query = `UPDATE prescription SET pdf_url = ? WHERE id = ?`
+	} else {
+		return fmt.Errorf("unknown table")
+	}
+
+	_, err := s.db.Exec(query, fileName, prescId)
 	if err != nil {
 		return err
 	}
@@ -835,8 +858,17 @@ func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) err
 
 // false means doesn't exist
 func (s *Store) IsPDFUrlExist(tableName string, fileName string) (bool, error) {
-	query := `SELECT COUNT(*) FROM ? WHERE pdf_url = ?`
-	row := s.db.QueryRow(query, tableName, fileName)
+	var query string
+
+	if tableName == "eticket" {
+		query = `SELECT COUNT(*) FROM eticket WHERE pdf_url = ?`
+	} else if tableName == "prescription" {
+		query = `SELECT COUNT(*) FROM prescription WHERE pdf_url = ?`
+	} else {
+		return true, fmt.Errorf("unknown table")
+	}
+
+	row := s.db.QueryRow(query, fileName)
 	if row.Err() != nil {
 		return true, row.Err()
 	}
