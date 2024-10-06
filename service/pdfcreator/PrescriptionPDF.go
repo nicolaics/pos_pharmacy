@@ -2,7 +2,6 @@ package pdfcreator
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,18 +12,23 @@ import (
 	"github.com/nicolaics/pos_pharmacy/constants"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/go-pdf/fpdf"
 )
 
+var caser = cases.Title(language.Indonesian)
+
 func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
-	directory := "../static/pdf/prescription"
-	if err := os.MkdirAll(directory, 0755); err != nil {
+	directory, err := filepath.Abs("static/pdf/prescription/")
+	if err != nil {
 		return "", err
 	}
 
-	s, _ := filepath.Abs("static/assets/font/")
-	log.Println(s)
+	if err := os.MkdirAll(directory, 0744); err != nil {
+		return "", err
+	}
 
 	pdf, err := initPrescriptionPdf()
 	if err != nil {
@@ -82,8 +86,8 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
 
     fileName := prevFileName
     
-    if prevFileName != "" {
-        fileName := "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
+    if prevFileName == "" {
+        fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(6) + "-" + utils.GenerateRandomCodeAlphanumeric(6) + ".pdf"
         isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
         if err != nil {
             return "", err
@@ -98,7 +102,7 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
         }
     }
 
-	err = pdf.OutputFileAndClose(fileName)
+	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -239,6 +243,8 @@ func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPDFReturn) e
 
     // Patient
     {
+        presc.Patient.Name = caser.String(presc.Patient.Name)
+
         pdf.SetY(pdf.GetY() - 0.05)
         pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
         pdf.CellFormat(1.2, constants.PRESC_STD_CELL_HEIGHT, "Untuk", "", 0, "L", false, 0, "")
@@ -267,6 +273,8 @@ func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPDFReturn) e
 
     // Doctor
     {
+        presc.Doctor.Name = caser.String(presc.Doctor.Name)
+
         pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
         pdf.CellFormat(1.3, constants.PRESC_STD_CELL_HEIGHT, "Dari dr.", "", 0, "L", false, 0, "")
 
@@ -325,7 +333,8 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
 
         for _, medicine := range(medicineSet.MedicineItems) {
             pdf.SetXY(startMedicineX, pdf.GetY() + 0.1)
-
+            
+            medicine.MedicineName = caser.String(medicine.MedicineName)
             nameSplit := nameRegex.FindAllStringIndex(medicine.MedicineName, -1)
             
             if len(nameSplit) == 0 {
@@ -394,14 +403,14 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
                 pdf.SetX(pdf.GetX() + 0.1)
                 pdf.SetFont(constants.PRESC_MED_QTY_UNIT_FONT, constants.REGULAR, constants.PRESC_MED_QTY_UNIT_FONT_SZ)
                 cellWidth = pdf.GetStringWidth(medicine.Unit)
-                pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicine.Unit, "", 1, "L", false, 0, "")
+                pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, strings.ToLower(medicine.Unit), "", 1, "L", false, 0, "")
             }
 
             pdf.SetX(startMedicineX)
         }
 
         pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)
-        pdf.CellFormat(0, 0.6, medicineSet.Mf, "", 1, "L", false, 0, "")
+        pdf.CellFormat(0, 0.6, strings.ToLower(medicineSet.Mf), "", 1, "L", false, 0, "")
 
         pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, (constants.PRESC_MF_DOSE_FONT_SZ + 1))
         pdf.SetX((constants.PRESC_WIDTH / 2) - 2)
@@ -434,13 +443,13 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
         }
 
         pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)
-        cellWidth = pdf.GetStringWidth(medicineSet.SetUnit) + constants.PRESC_MARGIN
-        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicineSet.SetUnit, "", 0, "L", false, 0, "")
+        cellWidth = pdf.GetStringWidth(medicineSet.SetUnit)
+        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, strings.ToLower(medicineSet.SetUnit), "", 0, "L", false, 0, "")
 
         if medicineSet.ConsumeTime != "" {
             pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)
             cellWidth = pdf.GetStringWidth(medicineSet.ConsumeTime) + constants.PRESC_MARGIN
-            pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, medicineSet.ConsumeTime, "", 0, "L", false, 0, "")
+            pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, strings.ToLower(medicineSet.ConsumeTime), "", 0, "L", false, 0, "")
         }
 
         pdf.SetFont(constants.PRESC_MF_DOSE_FONT, constants.REGULAR, constants.PRESC_MF_DOSE_FONT_SZ)

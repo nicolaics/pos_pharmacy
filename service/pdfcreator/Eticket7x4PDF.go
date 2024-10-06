@@ -2,7 +2,6 @@ package pdfcreator
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,16 +11,19 @@ import (
 	"github.com/nicolaics/pos_pharmacy/constants"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
-	directory := "../static/pdf/eticket"
-	if err := os.MkdirAll(directory, 0755); err != nil {
+	directory, err := filepath.Abs("static/pdf/eticket/")
+	if err != nil {
 		return "", err
 	}
 
-	s, _ := filepath.Abs("static/assets/font/")
-	log.Println(s)
+	if err := os.MkdirAll(directory, 0744); err != nil {
+		return "", err
+	}
 
 	pdf, err := initEticketPdf()
 	if err != nil {
@@ -47,7 +49,7 @@ func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, pres
 		}
 	}
 
-	err = pdf.OutputFileAndClose(fileName)
+	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -85,6 +87,8 @@ func initEticketPdf() (*fpdf.Fpdf, error) {
 }
 
 func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, setNumber int) error {
+	caser := cases.Title(language.Indonesian)
+
 	pdf.SetLineWidth(0.02)
 	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
 	pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
@@ -117,6 +121,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
 		pdf.CellFormat(1.1, (constants.ETIX_7X4_STD_CELL_HEIGHT * 3), "Nama:", "", 0, "LM", false, 0, "")
 
+		eticket.PatientName = caser.String(eticket.PatientName)
 		nameSplit := strings.Split(eticket.PatientName, " ")
 		startName := pdf.GetX()
 		pdf.SetFont("Arial", constants.BOLD, (constants.ETIX_7X4_STD_FONT_SZ + 2))
@@ -143,6 +148,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 	// Usage
 	{
+		eticket.SetUsage = caser.String(eticket.SetUsage)
 
 		usageSplit := strings.Split(eticket.SetUsage, " ")
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
@@ -159,12 +165,14 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 	// Dose
 	{
+		eticket.SetUnit = caser.String(eticket.SetUnit)
+
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
 
 		slashIdx := strings.Index(eticket.Dose, "/")
 		if slashIdx != -1 {
-			pdf.SetX(0.2)
-			pdf.CellFormat(1.15, constants.ETIX_7X4_STD_CELL_HEIGHT, "Sehari", "", 0, "L", false, 0, "")
+			pdf.SetX(0.4)
+			pdf.CellFormat(1.15, constants.ETIX_7X4_STD_CELL_HEIGHT, "Sehari", "", 0, "R", false, 0, "")
 
 			doseSplit := strings.Split(eticket.Dose, "/")
 			doseSplit[1] = strings.TrimSpace(doseSplit[1])
@@ -173,6 +181,7 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			aDay[0] = strings.TrimSpace(aDay[0])
 			aDay[1] = strings.TrimSpace(aDay[1])
 
+			pdf.SetX(1.55)
 			cellWidth := pdf.GetStringWidth(fmt.Sprintf("%s x ", aDay[0]))
 			pdf.CellFormat(cellWidth, constants.ETIX_7X4_STD_CELL_HEIGHT, fmt.Sprintf("%s x ", aDay[0]), "", 0, "L", false, 0, "")
 
@@ -184,10 +193,10 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			pdf.SubWrite(constants.PRESC_STD_CELL_HEIGHT, doseSplit[1], 4, -3.5, 0, "")
 
 			pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
-			pdf.SetX(pdf.GetX() + 0.1)
+			pdf.SetX(pdf.GetX() + 0.15)
 			pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, eticket.SetUnit, "", 1, "L", false, 0, "")
 		} else {
-			doseTxt := fmt.Sprintf("Sehari %s %s", strings.ToLower(eticket.Dose), strings.ToLower(eticket.SetUnit))
+			doseTxt := fmt.Sprintf("Sehari %s %s", strings.ToLower(eticket.Dose), eticket.SetUnit)
 
 			pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, doseTxt, "", 1, "C", false, 0, "")
 		}
