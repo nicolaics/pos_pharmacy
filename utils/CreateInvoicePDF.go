@@ -1,0 +1,506 @@
+package utils
+
+import (
+	"fmt"
+	"log"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/nicolaics/pos_pharmacy/constants"
+	
+	"github.com/go-pdf/fpdf"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
+)
+
+func CreateInvoice() {
+	pdf, err := initInvoicePdf()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = createInvoiceHeader(pdf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	startTableY := pdf.GetY() + 0.2
+
+	startX, err := createInvoiceTableHeader(pdf, startTableY)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = createInvoiceData(pdf, startX)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	startFooterY := 11.0
+
+	if pdf.GetY() > startFooterY {
+		pdf.AddPage()
+	}
+
+	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+	pdf.SetLineWidth(0.02)
+
+	if pdf.PageCount() > 1 {
+		pdf.SetPage(1)
+
+		pdf.Line(startX["item"], startTableY, startX["item"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		pdf.Line(startX["qty"], startTableY, startX["qty"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		pdf.Line(startX["unit"], startTableY, startX["unit"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		pdf.Line(startX["price"], startTableY, startX["price"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		pdf.Line(startX["discount"], startTableY, startX["discount"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		pdf.Line(startX["subtotal"], startTableY, startX["subtotal"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+
+		for i := 1; i < (pdf.PageCount() - 1); i++ {
+			pdf.SetPage(i + 1)
+			pdf.Line(startX["item"], 0.5, startX["item"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+			pdf.Line(startX["qty"], 0.5, startX["qty"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+			pdf.Line(startX["unit"], 0.5, startX["unit"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+			pdf.Line(startX["price"], 0.5, startX["price"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+			pdf.Line(startX["discount"], 0.5, startX["discount"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+			pdf.Line(startX["subtotal"], 0.5, startX["subtotal"], (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN))
+		}
+
+		pdf.SetPage(pdf.PageCount())
+		pdf.Line(startX["item"], 0.5, startX["item"], (startFooterY - 0.5))
+		pdf.Line(startX["qty"], 0.5, startX["qty"], (startFooterY - 0.5))
+		pdf.Line(startX["unit"], 0.5, startX["unit"], (startFooterY - 0.5))
+		pdf.Line(startX["price"], 0.5, startX["price"], (startFooterY - 0.5))
+		pdf.Line(startX["discount"], 0.5, startX["discount"], (startFooterY - 0.5))
+		pdf.Line(startX["subtotal"], 0.5, startX["subtotal"], (startFooterY - 0.5))
+	} else {
+		pdf.Line(startX["item"], startTableY, startX["item"], (startFooterY - 0.5))
+		pdf.Line(startX["qty"], startTableY, startX["qty"], (startFooterY - 0.5))
+		pdf.Line(startX["unit"], startTableY, startX["unit"], (startFooterY - 0.5))
+		pdf.Line(startX["price"], startTableY, startX["price"], (startFooterY - 0.5))
+		pdf.Line(startX["discount"], startTableY, startX["discount"], (startFooterY - 0.5))
+		pdf.Line(startX["subtotal"], startTableY, startX["subtotal"], (startFooterY - 0.5))
+	}
+
+	pdf.SetDashPattern([]float64{0.05, 0.05}, 0)
+	pdf.Line(0.05, (startFooterY - 0.3), (constants.INVOICE_WIDTH - 0.05), (startFooterY - 0.3))
+
+	pdf.SetDashPattern([]float64{0, 0}, 0)
+
+	err = createInvoiceFooter(pdf, startX, startFooterY)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = pdf.OutputFileAndClose("invoice.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func initInvoicePdf() (*fpdf.Fpdf, error) {
+	s, _ := filepath.Abs("static/assets/font/")
+
+	pdf := fpdf.NewCustom(&fpdf.InitType{
+		OrientationStr: "P",
+		UnitStr:        "cm",
+		SizeStr:        "10x15",
+		Size: fpdf.SizeType{
+			Wd: constants.INVOICE_WIDTH,
+			Ht: constants.INVOICE_HEIGHT,
+		},
+		FontDirStr: s,
+	})
+
+	pdf.SetMargins(0.2, 0.3, 0.2)
+	pdf.SetAutoPageBreak(true, constants.INVOICE_MARGIN)
+
+	pdf.AddUTF8Font("Arial", constants.REGULAR, "Arial.TTF")
+	pdf.AddUTF8Font("Arial", constants.BOLD, "ArialBD.TTF")
+	pdf.AddUTF8Font("Arial", constants.ITALIC, "ArialI.TTF")
+	pdf.AddUTF8Font("Calibri", constants.REGULAR, "Calibri.TTF")
+	pdf.AddUTF8Font("Calibri", constants.BOLD, "CalibriBold.TTF")
+	pdf.AddUTF8Font("Bree", constants.REGULAR, "bree-serif-regular.ttf")
+	pdf.AddUTF8Font("Bree", constants.BOLD, "Bree Serif Bold.ttf")
+
+	pdf.AddPage()
+
+	if pdf.Error() != nil {
+		return nil, fmt.Errorf("error init invoice pdf: %v", pdf.Error())
+	}
+
+	return pdf, nil
+}
+
+func createInvoiceHeader(pdf *fpdf.Fpdf) error {
+	pdf.SetXY((constants.INVOICE_MARGIN + 0.1), 0.3)
+
+	// TODO: get company name from env
+	companyName := strings.ToUpper("APOTEK C M C")
+
+	pdf.SetFont("Bree", constants.BOLD, 20)
+	cellWidth := pdf.GetStringWidth(companyName) + constants.INVOICE_MARGIN
+	pdf.CellFormat(cellWidth, 0.6, companyName, "", 1, "L", false, 0, "")
+
+	// TODO: get address from env
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
+	pdf.MultiCell(cellWidth, constants.INVOICE_HEADER_HEIGHT, "Citra 3 Blok B5 No. 26, Pegadungan, Kalideres, Jakarta", "", "C", false)
+
+	// TODO: get phone number from env
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
+	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, "No. Telp: 021-5457550", "", 1, "C", false, 0, "")
+
+	// TODO: get address from env
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_HEADER_FONT_SZ)
+	pdf.CellFormat(cellWidth, constants.INVOICE_HEADER_HEIGHT, "WhatsApp: 0857-1715-7550", "", 1, "C", false, 0, "")
+
+	// TODO: get the data from envs
+	pdf.SetFont("Calibri", constants.REGULAR, 9)
+	pdf.MultiCell(cellWidth, 0.34, "Hati yang Gembira adalah Obat yang Manjur", "", "C", false)
+
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create invoice pdf header: %v", pdf.Error())
+	}
+
+	err := createInvoiceInfo(pdf)
+	if err != nil {
+		return fmt.Errorf("error create invoice info: %v", err)
+	}
+
+	pdf.SetLineWidth(0.02)
+	pdf.SetDashPattern([]float64{0.05, 0.05}, 0)
+	pdf.Line(0.05, pdf.GetY(), (constants.INVOICE_WIDTH - 0.05), pdf.GetY())
+
+	pdf.SetDashPattern([]float64{0, 0}, 0)
+
+	return nil
+}
+
+func createInvoiceInfo(pdf *fpdf.Fpdf) error {
+	var caser = cases.Title(language.Indonesian)
+
+	// DATA
+	number := 100
+	cashier := caser.String("admin")
+
+	startX := 5.3
+	space := 0.1
+
+	pdf.SetXY(startX, 0.3)
+
+	// Number
+	{
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_INFO_TITLE_WIDTH, constants.INVOICE_STD_CELL_HEIGHT, "No.", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, strconv.Itoa(number), "RTB", 1, "L", false, 0, "")
+	}
+
+	pdf.SetXY(startX, pdf.GetY()+space)
+
+	// Date
+	{
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_INFO_TITLE_WIDTH, constants.INVOICE_STD_CELL_HEIGHT, "Tgl.", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, time.Now().Format("02-01-2006"), "RTB", 1, "L", false, 0, "")
+	}
+
+	pdf.SetXY(startX, pdf.GetY()+space)
+
+	// Time
+	{
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_INFO_TITLE_WIDTH, constants.INVOICE_STD_CELL_HEIGHT, "Jam", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, time.Now().Format("15:04"), "RTB", 1, "L", false, 0, "")
+	}
+
+	pdf.SetXY(startX, pdf.GetY()+space)
+
+	// Cashier
+	{
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_INFO_TITLE_WIDTH, constants.INVOICE_STD_CELL_HEIGHT, "Kasir", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, cashier, "RTB", 1, "L", false, 0, "")
+	}
+
+	pdf.SetY(pdf.GetY() + 0.3)
+
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create presc info: %v", pdf.Error())
+	}
+
+	return nil
+}
+
+func createInvoiceTableHeader(pdf *fpdf.Fpdf, startTableY float64) (map[string]float64, error) {
+	pdf.SetLineWidth(0.02)
+
+	pdf.SetY(startTableY)
+
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_NO_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "No.", "B", 0, "C", false, 0, "")
+
+	itemStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_ITEM_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "Item", "B", 0, "C", false, 0, "")
+
+	qtyStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_QTY_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "Qty", "B", 0, "C", false, 0, "")
+
+	unitStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_UNIT_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "Unit", "B", 0, "C", false, 0, "")
+
+	priceStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_PRICE_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "Price", "B", 0, "C", false, 0, "")
+
+	discStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_DISC_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "%", "B", 0, "C", false, 0, "")
+
+	subtotalStartX := pdf.GetX()
+	pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_TABLE_HEADER_FONT_SZ)
+	pdf.CellFormat(constants.INVOICE_SUBTOTAL_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, "Subtotal", "B", 1, "C", false, 0, "")
+
+	if pdf.Error() != nil {
+		return nil, fmt.Errorf("error create invoice table header: %v", pdf.Error())
+	}
+
+	startX := map[string]float64{
+		"item":     itemStartX,
+		"qty":      qtyStartX,
+		"unit":     unitStartX,
+		"price":    priceStartX,
+		"discount": discStartX,
+		"subtotal": subtotalStartX,
+	}
+
+	return startX, nil
+}
+
+func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64) error {
+	var printer = message.NewPrinter(language.Indonesian)
+
+	// DATA
+	type MedicineLists struct {
+		Name     string
+		Qty      float64
+		Unit     string
+		Price    float64
+		Discount float64
+		Subtotal float64
+	}
+
+	medicineLists := make([]MedicineLists, 0)
+
+	for i := 0; i < 20; i++ {
+		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
+		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
+		medicineLists = append(medicineLists, MedicineLists{Name: "Codein", Qty: 15, Unit: "stp", Price: 10000, Discount: 0, Subtotal: 120000})
+		medicineLists = append(medicineLists, MedicineLists{Name: "Tremenza", Qty: 1, Unit: "box", Price: 990000, Discount: 0, Subtotal: 99000})
+		medicineLists = append(medicineLists, MedicineLists{Name: "Braxidin", Qty: 0.33, Unit: "tab", Price: 990000, Discount: 99000, Subtotal: 900000})
+		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
+	}
+
+	pdf.SetLineWidth(0.02)
+	pdf.SetY(pdf.GetY() + 0.05)
+
+	number := 1
+	nextY := pdf.GetY()
+
+	for _, medicine := range medicineLists {
+		if (pdf.GetY() + (constants.INVOICE_TABLE_HEIGHT * 3)) > (constants.INVOICE_HEIGHT - constants.INVOICE_MARGIN) {
+			pdf.AddPage()
+
+			// change top margin into 0.5
+			nextY = 0.5
+		}
+		startY := nextY
+
+		pdf.SetXY(pdf.GetX(), startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_NO_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strconv.Itoa(number), "", 0, "C", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		pdf.MultiCell(constants.INVOICE_ITEM_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strings.ToUpper(medicine.Name), "", "L", false)
+
+		nextY = pdf.GetY()
+
+		pdf.SetXY(startX["qty"], startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		qtyString := printer.Sprintf("%.1f", medicine.Qty)
+		pdf.CellFormat(constants.INVOICE_QTY_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, qtyString, "", 0, "C", false, 0, "")
+
+		pdf.SetXY(startX["unit"], startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		pdf.CellFormat(constants.INVOICE_UNIT_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strings.ToUpper(medicine.Unit), "", 0, "C", false, 0, "")
+
+		pdf.SetXY(startX["price"], startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		priceString := printer.Sprintf("Rp. %.1f", medicine.Price)
+		pdf.CellFormat(constants.INVOICE_PRICE_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, priceString, "", 0, "C", false, 0, "")
+
+		pdf.SetXY(startX["discount"], startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		discountInPercentage := (medicine.Discount / medicine.Price) * 100
+		discountString := printer.Sprintf("%.1f", discountInPercentage)
+		pdf.CellFormat(constants.INVOICE_DISC_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, discountString, "", 0, "C", false, 0, "")
+
+		pdf.SetXY(startX["subtotal"], startY)
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
+		subtotalString := printer.Sprintf("Rp. %.1f", medicine.Subtotal)
+		pdf.CellFormat(constants.INVOICE_SUBTOTAL_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, subtotalString, "", 1, "C", false, 0, "")
+
+		number++
+	}
+
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create presc info: %v", pdf.Error())
+	}
+
+	return nil
+}
+
+func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY float64) error {
+	var printer = message.NewPrinter(language.Indonesian)
+	
+	// DATA
+	subtotal := 1210000.0
+	discount := 200021.0
+	discountPercentage := 2.0
+	tax := 10000.0
+	taxPercentage := 10.0
+	total := 25000000.0
+	paidAmount := 25000000.0
+	changeAmount := 25000000.0
+	description := "Antar ke Citra 3 Blok B5 No. 26"
+
+	pdf.SetLineWidth(0.02)
+
+	// Description
+	{
+		pdf.SetY(startFooterY)
+		cellWidth := startX["unit"] - pdf.GetX() - 0.1
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Note:", "T", 1, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, 6)
+		pdf.MultiCell(cellWidth, constants.INVOICE_STD_CELL_HEIGHT, description, "", "L", false)
+
+		pdf.Line(pdf.GetX(), startFooterY, pdf.GetX(), 14.0)
+		pdf.Line(pdf.GetX(), 14.0, (startX["unit"] - 0.1), 14.0)
+		pdf.Line((startX["unit"] - 0.1), startFooterY, (startX["unit"] - 0.1), 14.0)
+	}
+
+	pdf.SetXY(startX["unit"], startFooterY)
+
+	cellWidth := startX["discount"] - pdf.GetX()
+
+	// Subtotal
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Subtotal:", "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		subtotalString := printer.Sprintf("Rp. %.1f", subtotal)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, subtotalString, "", 1, "L", false, 0, "")
+	}
+
+	pdf.SetX(startX["unit"])
+
+	// Discount
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		discountPercentageString := printer.Sprintf("Discount (%.1f%%):", discountPercentage)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, discountPercentageString, "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		discountString := printer.Sprintf("Rp. %.1f", discount)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, discountString, "", 1, "L", false, 0, "")
+	}
+
+	pdf.SetX(startX["unit"])
+
+	// Tax
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		taxPercentageString := printer.Sprintf("Tax (%.1f%%):", taxPercentage)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, taxPercentageString, "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		taxString := printer.Sprintf("Rp. %.1f", tax)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, taxString, "", 1, "L", false, 0, "")
+	}
+
+	pdf.SetX(startX["unit"])
+
+	// Total
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Total:", "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		totalString := printer.Sprintf("Rp. %.1f", total)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, totalString, "", 1, "L", false, 0, "")
+	}
+
+	pdf.SetX(startX["unit"])
+
+	// Paid Amount
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Paid:", "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		paidAmountString := printer.Sprintf("Rp. %.1f", paidAmount)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, paidAmountString, "", 1, "L", false, 0, "")
+	}
+
+	pdf.SetX(startX["unit"])
+
+	// Change Amount
+	{
+		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Change:", "", 0, "R", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
+		changeAmountString := printer.Sprintf("Rp. %.1f", changeAmount)
+		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, changeAmountString, "", 1, "L", false, 0, "")
+	}
+
+	// Disclaimer
+	pdf.SetY(pdf.GetY() + 0.2)
+	{
+		pdf.SetFont("Arial", constants.BOLD, 6)
+		pdf.MultiCell(0, constants.INVOICE_FOOTER_CELL_HEIGHT, "Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan! Terima kasih!", "1", "C", false)
+	}
+
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create presc footer: %v", pdf.Error())
+	}
+
+	return nil
+}
