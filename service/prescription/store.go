@@ -796,7 +796,7 @@ func (s *Store) DeleteEticketByPrescriptionID(id int) error {
 	return nil
 }
 
-func (s *Store) GetEticketI(eticket types.Eticket) (int, error) {
+func (s *Store) GetEticketID(eticket types.Eticket) (int, error) {
 	query := `SELECT id FROM eticket 
 				WHERE prescription_id = ? AND prescription_set_item_id = ? 
 				AND number = ? AND medicine_qty = ?`
