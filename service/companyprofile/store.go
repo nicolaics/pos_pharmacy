@@ -68,14 +68,11 @@ func (s *Store) GetCompanyProfileByID(id int) (*types.CompanyProfile, error) {
 
 func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error {
 	query := `INSERT INTO self_company_profile 
-				(name, address, business_number, pharmacist, 
-				pharmacist_license_number, last_modified, last_modified_by_user_id) 
+				(name, address, last_modified_by_user_id) 
 				VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := s.db.Exec(query,
-		companyProfile.Name, companyProfile.Address, companyProfile.BusinessNumber,
-		companyProfile.Pharmacist, companyProfile.PharmacistLicenseNumber,
-		time.Now(), companyProfile.LastModifiedByUserID)
+		companyProfile.Name, companyProfile.Address, companyProfile.LastModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -84,9 +81,7 @@ func (s *Store) CreateCompanyProfile(companyProfile types.CompanyProfile) error 
 }
 
 func (s *Store) GetCompanyProfile() (*types.CompanyProfileReturn, error) {
-	query := `SELECT c.id, c.name, c.address, c.business_number, 
-					c.pharmacist, c.pharmacist_license_number, 
-					c.last_modified, 
+	query := `SELECT c.id, c.name, c.last_modified, 
 					user.name 
 					FROM self_company_profile AS c 
 					JOIN user ON user.id = c.last_modified_by_user_id`
@@ -141,14 +136,10 @@ func (s *Store) ModifyCompanyProfile(id int, user *types.User, newCompanyProfile
 	}
 	
 	query := `UPDATE self_company_profile SET 
-			name = ?, address = ?, business_number = ?, 
-			pharmacist = ?, pharmacist_license_number = ?, 
-			last_modified = ?, last_modified_by_user_id = ? WHERE id = ?`
+			name = ?, address = ?, last_modified = ?, last_modified_by_user_id = ? WHERE id = ?`
 
 	_, err = s.db.Exec(query,
-		newCompanyProfile.Name, newCompanyProfile.Address, newCompanyProfile.BusinessNumber,
-		newCompanyProfile.Pharmacist, newCompanyProfile.PharmacistLicenseNumber, time.Now(),
-		user.ID, id)
+		newCompanyProfile.Name, newCompanyProfile.Address, time.Now(), user.ID, id)
 	if err != nil {
 		return err
 	}
@@ -165,9 +156,6 @@ func scanRowIntoCompanyProfile(rows *sql.Rows) (*types.CompanyProfile, error) {
 		&companyProfile.ID,
 		&companyProfile.Name,
 		&companyProfile.Address,
-		&companyProfile.BusinessNumber,
-		&companyProfile.Pharmacist,
-		&companyProfile.PharmacistLicenseNumber,
 		&companyProfile.CreatedAt,
 		&companyProfile.LastModified,
 		&companyProfile.LastModifiedByUserID,
@@ -190,9 +178,6 @@ func scanRowIntoCompanyProfileReturn(rows *sql.Rows) (*types.CompanyProfileRetur
 		&companyProfile.ID,
 		&companyProfile.Name,
 		&companyProfile.Address,
-		&companyProfile.BusinessNumber,
-		&companyProfile.Pharmacist,
-		&companyProfile.PharmacistLicenseNumber,
 		&companyProfile.LastModified,
 		&companyProfile.LastModifiedByUserName,
 	)

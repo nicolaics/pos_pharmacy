@@ -61,9 +61,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	err = h.companyProfileStore.CreateCompanyProfile(types.CompanyProfile{
 		Name:                    payload.Name,
 		Address:                 payload.Address,
-		BusinessNumber:          payload.BusinessNumber,
-		Pharmacist:              payload.Pharmacist,
-		PharmacistLicenseNumber: payload.PharmacistLicenseNumber,
 		LastModifiedByUserID:    user.ID,
 	})
 
@@ -167,9 +164,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	err = h.companyProfileStore.ModifyCompanyProfile(payload.ID, user, types.CompanyProfile{
 		Name:                    payload.NewData.Name,
 		Address:                 payload.NewData.Address,
-		BusinessNumber:          payload.NewData.Address,
-		Pharmacist:              payload.NewData.Pharmacist,
-		PharmacistLicenseNumber: payload.NewData.PharmacistLicenseNumber,
 		LastModifiedByUserID:    user.ID,
 	})
 	if err != nil {
