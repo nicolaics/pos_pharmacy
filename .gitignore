@@ -10,6 +10,7 @@ test_token.json
 *.txt
 *.log
 static/assets
+static/pdf
 create_justus_db.py
 
 # FRONTEND
