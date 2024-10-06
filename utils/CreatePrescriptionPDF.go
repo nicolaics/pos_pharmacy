@@ -84,14 +84,14 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
     fileName := prevFileName
     
     if prevFileName == "" {
-        fileName = "p-" + GenerateRandomCodeAlphanumeric(6) + "-" + GenerateRandomCodeAlphanumeric(6) + ".pdf"
+        fileName = "p-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
         isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
         if err != nil {
             return "", err
         }
 
         for isExist {
-            fileName = "p-" + GenerateRandomCodeAlphanumeric(6) + "-" + GenerateRandomCodeAlphanumeric(6) + ".pdf"
+            fileName = "p-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
             isExist, err = prescStore.IsPDFUrlExist("prescription", fileName)
             if err != nil {
                 return "", err

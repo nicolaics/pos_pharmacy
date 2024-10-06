@@ -34,14 +34,14 @@ func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, pres
 		return "", err
 	}
 
-	fileName := "e-" + GenerateRandomCodeAlphanumeric(6) + "-" + GenerateRandomCodeAlphanumeric(6) + ".pdf"
+	fileName := "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
 	isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
 	if err != nil {
 		return "", err
 	}
 
 	for isExist {
-		fileName = "e-" + GenerateRandomCodeAlphanumeric(6) + "-" + GenerateRandomCodeAlphanumeric(6) + ".pdf"
+		fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
 		isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
 		if err != nil {
 			return "", err

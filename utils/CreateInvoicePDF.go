@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,27 +17,36 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreateInvoice() {
+func CreateInvoice() (string, error) {
+	directory, err := filepath.Abs("static/pdf/invoice/")
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(directory, 0744); err != nil {
+		return "", err
+	}
+
 	pdf, err := initInvoicePdf()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	err = createInvoiceHeader(pdf)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	startTableY := pdf.GetY() + 0.2
 
 	startX, err := createInvoiceTableHeader(pdf, startTableY)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	err = createInvoiceData(pdf, startX)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	startFooterY := 11.0
@@ -92,13 +101,29 @@ func CreateInvoice() {
 
 	err = createInvoiceFooter(pdf, startX, startFooterY)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	err = pdf.OutputFileAndClose("invoice.pdf")
+	fileName := "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+	// isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// for isExist {
+	// 	fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+	// 	isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// }
+
+	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
+
+	return fileName, nil
 }
 
 func initInvoicePdf() (*fpdf.Fpdf, error) {
