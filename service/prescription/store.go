@@ -394,21 +394,21 @@ func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, pat
 
 func (s *Store) CreatePrescription(prescription types.Prescription) error {
 	values := "?"
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 11; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO prescription (
 		invoice_id, number, prescription_date, patient_id, doctor_id, qty, 
 		price, total_price, description, 
-		user_id, last_modified_by_user_id
+		user_id, last_modified_by_user_id, pdf_url
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		prescription.InvoiceID, prescription.Number, prescription.PrescriptionDate,
 		prescription.PatientID, prescription.DoctorID, prescription.Qty,
 		prescription.Price, prescription.TotalPrice, prescription.Description,
-		prescription.UserID, prescription.LastModifiedByUserID)
+		prescription.UserID, prescription.LastModifiedByUserID, prescription.PDFUrl)
 	if err != nil {
 		return err
 	}
@@ -417,11 +417,17 @@ func (s *Store) CreatePrescription(prescription types.Prescription) error {
 }
 
 func (s *Store) CreateSetItem(medicineSet types.PrescriptionSetItem) error {
+	values := "?"
+	for i := 0; i < 9; i++ {
+		values += ", ?"
+	}
+
+
 	query := `INSERT INTO prescription_set_item 
 				(prescription_id, mf_id, dose_id, set_unit_id, 
 				consume_time_id, det_id, prescription_set_usage_id, must_finish, 
 				print_eticket, eticket_id) 
-				VALUES (?, ?, ?, ?, ?, ?)`
+				VALUES (` + values + `)`
 	_, err := s.db.Exec(query, medicineSet.PrescriptionID, medicineSet.MfID, medicineSet.DoseID,
 		medicineSet.SetUnitID, medicineSet.ConsumeTimeID, medicineSet.DetID,
 		medicineSet.UsageID, medicineSet.MustFinish, medicineSet.PrintEticket,
@@ -759,10 +765,10 @@ func (s *Store) GetSetItemID(medicineSet types.PrescriptionSetItem) (int, error)
 
 func (s *Store) CreateEticket(eticket types.Eticket) error {
 	query := `INSERT INTO eticket 
-				(prescription_id, prescription_set_item_id, number, medicine_qty) 
-				VALUES (?, ?, ?, ?)`
+				(prescription_id, prescription_set_item_id, number, medicine_qty, pdf_url) 
+				VALUES (?, ?, ?, ?, ?)`
 	_, err := s.db.Exec(query, eticket.PrescriptionID, eticket.PrescriptionSetItemID,
-		eticket.Number, eticket.MedicineQty)
+		eticket.Number, eticket.MedicineQty, eticket.PDFUrl)
 	if err != nil {
 		return err
 	}
@@ -780,32 +786,41 @@ func (s *Store) DeleteEticket(id int) error {
 	return nil
 }
 
-func (s *Store) GetEticketIDAndPDFUrl(eticket types.Eticket) (int, string, error) {
-	query := `SELECT id, pdf_url FROM eticket 
+func (s *Store) DeleteEticketByPrescriptionID(id int) error {
+	query := `DELETE FROM eticket WHERE prescription_id = ?`
+	_, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Store) GetEticketI(eticket types.Eticket) (int, error) {
+	query := `SELECT id FROM eticket 
 				WHERE prescription_id = ? AND prescription_set_item_id = ? 
 				AND number = ? AND medicine_qty = ?`
 	rows, err := s.db.Query(query, eticket.PrescriptionID, eticket.PrescriptionSetItemID,
 		eticket.Number, eticket.MedicineQty)
 	if err != nil {
-		return 0, "", err
+		return 0, err
 	}
 	defer rows.Close()
 
 	var id int
-	var pdfUrl string
 
 	for rows.Next() {
-		err = rows.Scan(&id, &pdfUrl)
+		err = rows.Scan(&id)
 		if err != nil {
-			return 0, "", err
+			return 0, err
 		}
 	}
 
 	if id == 0 {
-		return 0, "", fmt.Errorf("eticket not found")
+		return 0, fmt.Errorf("eticket not found")
 	}
 
-	return id, pdfUrl, nil
+	return id, nil
 }
 
 func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) error {

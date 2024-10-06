@@ -39,7 +39,8 @@ type PrescriptionStore interface {
 
 	CreateEticket(Eticket) error
 	DeleteEticket(int) error
-	GetEticketIDAndPDFUrl(Eticket) (int, string, error)
+	DeleteEticketByPrescriptionID(int) error
+	GetEticketID(Eticket) (int, error)
 
 	// tabla nemae = prescription, eticket
 	UpdatePDFUrl(tableName string, id int, fileName string) error

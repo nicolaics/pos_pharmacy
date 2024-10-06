@@ -181,6 +181,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:          payload.Description,
 		UserID:               user.ID,
 		LastModifiedByUserID: user.ID,
+		PDFUrl: "",
 	}
 
 	err = h.prescriptionStore.CreatePrescription(presc)
@@ -340,7 +341,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err))
 			return
 		}
 
@@ -364,6 +365,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
+				PDFUrl: "",
 			}
 
 			err = h.prescriptionStore.CreateEticket(eticket)
@@ -378,7 +380,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketId, _, err := h.prescriptionStore.GetEticketIDAndPDFUrl(eticket)
+			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
@@ -413,7 +415,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				MustFinish: setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore, "")
+			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 				return
@@ -1281,7 +1283,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set"))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err))
 			return
 		}
 
@@ -1300,13 +1302,19 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 		// create eticket
 		if setItem.PrintEticket {
+			err = h.prescriptionStore.DeleteEticketByPrescriptionID(payload.ID)
+			if err != nil {
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting eticket: %v", err))
+				return
+			}
+
 			eticket := types.Eticket{
 				PrescriptionID:        payload.ID,
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
+				PDFUrl: "",
 			}
-
 			err = h.prescriptionStore.CreateEticket(eticket)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
@@ -1319,7 +1327,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketId, eticketFileName, err := h.prescriptionStore.GetEticketIDAndPDFUrl(eticket)
+			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
 				if errDel != nil {
@@ -1354,7 +1362,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				MustFinish: setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err = pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore, eticketFileName)
+			eticketFileName, err := pdfcreator.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 				return
