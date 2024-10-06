@@ -19,7 +19,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) (*types.PurchaseOrderInvoice, error) {
-	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *Store) GetPurchaseOrderInvoicesByNumber(number int) (*types.PurchaseOrd
 }
 
 func (s *Store) GetPurchaseOrderInvoiceByID(id int) (*types.PurchaseOrderInvoice, error) {
-	query := "SELECT * FROM purchase_order_invoice WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM purchase_order_invoice WHERE id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,8 @@ func (s *Store) GetPurchaseOrderInvoiceID(number int, companyId int, supplierId 
 	query := `SELECT id FROM purchase_order_invoice 
 				WHERE number = ? AND company_id = ? 
 				AND supplier_id = ? AND total_item = ? 
-				AND invoice_date = ? AND deleted_at IS NULL`
+				AND invoice_date = ? AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
 
 	rows, err := s.db.Query(query, number, companyId, supplierId, totalItem, invoiceDate)
 	if err != nil {
@@ -192,8 +193,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, end
 					FROM purchase_order_invoice 
 					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
 					AND number = ? 
-					AND deleted_at IS NULL 
-					ORDER BY invoice_date DESC`
+					AND deleted_at IS NULL`
 
 	row := s.db.QueryRow(query, startDate, endDate, number)
 	if row.Err() != nil {
@@ -354,7 +354,8 @@ func (s *Store) GetPurchaseOrderItem(purchaseOrderInvoiceId int) ([]types.Purcha
 					ON poit.purchase_order_invoice_id = poin.id 
 				JOIN medicine ON poit.medicine_id = medicine.id 
 				JOIN unit ON poit.unit_id = unit.id 
-				WHERE poin.id = ? AND poin.deleted_at IS NULL`
+				WHERE poin.id = ? AND poin.deleted_at IS NULL 
+				ORDER BY poin.invoice_date DESC`
 
 	rows, err := s.db.Query(query, purchaseOrderInvoiceId)
 	if err != nil {

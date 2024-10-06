@@ -17,7 +17,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPatientByName(name string, age int) (*types.Patient, error) {
-	query := "SELECT * FROM patient WHERE name = ? AND age = ?"
+	query := "SELECT * FROM patient WHERE name = ? AND age = ? ORDER BY name ASC"
 	rows, err := s.db.Query(query, name, age)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (s *Store) GetPatientsBySearchName(name string) ([]types.Patient, error) {
 	patients := make([]types.Patient, 0)
 
 	if count == 0 {
-		query = "SELECT * FROM patient WHERE name LIKE ?"
+		query = "SELECT * FROM patient WHERE name LIKE ? ORDER BY name ASC"
 		searchVal := "%"
 
 		for _, val := range name {
@@ -86,7 +86,7 @@ func (s *Store) GetPatientsBySearchName(name string) ([]types.Patient, error) {
 		return patients, nil
 	}
 
-	query = "SELECT * FROM patient WHERE name = ?"
+	query = "SELECT * FROM patient WHERE name = ? ORDER BY name ASC"
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (s *Store) GetPatientsBySearchName(name string) ([]types.Patient, error) {
 }
 
 func (s *Store) GetPatientByID(id int) (*types.Patient, error) {
-	query := "SELECT * FROM patient WHERE id = ?"
+	query := "SELECT * FROM patient WHERE id = ? ORDER BY name ASC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (s *Store) CreatePatient(patient types.Patient) error {
 }
 
 func (s *Store) GetAllPatients() ([]types.Patient, error) {
-	rows, err := s.db.Query("SELECT * FROM patient")
+	rows, err := s.db.Query("SELECT * FROM patient ORDER BY name ASC")
 	if err != nil {
 		return nil, err
 	}

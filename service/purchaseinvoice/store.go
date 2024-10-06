@@ -19,7 +19,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPurchaseInvoicesByNumber(number int) ([]types.PurchaseInvoice, error) {
-	query := "SELECT * FROM purchase_invoice WHERE number = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM purchase_invoice WHERE number = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (s *Store) GetPurchaseInvoicesByNumber(number int) ([]types.PurchaseInvoice
 }
 
 func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
-	query := "SELECT * FROM purchase_invoice WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM purchase_invoice WHERE id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,8 @@ func (s *Store) GetPurchaseInvoiceID(number int, companyId int, supplierId int, 
 	query := `SELECT id FROM purchase_invoice 
 				WHERE number = ? AND company_id = ? AND supplier_id = ? 
 				AND subtotal = ? AND total_price = ? AND invoice_date = ? 
-				AND deleted_at IS NULL`
+				AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
 
 	rows, err := s.db.Query(query, number, companyId, supplierId, subtotal, totalPrice, invoiceDate)
 	if err != nil {
@@ -218,8 +219,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 				FROM purchase_invoice 
 				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
 				AND number = ? 
-				AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				AND deleted_at IS NULL`
 
 	row := s.db.QueryRow(query, startDate, endDate, number)
 	if row.Err() != nil {

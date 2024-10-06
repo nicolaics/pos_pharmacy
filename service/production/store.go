@@ -19,7 +19,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetProductionByNumber(number int) (*types.Production, error) {
-	query := "SELECT * FROM production WHERE number = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM production WHERE number = ? AND deleted_at IS NULL ORDER BY production_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *Store) GetProductionByNumber(number int) (*types.Production, error) {
 }
 
 func (s *Store) GetProductionByID(id int) (*types.Production, error) {
-	query := "SELECT * FROM production WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM production WHERE id = ? AND deleted_at IS NULL ORDER BY production_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err

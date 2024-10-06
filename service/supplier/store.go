@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
-	query := "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM supplier WHERE name = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 }
 
 func (s *Store) GetSupplierBySearchName(name string) ([]types.SupplierInformationReturnPayload, error) {
-	query := "SELECT COUNT(*) FROM supplier WHERE name = ? AND deleted_at IS NULL"
+	query := "SELECT COUNT(*) FROM supplier WHERE name = ? AND deleted_at IS NULL ORDER BY name ASC"
 	row := s.db.QueryRow(query, name)
 	if row.Err() != nil {
 		return nil, row.Err()
@@ -64,7 +64,8 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.SupplierInformatio
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.name LIKE ? AND s.deleted_at IS NULL`
+				WHERE s.name LIKE ? AND s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 		searchVal := "%"
 
 		for _, val := range name {
@@ -97,7 +98,8 @@ func (s *Store) GetSupplierBySearchName(name string) ([]types.SupplierInformatio
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.name = ? AND s.deleted_at IS NULL`
+				WHERE s.name = ? AND s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -139,7 +141,8 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.contact_person_name LIKE ? AND s.deleted_at IS NULL`
+				WHERE s.contact_person_name LIKE ? AND s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 		searchVal := "%"
 
 		for _, val := range name {
@@ -172,7 +175,8 @@ func (s *Store) GetSupplierBySearchContactPersonName(name string) ([]types.Suppl
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.contact_person_name = ? AND s.deleted_at IS NULL`
+				WHERE s.contact_person_name = ? AND s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -198,7 +202,8 @@ func (s *Store) GetSupplierByID(id int) (*types.SupplierInformationReturnPayload
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.id = ? AND s.deleted_at IS NULL`
+				WHERE s.id = ? AND s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -250,7 +255,8 @@ func (s *Store) GetAllSuppliers() ([]types.SupplierInformationReturnPayload, err
 					s.vendor_is_taxable, s.created_at, s.last_modified, user.name 
 				FROM supplier AS s 
 				JOIN user ON s.last_modified_by_user_id = user.id 
-				WHERE s.deleted_at IS NULL`
+				WHERE s.deleted_at IS NULL 
+				ORDER BY s.name ASC`
 
 	rows, err := s.db.Query(query)
 	if err != nil {

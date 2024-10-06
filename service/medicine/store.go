@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
-	query := "SELECT * FROM medicine WHERE name = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM medicine WHERE name = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,8 @@ func (s *Store) GetMedicineByID(id int) (*types.MedicineListsReturnPayload, erro
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.id = ? 
-					AND med.deleted_at IS NULL`
+					AND med.deleted_at IS NULL 
+					ORDER BY name ASC`
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -85,7 +86,7 @@ func (s *Store) GetMedicineByID(id int) (*types.MedicineListsReturnPayload, erro
 }
 
 func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
-	query := "SELECT * FROM medicine WHERE barcode = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM medicine WHERE barcode = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, barcode)
 	if err != nil {
 		return nil, err
@@ -143,7 +144,8 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.name LIKE ? 
-					AND med.deleted_at IS NULL`
+					AND med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 		searchVal := "%"
 
 
@@ -189,7 +191,8 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.name = ? 
-					AND med.deleted_at IS NULL`
+					AND med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -243,7 +246,8 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.barcode LIKE ? 
-					AND med.deleted_at IS NULL`
+					AND med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 		searchVal := "%"
 
 
@@ -289,7 +293,8 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
 					WHERE med.barcode = ? 
-					AND med.deleted_at IS NULL`
+					AND med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 	rows, err := s.db.Query(query, barcode)
 	if err != nil {
 		return nil, err
@@ -326,7 +331,8 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
-					WHERE med.description LIKE ? AND med.deleted_at IS NULL`
+					WHERE med.description LIKE ? AND med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 
 	searchVal := "%"
 	for _, val := range description {
@@ -399,7 +405,8 @@ func (s *Store) GetAllMedicines() ([]types.MedicineListsReturnPayload, error) {
 					JOIN unit AS utt ON med.second_unit_id = utt.id 
 					JOIN unit AS utht ON med.third_unit_id = utht.id 
 					JOIN user ON user.id = med.last_modified_by_user_id 
-					WHERE med.deleted_at IS NULL`
+					WHERE med.deleted_at IS NULL 
+					ORDER BY med.name ASC`
 
 	rows, err := s.db.Query(query)
 	if err != nil {

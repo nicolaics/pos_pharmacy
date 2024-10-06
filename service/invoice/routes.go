@@ -816,3 +816,54 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice modified by %s", user.Name))
 }
+
+/*
+func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.ViewPrescriptionDetailPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// check if the invoice exists
+	// prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.PrescriptionID)
+	// if err != nil {
+	// 	utils.WriteError(w, http.StatusBadRequest,
+	// 		fmt.Errorf("prescription with id %d doesn't exists", payload.PrescriptionID))
+	// 	return
+	// }
+
+	// pdfFile := "static/pdf/prescription/" + prescription.PDFUrl
+
+	// file, err := os.Open(pdfFile)
+    // if err != nil {
+    //     utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("file not found"))
+    //     return
+    // }
+    // defer file.Close()
+
+	// attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
+	// w.Header().Set("Content-Type", "application/pdf")
+	// w.Header().Set("Content-Disposition", attachment)
+	// w.WriteHeader(http.StatusOK)
+	
+    
+    // http.ServeFile(w, r, pdfFile)
+}
+*/

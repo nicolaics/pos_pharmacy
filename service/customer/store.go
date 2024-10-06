@@ -19,7 +19,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
-	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (s *Store) GetCustomersBySearchName(name string) ([]types.Customer, error) 
 	customers := make([]types.Customer, 0)
 
 	if count == 0 {
-		query = "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL"
+		query = "SELECT * FROM customer WHERE name LIKE ? AND deleted_at IS NULL ORDER BY name ASC"
 		searchVal := "%"
 
 		log.Println("search val customer: ", searchVal)
@@ -90,7 +90,7 @@ func (s *Store) GetCustomersBySearchName(name string) ([]types.Customer, error) 
 		return customers, nil
 	}
 
-	query = "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL"
+	query = "SELECT * FROM customer WHERE name = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, name)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (s *Store) GetCustomersBySearchName(name string) ([]types.Customer, error) 
 }
 
 func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
-	query := "SELECT * FROM customer WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM customer WHERE id = ? AND deleted_at IS NULL ORDER BY name ASC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (s *Store) CreateCustomer(customer types.Customer) error {
 }
 
 func (s *Store) GetAllCustomers() ([]types.Customer, error) {
-	rows, err := s.db.Query("SELECT * FROM customer WHERE deleted_at IS NULL")
+	rows, err := s.db.Query("SELECT * FROM customer WHERE deleted_at IS NULL ORDER BY name ASC")
 	if err != nil {
 		return nil, err
 	}

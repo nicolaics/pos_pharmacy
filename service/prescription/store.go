@@ -22,7 +22,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPrescriptionsByNumber(number int) ([]types.Prescription, error) {
-	query := "SELECT * FROM prescription WHERE number = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM prescription WHERE number = ? AND deleted_at IS NULL ORDER BY prescription_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *Store) GetPrescriptionsByNumber(number int) ([]types.Prescription, erro
 }
 
 func (s *Store) GetPrescriptionByID(id int) (*types.Prescription, error) {
-	query := "SELECT * FROM prescription WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM prescription WHERE id = ? AND deleted_at IS NULL ORDER BY prescription_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -112,8 +112,7 @@ func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate tim
 					FROM prescription 
 					WHERE (prescription_date BETWEEN DATE(?) AND DATE(?)) 
 					AND number = ? 
-					AND deleted_at IS NULL 
-					ORDER BY p.prescription_date DESC`
+					AND deleted_at IS NULL`
 
 	row := s.db.QueryRow(query, startDate, endDate, number)
 	if row.Err() != nil {
@@ -368,7 +367,8 @@ func (s *Store) GetPrescriptionID(invoiceId int, number int, date time.Time, pat
 	query := `SELECT id FROM prescription 
 				WHERE invoice_id = ? AND number = ? AND prescription_date = ? 
 				AND patient_id = ? AND total_price = ? AND doctor_id = ? 
-				AND deleted_at IS NULL`
+				AND deleted_at IS NULL 
+				ORDER BY prescription_date DESC`
 
 	rows, err := s.db.Query(query, invoiceId, number, date, patientId, totalPrice, doctorId)
 	if err != nil {

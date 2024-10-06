@@ -19,7 +19,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
-	query := "SELECT * FROM invoice WHERE id = ? AND deleted_at IS NULL"
+	query := "SELECT * FROM invoice WHERE id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,8 @@ func (s *Store) GetInvoiceByID(id int) (*types.Invoice, error) {
 func (s *Store) GetInvoiceID(number int, customerId int, invoiceDate time.Time) (int, error) {
 	query := `SELECT id FROM invoice 
 				WHERE number = ? AND customer_id = ? 
-				AND invoice_date = ? AND deleted_at IS NULL`
+				AND invoice_date = ? AND deleted_at IS NULL 
+				ORDER BY invoice_date DESC`
 
 	rows, err := s.db.Query(query, number, customerId, invoiceDate)
 	if err != nil {
@@ -71,7 +72,7 @@ func (s *Store) GetInvoiceID(number int, customerId int, invoiceDate time.Time) 
 }
 
 func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
-	query := "SELECT * FROM invoice WHERE number LIKE ? AND deleted_at IS NULL"
+	query := "SELECT * FROM invoice WHERE number LIKE ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 
 	searchVal := "%"
 	for _, val := range strconv.Itoa(number) {
@@ -139,8 +140,7 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 				FROM invoice 
 				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
 				AND number = ? 
-				AND deleted_at IS NULL 
-				ORDER BY invoice_date DESC`
+				AND deleted_at IS NULL`
 
 	row := s.db.QueryRow(query, startDate, endDate, number)
 	if row.Err() != nil {
