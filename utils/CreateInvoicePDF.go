@@ -98,7 +98,7 @@ func CreateInvoicePDF(invoice types.InvoicePDFPayload, invoiceStore types.Invoic
 	pdf.SetDashPattern([]float64{0.05, 0.05}, 0)
 	pdf.Line(0.05, (startFooterY - 0.3), (constants.INVOICE_WIDTH - 0.05), (startFooterY - 0.3))
 
-	pdf.SetDashPattern([]float64{0, 0}, 0)
+	pdf.SetDashPattern([]float64{}, 0)
 
 	err = createInvoiceFooter(pdf, startX, startFooterY, invoice)
 	if err != nil {
@@ -199,7 +199,7 @@ func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error 
 	pdf.SetDashPattern([]float64{0.05, 0.05}, 0)
 	pdf.Line(0.05, pdf.GetY(), (constants.INVOICE_WIDTH - 0.05), pdf.GetY())
 
-	pdf.SetDashPattern([]float64{0, 0}, 0)
+	pdf.SetDashPattern([]float64{}, 0)
 
 	return nil
 }
@@ -389,6 +389,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 	var printer = message.NewPrinter(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)
+	pdf.SetDashPattern([]float64{}, 0)
 
 	// Description
 	{
