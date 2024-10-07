@@ -337,9 +337,9 @@ func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate
 	return invoices, nil
 }
 
-func (s *Store) GetNumberOfInvoices() (int, error) {
-	query := `SELECT COUNT(*) FROM invoice`
-	row := s.db.QueryRow(query)
+func (s *Store) GetNumberOfInvoices(startDate time.Time, endDate time.Time) (int, error) {
+	query := `SELECT COUNT(*) FROM invoice WHERE invoice_date >= ? AND invoice_date < ?`
+	row := s.db.QueryRow(query, startDate, endDate)
 	if row.Err() != nil {
 		return -1, row.Err()
 	}
@@ -520,6 +520,25 @@ func (s *Store) UpdatePdfURL(invoiceId int, pdfUrl string) error {
 	}
 
 	return nil
+}
+
+// false means doesn't exist
+func (s *Store) IsPDFUrlExist(fileName string) (bool, error) {
+	query := `SELECT COUNT(*) FROM invoice WHERE pdf_url = ?`
+
+	row := s.db.QueryRow(query, fileName)
+	if row.Err() != nil {
+		return true, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
 }
 
 func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {

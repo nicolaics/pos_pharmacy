@@ -17,7 +17,7 @@ type InvoiceStore interface {
 	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]InvoiceListsReturnPayload, error)
 
 	GetInvoiceID(number int, customerId int, invoiceDate time.Time) (int, error)
-	GetNumberOfInvoices() (int, error)
+	GetNumberOfInvoices(startDate time.Time, endDate time.Time) (int, error)
 
 	CreateInvoice(Invoice) error
 	CreateMedicineItem(InvoiceMedicineItem) error
@@ -27,6 +27,7 @@ type InvoiceStore interface {
 	ModifyInvoice(int, Invoice, *User) error
 
 	UpdatePdfURL(invoiceId int, pdfUrl string) error
+	IsPDFUrlExist(pdfUrl string) (bool, error)
 
 	// delete entirely from the db if there's error
 	AbsoluteDeleteInvoice(invoice Invoice) error
@@ -166,4 +167,20 @@ type Invoice struct {
 	PdfURL               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
+}
+
+type InvoicePDFPayload struct {
+	Number             int                                `json:"number"`
+	UserName           string                             `json:"userName"`
+	Subtotal           float64                            `json:"subtotal"`
+	Discount           float64                            `json:"discount"`
+	DiscountPercentage float64                            `json:"discountPercentage"`
+	Tax                float64                            `json:"tax"`
+	TaxPercentage      float64                            `json:"taxPercentage"`
+	TotalPrice         float64                            `json:"totalPrice"`
+	PaidAmount         float64                            `json:"paidAmount"`
+	ChangeAmount       float64                            `json:"changeAmount"`
+	Description        string                             `json:"description"`
+	InvoiceDate        time.Time                          `json:"invoiceDate"`
+	MedicineLists      []InvoiceMedicineItemReturnPayload `json:"medicineLists"`
 }
