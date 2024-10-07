@@ -14,7 +14,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CreateEticket7x4(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
+func CreateEticket7x4PDF(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
 	directory, err := filepath.Abs("static/pdf/eticket/")
 	if err != nil {
 		return "", err
