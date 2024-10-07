@@ -431,7 +431,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err := utils.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
+			eticketFileName, err := utils.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 				return
@@ -1199,6 +1199,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// tODO: remove absolute delete
 	// create new set items
 	for _, setItem := range payload.NewData.SetItems {
 		// get consume time
@@ -1413,7 +1414,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err := utils.CreateEticket7x4(eticketPDF, setNumber, h.prescriptionStore)
+			eticketFileName, err := utils.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 				return
@@ -1629,7 +1630,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	zipWriter := zip.NewWriter(w)
-    defer zipWriter.Close()
+	defer zipWriter.Close()
 
 	etickets, err := h.prescriptionStore.GetEticketsByPrescriptionID(prescription.ID)
 	if err != nil {
@@ -1638,29 +1639,29 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(etickets) > 0 {
-		for _, eticket := range(etickets) {
+		for _, eticket := range etickets {
 			pdfFiles = append(pdfFiles, ("static/pdf/eticket/" + eticket.PDFUrl))
 		}
 	}
 
-    for _, fileName := range pdfFiles {
-        file, err := os.Open(fileName)
-        if err != nil {
-            http.Error(w, "File not found: "+fileName, http.StatusNotFound)
-            return
-        }
-        defer file.Close()
+	for _, fileName := range pdfFiles {
+		file, err := os.Open(fileName)
+		if err != nil {
+			http.Error(w, "File not found: "+fileName, http.StatusNotFound)
+			return
+		}
+		defer file.Close()
 
-        zipFile, err := zipWriter.Create(filepath.Base(fileName))
-        if err != nil {
-            http.Error(w, "Could not create zip", http.StatusInternalServerError)
-            return
-        }
+		zipFile, err := zipWriter.Create(filepath.Base(fileName))
+		if err != nil {
+			http.Error(w, "Could not create zip", http.StatusInternalServerError)
+			return
+		}
 
-        _, err = io.Copy(zipFile, file)
-        if err != nil {
-            http.Error(w, "Could not copy file content", http.StatusInternalServerError)
-            return
-        }
-    }
+		_, err = io.Copy(zipFile, file)
+		if err != nil {
+			http.Error(w, "Could not copy file content", http.StatusInternalServerError)
+			return
+		}
+	}
 }
