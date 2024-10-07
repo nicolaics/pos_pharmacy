@@ -163,7 +163,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDate(startDate time.Time, endDate time
 					FROM purchase_order_invoice AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
-					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`
 
@@ -191,7 +191,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDate(startDate time.Time, endDate time
 func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PurchaseOrderInvoiceListsReturnPayload, error) {
 	query := `SELECT COUNT(*)
 					FROM purchase_order_invoice 
-					WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE invoice_date >= ? AND invoice_date < ? 
 					AND number = ? 
 					AND deleted_at IS NULL`
 
@@ -216,7 +216,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, end
 					FROM purchase_order_invoice AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
-					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
 					AND poi.number LIKE ? 
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`
@@ -252,7 +252,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, end
 					FROM purchase_order_invoice AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
-					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
 					AND poi.number = ? 
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`
@@ -283,7 +283,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndUserID(startDate time.Time, end
 					FROM purchase_order_invoice AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
-					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
 					AND poi.user_id = ? 
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`
@@ -316,7 +316,7 @@ func (s *Store) GetPurchaseOrderInvoicesByDateAndSupplierID(startDate time.Time,
 					FROM purchase_order_invoice AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
-					WHERE (poi.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
 					AND poi.supplier_id = ? 
 					AND poi.deleted_at IS NULL 
 					ORDER BY poi.invoice_date DESC`

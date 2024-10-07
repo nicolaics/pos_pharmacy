@@ -48,6 +48,8 @@ type PrescriptionStore interface {
 	IsPDFUrlExist(tableName string, fileName string) (bool, error)
 
 	UpdateEticketID(eticketId int, prescSetItemId int) error
+
+	IsValidPrescriptionNumber(number int, startDate time.Time, endDate time.Time) (bool, error)
 }
 
 type RegisterPrescriptionPayload struct {

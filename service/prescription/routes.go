@@ -167,9 +167,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	prescriptionId, err := h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
-		patient.ID, payload.TotalPrice, doctor.ID)
-	if err == nil || prescriptionId != 0 {
+	today := time.Now().Format("2006-01-02 -0700MST")
+	startDate, err := utils.ParseStartDate(today)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse start date: %v", err))
+		return
+	}
+	endDate, err := utils.ParseEndDate(today)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse end date: %v", err))
+		return
+	}
+
+	isValid, err := h.prescriptionStore.IsValidPrescriptionNumber(payload.Number, *startDate, *endDate)
+	if err != nil || !isValid {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d exists", payload.Number))
 		return
 	}
@@ -196,7 +207,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get prescription ID
-	prescriptionId, err = h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
+	prescriptionId, err := h.prescriptionStore.GetPrescriptionID(invoiceId, payload.Number, *prescriptionDate,
 		patient.ID, payload.TotalPrice, doctor.ID)
 	if err != nil {
 		errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)

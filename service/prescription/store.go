@@ -82,7 +82,7 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 					JOIN invoice AS i ON p.invoice_id = i.id 
 					JOIN customer ON i.customer_id = customer.id 
 					JOIN user ON user.id = p.user_id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					ORDER BY p.prescription_date DESC`
 
@@ -110,7 +110,7 @@ func (s *Store) GetPrescriptionsByDate(startDate time.Time, endDate time.Time) (
 func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PrescriptionListsReturnPayload, error) {
 	query := `SELECT COUNT(*)
 					FROM prescription 
-					WHERE (prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prescription_date >= ? AND prescription_date < ? 
 					AND number = ? 
 					AND deleted_at IS NULL`
 
@@ -141,7 +141,7 @@ func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate tim
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.number LIKE ? 
 					ORDER BY p.prescription_date DESC`
@@ -183,7 +183,7 @@ func (s *Store) GetPrescriptionsByDateAndNumber(startDate time.Time, endDate tim
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.number = ? 
 					ORDER BY p.prescription_date DESC`
@@ -220,7 +220,7 @@ func (s *Store) GetPrescriptionsByDateAndUserID(startDate time.Time, endDate tim
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.user_id = ? 
 					ORDER BY p.prescription_date DESC`
@@ -259,7 +259,7 @@ func (s *Store) GetPrescriptionsByDateAndPatientID(startDate time.Time, endDate 
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.patient_id = ? 
 					ORDER BY p.prescription_date DESC`
@@ -298,7 +298,7 @@ func (s *Store) GetPrescriptionsByDateAndDoctorID(startDate time.Time, endDate t
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.doctor_id = ? 
 					ORDER BY p.prescription_date DESC`
@@ -337,7 +337,7 @@ func (s *Store) GetPrescriptionsByDateAndInvoiceID(startDate time.Time, endDate 
 					JOIN doctor ON p.doctor_id = doctor.id 
 					JOIN invoice ON p.invoice_id = invoice.id 
 					JOIN customer ON invoice.customer_id = customer.id 
-					WHERE (p.prescription_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE p.prescription_date >= ? AND p.prescription_date < ? 
 					AND p.deleted_at IS NULL 
 					AND p.invoice_id = ? 
 					ORDER BY p.prescription_date DESC`
@@ -421,7 +421,6 @@ func (s *Store) CreateSetItem(medicineSet types.PrescriptionSetItem) error {
 	for i := 0; i < 9; i++ {
 		values += ", ?"
 	}
-
 
 	query := `INSERT INTO prescription_set_item 
 				(prescription_id, mf_id, dose_id, set_unit_id, 
@@ -646,7 +645,7 @@ func (s *Store) AbsoluteDeletePrescription(presc types.Prescription) error {
 	if err != nil {
 		return err
 	}
-	
+
 	for _, setItemId := range setItemsId {
 		query = "DELETE FROM prescription_medicine_item WHERE prescription_set_item_id = ?"
 		_, err = s.db.Exec(query, setItemId)
@@ -1014,6 +1013,28 @@ func (s *Store) DeleteSetItem(prescription *types.Prescription, user *types.User
 	}
 
 	return nil
+}
+
+func (s *Store) IsValidPrescriptionNumber(number int, startDate time.Time, endDate time.Time) (bool, error) {
+	query := `SELECT COUNT(*)
+					FROM prescription 
+					WHERE prescription_date >= ? AND prescription_date < ? 
+					AND number = ? 
+					AND deleted_at IS NULL`
+
+	row := s.db.QueryRow(query, startDate, endDate, number)
+	if row.Err() != nil {
+		return false, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count < 1, nil
 }
 
 func scanRowIntoSetItem(rows *sql.Rows) (*types.PrescriptionSetItem, error) {

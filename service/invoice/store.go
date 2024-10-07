@@ -112,7 +112,7 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
 					AND invoice.deleted_at IS NULL 
 				ORDER BY invoice.invoice_date DESC`
 	rows, err := s.db.Query(query, startDate, endDate)
@@ -138,7 +138,7 @@ func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]typ
 func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.InvoiceListsReturnPayload, error) {
 	query := `SELECT COUNT(*) 
 				FROM invoice 
-				WHERE (invoice_date BETWEEN DATE(?) AND DATE(?)) 
+				WHERE invoice_date >= ? AND invoice_date < ? 
 				AND number = ? 
 				AND deleted_at IS NULL`
 
@@ -167,7 +167,7 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-					WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
 					AND invoice.number LIKE ? 
 					AND invoice.deleted_at IS NULL 
 					ORDER BY invoice.invoice_date DESC`
@@ -207,7 +207,7 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-					WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
 					AND invoice.number = ? 
 					AND invoice.deleted_at IS NULL 
 					ORDER BY invoice.invoice_date DESC`
@@ -242,7 +242,7 @@ func (s *Store) GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Tim
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND user_id = ? 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
 					AND invoice.deleted_at IS NULL 
 				ORDER BY invoice.invoice_date DESC`
 
@@ -277,9 +277,10 @@ func (s *Store) GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND customer_id = ? 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
+					AND customer_id = ? 
 					AND invoice.deleted_at IS NULL 
-				ORDER BY invoice.invoice_date DESC`
+					ORDER BY invoice.invoice_date DESC`
 
 	rows, err := s.db.Query(query, startDate, endDate, cid)
 	if err != nil {
@@ -312,7 +313,7 @@ func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate
 					JOIN user ON user.id = invoice.user_id 
 					JOIN customer ON customer.id = invoice.customer_id 
 					JOIN payment_method ON payment_method.id = invoice.payment_method_id 
-				WHERE (invoice.invoice_date BETWEEN DATE(?) AND DATE(?)) AND payment_method_id = ? 
+					WHERE invoice.invoice_date >= ? AND invoice.invoice_date < ? 
 					AND invoice.deleted_at IS NULL 
 				ORDER BY invoice.invoice_date DESC`
 

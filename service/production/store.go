@@ -81,7 +81,7 @@ func (s *Store) GetProductionsByDate(startDate time.Time, endDate time.Time) ([]
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					ORDER BY prod.production_date DESC`
 
@@ -119,7 +119,7 @@ func (s *Store) GetProductionsByDateAndNumber(startDate time.Time, endDate time.
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					AND prod.number LIKE ? 
 					ORDER BY prod.production_date DESC`
@@ -165,7 +165,7 @@ func (s *Store) GetProductionsByDateAndUserID(startDate time.Time, endDate time.
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					AND prod.user_id = ? 
 					ORDER BY prod.production_date DESC`
@@ -204,7 +204,7 @@ func (s *Store) GetProductionsByDateAndMedicineID(startDate time.Time, endDate t
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					AND prod.produced_medicine_id = ? 
 					ORDER BY prod.production_date DESC`
@@ -243,7 +243,7 @@ func (s *Store) GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDa
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					AND prod.updated_to_stock = ? 
 					ORDER BY prod.production_date DESC`
@@ -282,7 +282,7 @@ func (s *Store) GetProductionsByDateAndUpdatedToAccount(startDate time.Time, end
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
 					JOIN user ON prod.user_id = user.id 
 					JOIN unit ON unit.id = prod.produced_unit_id 
-					WHERE (prod.production_date BETWEEN DATE(?) AND DATE(?)) 
+					WHERE prod.production_date >= ? AND prod.production_date < ? 
 					AND prod.deleted_at IS NULL 
 					AND prod.updated_to_account = ? 
 					ORDER BY prod.production_date DESC`
