@@ -10,6 +10,7 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
+	"github.com/nicolaics/pos_pharmacy/types"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
@@ -17,7 +18,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreateInvoice() (string, error) {
+func CreateInvoicePDF(invoice types.InvoicePDFPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/invoice/")
 	if err != nil {
 		return "", err
@@ -32,7 +33,7 @@ func CreateInvoice() (string, error) {
 		return "", err
 	}
 
-	err = createInvoiceHeader(pdf)
+	err = createInvoiceHeader(pdf, invoice)
 	if err != nil {
 		return "", err
 	}
@@ -44,7 +45,7 @@ func CreateInvoice() (string, error) {
 		return "", err
 	}
 
-	err = createInvoiceData(pdf, startX)
+	err = createInvoiceData(pdf, startX, invoice.MedicineLists)
 	if err != nil {
 		return "", err
 	}
@@ -99,24 +100,28 @@ func CreateInvoice() (string, error) {
 
 	pdf.SetDashPattern([]float64{0, 0}, 0)
 
-	err = createInvoiceFooter(pdf, startX, startFooterY)
+	err = createInvoiceFooter(pdf, startX, startFooterY, invoice)
 	if err != nil {
 		return "", err
 	}
 
-	fileName := "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
-	// isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
-	// if err != nil {
-	// 	return "", err
-	// }
+	fileName := prevFileName
 
-	// for isExist {
-	// 	fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
-	// 	isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// }
+	if prevFileName == "" {
+		fileName := "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+		isExist, err := invoiceStore.IsPDFUrlExist(fileName)
+		if err != nil {
+			return "", err
+		}
+
+		for isExist {
+			fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+			isExist, err = invoiceStore.IsPDFUrlExist(fileName)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
 
 	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
 	if err != nil {
@@ -160,7 +165,7 @@ func initInvoicePdf() (*fpdf.Fpdf, error) {
 	return pdf, nil
 }
 
-func createInvoiceHeader(pdf *fpdf.Fpdf) error {
+func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error {
 	pdf.SetXY((constants.INVOICE_MARGIN + 0.1), 0.3)
 
 	pdf.SetFont("Bree", constants.BOLD, 20)
@@ -185,7 +190,7 @@ func createInvoiceHeader(pdf *fpdf.Fpdf) error {
 		return fmt.Errorf("error create invoice pdf header: %v", pdf.Error())
 	}
 
-	err := createInvoiceInfo(pdf)
+	err := createInvoiceInfo(pdf, invoice)
 	if err != nil {
 		return fmt.Errorf("error create invoice info: %v", err)
 	}
@@ -199,12 +204,8 @@ func createInvoiceHeader(pdf *fpdf.Fpdf) error {
 	return nil
 }
 
-func createInvoiceInfo(pdf *fpdf.Fpdf) error {
+func createInvoiceInfo(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error {
 	var caser = cases.Title(language.Indonesian)
-
-	// DATA
-	number := 100
-	cashier := caser.String("admin")
 
 	startX := 5.3
 	space := 0.1
@@ -220,7 +221,7 @@ func createInvoiceInfo(pdf *fpdf.Fpdf) error {
 		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, strconv.Itoa(number), "RTB", 1, "L", false, 0, "")
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, strconv.Itoa(invoice.Number), "RTB", 1, "L", false, 0, "")
 	}
 
 	pdf.SetXY(startX, pdf.GetY()+space)
@@ -234,21 +235,7 @@ func createInvoiceInfo(pdf *fpdf.Fpdf) error {
 		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, time.Now().Format("02-01-2006"), "RTB", 1, "L", false, 0, "")
-	}
-
-	pdf.SetXY(startX, pdf.GetY()+space)
-
-	// Time
-	{
-		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(constants.INVOICE_INFO_TITLE_WIDTH, constants.INVOICE_STD_CELL_HEIGHT, "Jam", "LTB", 0, "L", false, 0, "")
-
-		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
-
-		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, time.Now().Format("15:04"), "RTB", 1, "L", false, 0, "")
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, invoice.InvoiceDate.Format("02-01-2006"), "RTB", 1, "L", false, 0, "")
 	}
 
 	pdf.SetXY(startX, pdf.GetY()+space)
@@ -262,7 +249,21 @@ func createInvoiceInfo(pdf *fpdf.Fpdf) error {
 		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, cashier, "RTB", 1, "L", false, 0, "")
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, caser.String(invoice.UserName), "RTB", 1, "L", false, 0, "")
+	}
+
+	pdf.SetXY(startX, pdf.GetY()+space)
+
+	// Printed Time
+	{
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat((constants.INVOICE_INFO_TITLE_WIDTH + 0.6), constants.INVOICE_STD_CELL_HEIGHT, "Tgl. Cetak", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Calibri", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0.2, constants.INVOICE_STD_CELL_HEIGHT, ":", "TB", 0, "L", false, 0, "")
+
+		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_STD_FONT_SZ)
+		pdf.CellFormat(0, constants.INVOICE_STD_CELL_HEIGHT, time.Now().Format("02-01-2006  15:04"), "RTB", 1, "L", false, 0, "")
 	}
 
 	pdf.SetY(pdf.GetY() + 0.3)
@@ -322,29 +323,8 @@ func createInvoiceTableHeader(pdf *fpdf.Fpdf, startTableY float64) (map[string]f
 	return startX, nil
 }
 
-func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64) error {
+func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64, medicineLists []types.InvoiceMedicineListsPayload) error {
 	var printer = message.NewPrinter(language.Indonesian)
-
-	// DATA
-	type MedicineLists struct {
-		Name     string
-		Qty      float64
-		Unit     string
-		Price    float64
-		Discount float64
-		Subtotal float64
-	}
-
-	medicineLists := make([]MedicineLists, 0)
-
-	for i := 0; i < 20; i++ {
-		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
-		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
-		medicineLists = append(medicineLists, MedicineLists{Name: "Codein", Qty: 15, Unit: "stp", Price: 10000, Discount: 0, Subtotal: 120000})
-		medicineLists = append(medicineLists, MedicineLists{Name: "Tremenza", Qty: 1, Unit: "box", Price: 990000, Discount: 0, Subtotal: 99000})
-		medicineLists = append(medicineLists, MedicineLists{Name: "Braxidin", Qty: 0.33, Unit: "tab", Price: 990000, Discount: 99000, Subtotal: 900000})
-		medicineLists = append(medicineLists, MedicineLists{Name: "Sinocort 22 mg 2", Qty: 0.5, Unit: "tab", Price: 10000, Discount: 0, Subtotal: 10000})
-	}
 
 	pdf.SetLineWidth(0.02)
 	pdf.SetY(pdf.GetY() + 0.05)
@@ -366,7 +346,7 @@ func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64) error {
 		pdf.CellFormat(constants.INVOICE_NO_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strconv.Itoa(number), "", 0, "C", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
-		pdf.MultiCell(constants.INVOICE_ITEM_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strings.ToUpper(medicine.Name), "", "L", false)
+		pdf.MultiCell(constants.INVOICE_ITEM_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, strings.ToUpper(medicine.MedicineName), "", "L", false)
 
 		nextY = pdf.GetY()
 
@@ -405,19 +385,8 @@ func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64) error {
 	return nil
 }
 
-func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY float64) error {
+func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY float64, invoice types.InvoicePDFPayload) error {
 	var printer = message.NewPrinter(language.Indonesian)
-	
-	// DATA
-	subtotal := 1210000.0
-	discount := 200021.0
-	discountPercentage := 2.0
-	tax := 10000.0
-	taxPercentage := 10.0
-	total := 25000000.0
-	paidAmount := 25000000.0
-	changeAmount := 25000000.0
-	description := "Antar ke Citra 3 Blok B5 No. 26"
 
 	pdf.SetLineWidth(0.02)
 
@@ -429,7 +398,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Note:", "T", 1, "L", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, 6)
-		pdf.MultiCell(cellWidth, constants.INVOICE_STD_CELL_HEIGHT, description, "", "L", false)
+		pdf.MultiCell(cellWidth, constants.INVOICE_STD_CELL_HEIGHT, invoice.Description, "", "L", false)
 
 		pdf.Line(pdf.GetX(), startFooterY, pdf.GetX(), 14.0)
 		pdf.Line(pdf.GetX(), 14.0, (startX["unit"] - 0.1), 14.0)
@@ -446,7 +415,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Subtotal:", "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		subtotalString := printer.Sprintf("Rp. %.1f", subtotal)
+		subtotalString := printer.Sprintf("Rp. %.1f", invoice.Subtotal)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, subtotalString, "", 1, "L", false, 0, "")
 	}
 
@@ -455,11 +424,11 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 	// Discount
 	{
 		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
-		discountPercentageString := printer.Sprintf("Discount (%.1f%%):", discountPercentage)
+		discountPercentageString := printer.Sprintf("Discount (%.1f%%):", invoice.DiscountPercentage)
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, discountPercentageString, "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		discountString := printer.Sprintf("Rp. %.1f", discount)
+		discountString := printer.Sprintf("Rp. %.1f", invoice.Discount)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, discountString, "", 1, "L", false, 0, "")
 	}
 
@@ -468,11 +437,11 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 	// Tax
 	{
 		pdf.SetFont("Calibri", constants.BOLD, constants.INVOICE_FOOTER_FONT_SZ)
-		taxPercentageString := printer.Sprintf("Tax (%.1f%%):", taxPercentage)
+		taxPercentageString := printer.Sprintf("Tax (%.1f%%):", invoice.TaxPercentage)
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, taxPercentageString, "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		taxString := printer.Sprintf("Rp. %.1f", tax)
+		taxString := printer.Sprintf("Rp. %.1f", invoice.Tax)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, taxString, "", 1, "L", false, 0, "")
 	}
 
@@ -484,7 +453,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Total:", "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		totalString := printer.Sprintf("Rp. %.1f", total)
+		totalString := printer.Sprintf("Rp. %.1f", invoice.TotalPrice)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, totalString, "", 1, "L", false, 0, "")
 	}
 
@@ -496,7 +465,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Paid:", "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		paidAmountString := printer.Sprintf("Rp. %.1f", paidAmount)
+		paidAmountString := printer.Sprintf("Rp. %.1f", invoice.PaidAmount)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, paidAmountString, "", 1, "L", false, 0, "")
 	}
 
@@ -508,7 +477,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Change:", "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		changeAmountString := printer.Sprintf("Rp. %.1f", changeAmount)
+		changeAmountString := printer.Sprintf("Rp. %.1f", invoice.ChangeAmount)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, changeAmountString, "", 1, "L", false, 0, "")
 	}
 
