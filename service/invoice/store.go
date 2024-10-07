@@ -512,7 +512,7 @@ func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice, user *types.
 	return nil
 }
 
-func (s *Store) UpdatePdfURL(invoiceId int, pdfUrl string) error {
+func (s *Store) UpdatePDFUrl(invoiceId int, pdfUrl string) error {
 	query := `UPDATE invoice SET pdf_url = ? WHERE id = ? AND deleted_at IS NULL`
 	_, err := s.db.Exec(query, pdfUrl, invoiceId)
 	if err != nil {
@@ -598,7 +598,7 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		&invoice.CreatedAt,
 		&invoice.LastModified,
 		&invoice.LastModifiedByUserID,
-		&invoice.PdfURL,
+		&invoice.PDFUrl,
 		&invoice.DeletedAt,
 		&invoice.DeletedByUserID,
 	)

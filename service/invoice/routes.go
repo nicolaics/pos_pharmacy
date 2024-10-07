@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -43,10 +44,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/detail", h.handleGetInvoiceDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/invoice/print", h.handlePrint).Methods(http.MethodPost)
 
 	router.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/print", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -209,6 +212,35 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	invoicePDF := types.InvoicePDFPayload{
+		Number:             payload.Number,
+		UserName:           user.Name,
+		Subtotal:           payload.Subtotal,
+		Discount:           payload.Discount,
+		DiscountPercentage: ((payload.Discount / payload.Subtotal) * 100.0),
+		Tax:                payload.Tax,
+		TaxPercentage:      ((payload.Tax / payload.Subtotal) * 100.0),
+		TotalPrice:         payload.TotalPrice,
+		PaidAmount:         payload.PaidAmount,
+		ChangeAmount:       payload.ChangeAmount,
+		Description:        payload.Description,
+		InvoiceDate:        *invoiceDate,
+		MedicineLists:      payload.MedicineLists,
+	}
+	invoiceFileName, err := utils.CreateInvoicePDF(invoicePDF, h.invoiceStore, "")
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create invoice pdf: %v", err))
+		return
+	}
+
+	err = h.invoiceStore.UpdatePDFUrl(invoiceId, invoiceFileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update invoice pdf url: %v", err))
+		return
+	}
+
+	// reduce the stock
 	for _, medicine := range payload.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
@@ -770,6 +802,28 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	invoicePDF := types.InvoicePDFPayload{
+		Number:             invoice.Number,
+		UserName:           user.Name,
+		Subtotal:           payload.NewData.Subtotal,
+		Discount:           payload.NewData.Discount,
+		DiscountPercentage: ((payload.NewData.Discount / payload.NewData.Subtotal) * 100.0),
+		Tax:                payload.NewData.Tax,
+		TaxPercentage:      ((payload.NewData.Tax / payload.NewData.Subtotal) * 100.0),
+		TotalPrice:         payload.NewData.TotalPrice,
+		PaidAmount:         payload.NewData.PaidAmount,
+		ChangeAmount:       payload.NewData.ChangeAmount,
+		Description:        payload.NewData.Description,
+		InvoiceDate:        *invoiceDate,
+		MedicineLists:      payload.NewData.MedicineLists,
+	}
+	_, err = utils.CreateInvoicePDF(invoicePDF, h.invoiceStore, invoice.PDFUrl)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update invoice pdf: %v", err))
+		return
+	}
+
+	// subtract the stock
 	for _, medicine := range payload.NewData.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
@@ -802,10 +856,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice modified by %s", user.Name))
 }
 
-/*
 func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPrescriptionDetailPayload
+	var payload types.ViewInvoiceDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -827,28 +880,26 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the invoice exists
-	// prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.PrescriptionID)
-	// if err != nil {
-	// 	utils.WriteError(w, http.StatusBadRequest,
-	// 		fmt.Errorf("prescription with id %d doesn't exists", payload.PrescriptionID))
-	// 	return
-	// }
+	invoice, err := h.invoiceStore.GetInvoiceByID(payload.InvoiceID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("invoice with id %d doesn't exists", payload.InvoiceID))
+		return
+	}
 
-	// pdfFile := "static/pdf/prescription/" + prescription.PDFUrl
+	pdfFile := "static/pdf/invoice/" + invoice.PDFUrl
 
-	// file, err := os.Open(pdfFile)
-    // if err != nil {
-    //     utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("file not found"))
-    //     return
-    // }
-    // defer file.Close()
+	file, err := os.Open(pdfFile)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d file not found", payload.InvoiceID))
+		return
+	}
+	defer file.Close()
 
-	// attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
-	// w.Header().Set("Content-Type", "application/pdf")
-	// w.Header().Set("Content-Disposition", attachment)
-	// w.WriteHeader(http.StatusOK)
+	attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
 
-
-    // http.ServeFile(w, r, pdfFile)
+	http.ServeFile(w, r, pdfFile)
 }
-*/

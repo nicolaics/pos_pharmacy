@@ -26,7 +26,7 @@ type InvoiceStore interface {
 	DeleteInvoice(*Invoice, *User) error
 	ModifyInvoice(int, Invoice, *User) error
 
-	UpdatePdfURL(invoiceId int, pdfUrl string) error
+	UpdatePDFUrl(invoiceId int, pdfUrl string) error
 	IsPDFUrlExist(pdfUrl string) (bool, error)
 
 	// delete entirely from the db if there's error
@@ -113,7 +113,7 @@ type InvoiceDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
-	PdfURL                 string    `json:"pdfUrl"`
+	PDFUrl                 string    `json:"pdfUrl"`
 
 	// the one who creates the invoice
 	User struct {
@@ -164,23 +164,23 @@ type Invoice struct {
 	CreatedAt            time.Time     `json:"createdAt"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
-	PdfURL               string        `json:"pdfUrl"`
+	PDFUrl               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
 
 type InvoicePDFPayload struct {
-	Number             int                                `json:"number"`
-	UserName           string                             `json:"userName"`
-	Subtotal           float64                            `json:"subtotal"`
-	Discount           float64                            `json:"discount"`
-	DiscountPercentage float64                            `json:"discountPercentage"`
-	Tax                float64                            `json:"tax"`
-	TaxPercentage      float64                            `json:"taxPercentage"`
-	TotalPrice         float64                            `json:"totalPrice"`
-	PaidAmount         float64                            `json:"paidAmount"`
-	ChangeAmount       float64                            `json:"changeAmount"`
-	Description        string                             `json:"description"`
-	InvoiceDate        time.Time                          `json:"invoiceDate"`
-	MedicineLists      []InvoiceMedicineItemReturnPayload `json:"medicineLists"`
+	Number             int                           `json:"number"`
+	UserName           string                        `json:"userName"`
+	Subtotal           float64                       `json:"subtotal"`
+	Discount           float64                       `json:"discount"`
+	DiscountPercentage float64                       `json:"discountPercentage"`
+	Tax                float64                       `json:"tax"`
+	TaxPercentage      float64                       `json:"taxPercentage"`
+	TotalPrice         float64                       `json:"totalPrice"`
+	PaidAmount         float64                       `json:"paidAmount"`
+	ChangeAmount       float64                       `json:"changeAmount"`
+	Description        string                        `json:"description"`
+	InvoiceDate        time.Time                     `json:"invoiceDate"`
+	MedicineLists      []InvoiceMedicineListsPayload `json:"medicineLists"`
 }
