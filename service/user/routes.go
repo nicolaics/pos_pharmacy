@@ -383,7 +383,7 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	// check user exists or not
 	_, err = h.store.GetUserByID(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", http.StatusAccepted))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", accessDetails.UserID))
 		return
 	}
 
