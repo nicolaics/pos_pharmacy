@@ -42,9 +42,6 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/logout", h.handleLogout).Methods(http.MethodGet)
 	router.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/user/validate", h.handleValidateTokenRequest).Methods(http.MethodPost)
-	router.HandleFunc("/user/validate", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
-
 	router.HandleFunc("/user/admin", h.handleChangeAdminStatus).Methods(http.MethodPatch)
 	router.HandleFunc("/user/admin", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
@@ -400,31 +397,6 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, "successfully logged out")
-}
-
-func (h *Handler) handleValidateTokenRequest(w http.ResponseWriter, r *http.Request) {
-	var payload types.VerifyTokenRequestFromClientPayload
-
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	// validate the payload
-	if err := utils.Validate.Struct(payload); err != nil {
-		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-		return
-	}
-
-	// validate token for admin or expired
-	_, err := h.store.ValidateUserToken(w, r, payload.NeedAdmin)
-	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
-		return
-	}
-
-	utils.WriteJSON(w, http.StatusOK, nil)
 }
 
 func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request) {
