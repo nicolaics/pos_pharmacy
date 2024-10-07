@@ -1211,12 +1211,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume time: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1230,12 +1224,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("det: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1249,12 +1237,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("dose: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1268,12 +1250,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("mf: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1287,12 +1263,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("set usage: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1306,12 +1276,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume unit: error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -1329,12 +1293,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 		err = h.prescriptionStore.CreateSetItem(setItemStore)
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err))
 			return
 		}
@@ -1342,12 +1300,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		// get medicine set store data
 		setItemStoreId, err := h.prescriptionStore.GetSetItemID(setItemStore)
 		if err != nil {
-			errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-			if errDel != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
-				return
-			}
-
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine set id"))
 			return
 		}
@@ -1369,38 +1321,25 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 			err = h.prescriptionStore.CreateEticket(eticket)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err))
 				return
 			}
 
 			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err))
 				return
 			}
 
 			err = h.prescriptionStore.UpdateEticketID(eticketId, setItemStoreId)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel))
+				delErr := h.prescriptionStore.DeleteEticket(eticketId)
+				if delErr != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error delete eticket: %v: %v", delErr, err))
 					return
 				}
 
-				_ = h.prescriptionStore.DeleteEticket(eticketId)
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err))
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket: %v", err))
 				return
 			}
 
@@ -1427,12 +1366,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		for _, medicine := range setItem.MedicineLists {
 			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 				return
 			}
@@ -1445,12 +1378,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -1460,12 +1387,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			if fractionIdx == -1 {
 				medicineQty, err = strconv.ParseFloat(medicine.Qty, 64)
 				if err != nil {
-					errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-					if errDel != nil {
-						utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-						return
-					}
-
 					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error parse float: %v", err))
 					return
 				}
@@ -1487,12 +1408,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 			err = h.prescriptionStore.CreatePrescriptionMedicineItem(medicineItem)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError,
 					fmt.Errorf("prescription %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err))
 				return
@@ -1500,12 +1415,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 			err = utils.CheckStock(medData, unit, medicineQty)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName))
 				return
 			}
@@ -1514,12 +1423,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	medicineSets, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescription.ID)
 	if err != nil {
-		errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-		if errDel != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-			return
-		}
-
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err))
 		return
 	}
@@ -1542,12 +1445,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		for _, medicine := range setItem.MedicineItems {
 			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName))
 				return
 			}
@@ -1560,24 +1457,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, err)
 				return
 			}
 
 			err = utils.SubtractStock(h.medStore, medData, unit, medicine.QtyFloat, user)
 			if err != nil {
-				errDel := h.prescriptionStore.AbsoluteDeletePrescription(newPresc)
-				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel))
-					return
-				}
-
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 				return
 			}
