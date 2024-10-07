@@ -79,7 +79,8 @@ func ParseEndDate(dateStr string) (*time.Time, error) {
 		return nil, err
 	}
 
-	date = time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, date.Location())
+	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	date = date.AddDate(0, 0, 1)
 
 	return &date, nil
 }
