@@ -102,7 +102,7 @@ func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) err
 	}
 
 	query := `INSERT INTO purchase_invoice (
-		number, supplier_id, purchase_order_invoice_number, subtotal, discount, tax, 
+		number, supplier_id, purchase_order_number, subtotal, discount, tax, 
 		total_price, description, user_id, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
@@ -182,7 +182,7 @@ func (s *Store) GetPurchaseMedicineItem(purchaseInvoiceId int) ([]types.Purchase
 func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -238,7 +238,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 	if count == 0 {
 		query = `SELECT pi.id, pi.number, 
 					supplier.name, 
-					pi.purchase_order_invoice_number, 
+					pi.purchase_order_number, 
 					pi.total_price, pi.description, 
 					user.name, 
 					pi.invoice_date 
@@ -277,7 +277,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 
 	query = `SELECT pi.id, pi.number, 
 					supplier.name, 
-					pi.purchase_order_invoice_number, 
+					pi.purchase_order_number, 
 					pi.total_price, pi.description, 
 					user.name, 
 					pi.invoice_date 
@@ -311,7 +311,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -347,7 +347,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endD
 func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -383,7 +383,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate 
 func (s *Store) GetPurchaseInvoicesByDateAndPONumber(startDate time.Time, endDate time.Time, poiNumber int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
 				pi.invoice_date 
@@ -391,7 +391,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndPONumber(startDate time.Time, endDat
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
 				WHERE pi.invoice_date >= ? AND pi.invoice_date < ? 
-				AND pi.purchase_order_invoice_number = ? 
+				AND pi.purchase_order_number = ? 
 				AND pi.deleted_at IS NULL 
 				ORDER BY pi.invoice_date DESC`
 
@@ -476,7 +476,7 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 	}
 
 	query := `UPDATE purchase_invoice SET 
-				number = ?, supplier_id = ?, purchase_order_invoice_number = ?, 
+				number = ?, supplier_id = ?, purchase_order_number = ?, 
 				subtotal = ?, discount = ?, tax = ?, total_price = ?, description = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				 WHERE id = ?`
@@ -497,7 +497,7 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 	query := `SELECT id FROM purchase_invoice 
 				WHERE number = ? AND supplier_id = ? 
-				AND purchase_order_invoice_number = ? AND subtotal = ? 
+				AND purchase_order_number = ? AND subtotal = ? 
 				AND discount = ? AND tax = ? AND total_price = ? 
 				AND description = ? AND invoice_date = ?`
 
