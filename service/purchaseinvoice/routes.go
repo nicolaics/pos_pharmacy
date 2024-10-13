@@ -434,7 +434,7 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 
 			purchaseInvoices = append(purchaseInvoices, temp...)
 		}
-	} else if params == "purchase-order-invoice" {
+	} else if params == "purchase-order" {
 		poiNumber, err := strconv.Atoi(val)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
