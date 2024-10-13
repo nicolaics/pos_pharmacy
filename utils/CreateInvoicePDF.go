@@ -192,7 +192,7 @@ func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error 
 
 	err := createInvoiceInfo(pdf, invoice)
 	if err != nil {
-		return fmt.Errorf("error create invoice info: %v", err)
+		return err
 	}
 
 	pdf.SetLineWidth(0.02)
@@ -269,7 +269,7 @@ func createInvoiceInfo(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error {
 	pdf.SetY(pdf.GetY() + 0.3)
 
 	if pdf.Error() != nil {
-		return fmt.Errorf("error create presc info: %v", pdf.Error())
+		return fmt.Errorf("error create invoice info: %v", pdf.Error())
 	}
 
 	return nil
@@ -379,7 +379,7 @@ func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64, medicineLists 
 	}
 
 	if pdf.Error() != nil {
-		return fmt.Errorf("error create presc info: %v", pdf.Error())
+		return fmt.Errorf("error create invoice data: %v", pdf.Error())
 	}
 
 	return nil
@@ -497,7 +497,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 	}
 
 	if pdf.Error() != nil {
-		return fmt.Errorf("error create presc footer: %v", pdf.Error())
+		return fmt.Errorf("error create invoice footer: %v", pdf.Error())
 	}
 
 	return nil
