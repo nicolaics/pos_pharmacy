@@ -2,12 +2,14 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
 
 	"github.com/go-pdf/fpdf"
@@ -17,6 +19,15 @@ import (
 )
 
 func CreatePurchaseInvoicePDF() (string, error) {
+	directory, err := filepath.Abs("static/pdf/purchase-invoice/")
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(directory, 0744); err != nil {
+		return "", err
+	}
+	
 	pdf, err := initPurchaseInvoicePdf()
 	if err != nil {
 		return "", err
@@ -163,42 +174,37 @@ func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
 }
 
 func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf) error {
-	pdf.Image("static/assets/logo/Logo Apotik.png", pdf.GetX(), pdf.GetY(), constants.PI_LOGO_WIDTH, constants.PI_LOGO_HEIGHT, false, "", 0, "")
+	pdf.Image(config.Envs.CompanyLogoURL, pdf.GetX(), pdf.GetY(), constants.PI_LOGO_WIDTH, constants.PI_LOGO_HEIGHT, false, "", 0, "")
 
 	startBesideLogoX := constants.PI_MARGIN + constants.PI_LOGO_WIDTH + 0.1
 
-	// TODO: get company name from env
 	pdf.SetX(startBesideLogoX)
-	companyName := strings.ToUpper("APOTEK C M C")
-
 	pdf.SetTextColor(constants.GREEN_R, constants.GREEN_G, constants.GREEN_B)
 	pdf.SetFont("Bree", constants.BOLD, 22)
-	cellWidth := pdf.GetStringWidth(companyName) + constants.PI_MARGIN
-	pdf.CellFormat(cellWidth, 0.65, companyName, "", 1, "L", false, 0, "")
+	cellWidth := pdf.GetStringWidth(config.Envs.CompanyName) + constants.PI_MARGIN
+	pdf.CellFormat(cellWidth, 0.65, config.Envs.CompanyName, "", 1, "L", false, 0, "")
 
-	// TODO: get address from env
 	pdf.SetX(startBesideLogoX)
 	pdf.SetFont("Calibri", constants.REGULAR, constants.PI_HEADER_FONT_SZ)
-	cellWidth = pdf.GetStringWidth("Citra 3 Blok B5 No. 26, Pegadungan, Kalideres, Jakarta") + constants.PI_MARGIN
-	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, "Citra 3 Blok B5 No. 26, Pegadungan, Kalideres, Jakarta", "", 1, "C", false, 0, "")
+	cellWidth = pdf.GetStringWidth(config.Envs.CompanyAddress) + constants.PI_MARGIN
+	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, config.Envs.CompanyAddress, "", 1, "C", false, 0, "")
 
-	// TODO: get phone number from env
 	pdf.SetX(startBesideLogoX)
 	pdf.SetFont("Calibri", constants.REGULAR, constants.PI_HEADER_FONT_SZ)
-	cellWidth = pdf.GetStringWidth("No. Telp: 021-5457550 | WhatsApp: 0857-1715-7550") + constants.PI_MARGIN
-	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, "No. Telp: 021-5457550 | WhatsApp: 0857-1715-7550", "", 1, "L", false, 0, "")
+	phoneNumber := fmt.Sprintf("No. Telp: %s | WhatsApp: %s", config.Envs.CompanyPhoneNumber, config.Envs.CompanyWhatsAppNumber)
+	cellWidth = pdf.GetStringWidth(phoneNumber) + constants.PI_MARGIN
+	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, phoneNumber, "", 1, "L", false, 0, "")
 
-	// TODO: get business reg number from env
 	pdf.SetX(startBesideLogoX)
 	pdf.SetFont("Calibri", constants.REGULAR, constants.PI_HEADER_FONT_SZ)
-	cellWidth = pdf.GetStringWidth("No. SIA: 4048/TM.09.15") + constants.PI_MARGIN
-	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, "No. SIA: 4048/TM.09.15", "", 1, "C", false, 0, "")
+	cellWidth = pdf.GetStringWidth(config.Envs.BusinessRegistrationNumber) + constants.PI_MARGIN
+	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, config.Envs.BusinessRegistrationNumber, "", 1, "C", false, 0, "")
 
-	// TODO: get pharmacist from envs
 	pdf.SetX(startBesideLogoX)
 	pdf.SetFont("Calibri", constants.REGULAR, constants.PI_HEADER_FONT_SZ)
-	cellWidth = pdf.GetStringWidth("Apoteker: Aulia Handayani S. Farm.") + constants.PI_MARGIN
-	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, "Apoteker: Aulia Handayani S. Farm.", "", 1, "C", false, 0, "")
+	pharmacist := fmt.Sprintf("Apoteker: %s", config.Envs.Pharmacist)
+	cellWidth = pdf.GetStringWidth(pharmacist) + constants.PI_MARGIN
+	pdf.CellFormat(cellWidth, constants.PI_HEADER_HEIGHT, pharmacist, "", 1, "C", false, 0, "")
 
 	pdf.SetXY((constants.PI_WIDTH / 2), 0.3)
 	pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
