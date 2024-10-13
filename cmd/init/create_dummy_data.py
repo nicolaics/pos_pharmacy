@@ -967,7 +967,7 @@ def create_purchase_invoice(BACKEND_ROOT, TOKEN):
             "number": random.randint(1, 100),
             "companyId": 1,
             "supplierId": 3,
-            "purchaseOrderInvoiceNumber": 20,
+            "purchaseOrderNumber": 20,
             "subtotal": random.randint(1, 100000),
             "discount": random.randint(1, 10000),
             "tax": random.randint(1, 200),

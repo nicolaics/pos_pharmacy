@@ -20,11 +20,11 @@ import (
 	"github.com/nicolaics/pos_pharmacy/service/mf"
 	"github.com/nicolaics/pos_pharmacy/service/patient"
 	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
-	"github.com/nicolaics/pos_pharmacy/service/poinvoice"
 	"github.com/nicolaics/pos_pharmacy/service/prescription"
 	"github.com/nicolaics/pos_pharmacy/service/prescriptionsetusage"
 	"github.com/nicolaics/pos_pharmacy/service/production"
 	"github.com/nicolaics/pos_pharmacy/service/purchaseinvoice"
+	"github.com/nicolaics/pos_pharmacy/service/purchaseorder"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
 	"github.com/nicolaics/pos_pharmacy/service/unit"
 	"github.com/nicolaics/pos_pharmacy/service/user"
@@ -67,7 +67,7 @@ func (s *APIServer) Run() error {
 	unitStore := unit.NewStore(s.db)
 
 	purchaseInvoiceStore := purchaseinvoice.NewStore(s.db)
-	poInvoiceStore := poinvoice.NewStore(s.db)
+	poInvoiceStore := purchaseorder.NewStore(s.db)
 	invoiceStore := invoice.NewStore(s.db)
 	prescriptionStore := prescription.NewStore(s.db)
 	productionStore := production.NewStore(s.db)
@@ -94,7 +94,7 @@ func (s *APIServer) Run() error {
 	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore, medicineStore, unitStore, poInvoiceStore)
 	purchaseInvoiceHandler.RegisterRoutes(subrouter)
 
-	poInvoiceHandler := poinvoice.NewHandler(poInvoiceStore, userStore, supplierStore,
+	poInvoiceHandler := purchaseorder.NewHandler(poInvoiceStore, userStore, supplierStore,
 		medicineStore, unitStore)
 	poInvoiceHandler.RegisterRoutes(subrouter)
 
@@ -103,9 +103,9 @@ func (s *APIServer) Run() error {
 	invoiceHandler.RegisterRoutes(subrouter)
 
 	prescriptionHandler := prescription.NewHandler(prescriptionStore, userStore, customerStore,
-													medicineStore, unitStore, invoiceStore,
-													doctorStore, patientStore, consumeTimeStore,
-													detStore, doseStore, mfStore, prescSetUsageStore)
+		medicineStore, unitStore, invoiceStore,
+		doctorStore, patientStore, consumeTimeStore,
+		detStore, doseStore, mfStore, prescSetUsageStore)
 	prescriptionHandler.RegisterRoutes(subrouter)
 
 	productionHandler := production.NewHandler(productionStore, userStore, medicineStore, unitStore)
@@ -121,7 +121,6 @@ func (s *APIServer) Run() error {
 
 	router.Use(auth.CorsMiddleware())
 	subrouter.Use(auth.AuthMiddleware())
-	
 
 	return http.ListenAndServe(s.addr, router)
 }

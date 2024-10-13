@@ -5,35 +5,35 @@ import (
 	"time"
 )
 
-type PurchaseOrderInvoiceStore interface {
-	GetPurchaseOrderInvoicesByNumber(int) (*PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoiceByID(int) (*PurchaseOrderInvoice, error)
-	GetPurchaseOrderInvoiceID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error)
-	GetNumberOfPurchaseOrderInvoices() (int, error)
+type PurchaseOrderStore interface {
+	GetPurchaseOrdersByNumber(int) (*PurchaseOrder, error)
+	GetPurchaseOrderByID(int) (*PurchaseOrder, error)
+	GetPurchaseOrderID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error)
+	GetNumberOfPurchaseOrders() (int, error)
 
-	CreatePurchaseOrderInvoice(PurchaseOrderInvoice) error
+	CreatePurchaseOrder(PurchaseOrder) error
 	CreatePurchaseOrderItem(PurchaseOrderItem) error
 
-	GetPurchaseOrderInvoicesByDate(startDate time.Time, endDate time.Time) ([]PurchaseOrderInvoiceListsReturnPayload, error)
-	GetPurchaseOrderInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
-	GetPurchaseOrderInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
-	GetPurchaseOrderInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseOrderInvoiceListsReturnPayload, error)
+	GetPurchaseOrdersByDate(startDate time.Time, endDate time.Time) ([]PurchaseOrderListsReturnPayload, error)
+	GetPurchaseOrdersByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]PurchaseOrderListsReturnPayload, error)
+	GetPurchaseOrdersByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]PurchaseOrderListsReturnPayload, error)
+	GetPurchaseOrdersByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]PurchaseOrderListsReturnPayload, error)
 
-	GetPurchaseOrderItem(purchaseOrderInvoiceId int) ([]PurchaseOrderItemReturn, error)
+	GetPurchaseOrderItem(purchaseOrderId int) ([]PurchaseOrderItemReturn, error)
 
-	DeletePurchaseOrderInvoice(*PurchaseOrderInvoice, *User) error
-	DeletePurchaseOrderItem(*PurchaseOrderInvoice, *User) error
+	DeletePurchaseOrder(*PurchaseOrder, *User) error
+	DeletePurchaseOrderItem(*PurchaseOrder, *User) error
 
-	ModifyPurchaseOrderInvoice(int, PurchaseOrderInvoice, *User) error
+	ModifyPurchaseOrder(int, PurchaseOrder, *User) error
 
 	UpdtaeReceivedQty(poinid int, newQty float64, user *User, mid int) error
 
 	// delete entirely from the db if there's error
-	AbsoluteDeletePurchaseOrderInvoice(poi PurchaseOrderInvoice) error
+	AbsoluteDeletePurchaseOrder(poi PurchaseOrder) error
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
-type RegisterPurchaseOrderInvoicePayload struct {
+type RegisterPurchaseOrderPayload struct {
 	Number      int    `json:"number" validate:"required"`
 	SupplierID  int    `json:"supplierId" validate:"required"`
 	TotalItem   int    `json:"totalItem" validate:"required"`
@@ -52,7 +52,7 @@ type PurchaseOrderMedicineListPayload struct {
 }
 
 // only view the purchase invoice list
-type ViewPurchaseOrderInvoicePayload struct {
+type ViewPurchaseOrderPayload struct {
 	StartDate string `json:"startDate" validate:"required"` // if empty, just give today's date from morning
 	EndDate   string `json:"endDate" validate:"required"`   // if empty, just give today's date to current time
 }
@@ -62,9 +62,9 @@ type ViewPurchaseOrderItemPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 
-type ModifyPurchaseOrderInvoicePayload struct {
-	ID      int                                 `json:"id" validate:"required"`
-	NewData RegisterPurchaseOrderInvoicePayload `json:"newData" validate:"required"`
+type ModifyPurchaseOrderPayload struct {
+	ID      int                          `json:"id" validate:"required"`
+	NewData RegisterPurchaseOrderPayload `json:"newData" validate:"required"`
 }
 
 type PurchaseOrderItemReturn struct {
@@ -77,7 +77,7 @@ type PurchaseOrderItemReturn struct {
 	Remarks         string  `json:"remarks"`
 }
 
-type PurchaseOrderInvoiceListsReturnPayload struct {
+type PurchaseOrderListsReturnPayload struct {
 	ID           int       `json:"id"`
 	Number       int       `json:"number"`
 	SupplierName string    `json:"supplierName"`
@@ -86,7 +86,7 @@ type PurchaseOrderInvoiceListsReturnPayload struct {
 	InvoiceDate  time.Time `json:"invoiceDate"`
 }
 
-type PurchaseOrderInvoiceDetailPayload struct {
+type PurchaseOrderDetailPayload struct {
 	ID                     int       `json:"id"`
 	Number                 int       `json:"number"`
 	TotalItem              int       `json:"totalItem"`
@@ -114,11 +114,11 @@ type PurchaseOrderInvoiceDetailPayload struct {
 	MedicineLists []PurchaseOrderItemReturn `json:"medicineLists"`
 }
 
-type DeletePurchaseOrderInvoice struct {
+type DeletePurchaseOrder struct {
 	ID int `json:"id" validate:"required"`
 }
 
-type PurchaseOrderInvoice struct {
+type PurchaseOrder struct {
 	ID                   int           `json:"id"`
 	Number               int           `json:"number"`
 	SupplierID           int           `json:"supplierId"`
@@ -133,11 +133,11 @@ type PurchaseOrderInvoice struct {
 }
 
 type PurchaseOrderItem struct {
-	ID                     int     `json:"id"`
-	PurchaseOrderInvoiceID int     `json:"purchaseOrderInvoiceId"`
-	MedicineID             int     `json:"medicineId"`
-	OrderQty               float64 `json:"orderQty"`
-	ReceivedQty            float64 `json:"receivedQty"`
-	UnitID                 int     `json:"unitId"`
-	Remarks                string  `json:"remarks"`
+	ID              int     `json:"id"`
+	PurchaseOrderID int     `json:"purchaseOrderId"`
+	MedicineID      int     `json:"medicineId"`
+	OrderQty        float64 `json:"orderQty"`
+	ReceivedQty     float64 `json:"receivedQty"`
+	UnitID          int     `json:"unitId"`
+	Remarks         string  `json:"remarks"`
 }
