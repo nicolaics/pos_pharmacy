@@ -483,10 +483,17 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 	}
 
 	// Disclaimer
-	pdf.SetY(pdf.GetY() + 0.2)
+	pdf.SetXY(0.95, (pdf.GetY() + 0.2))
 	{
+		pdf.SetTextColor(constants.RED_R, constants.RED_G, constants.RED_B)
 		pdf.SetFont("Arial", constants.BOLD, 6)
-		pdf.MultiCell(0, constants.INVOICE_FOOTER_CELL_HEIGHT, "Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan! Terima kasih!", "1", "C", false)
+		cellWidth = pdf.GetStringWidth("Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan! ")
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan! ", "LTB", 0, "L", false, 0, "")
+
+		pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+		pdf.SetFont("Arial", constants.BOLD, 6)
+		cellWidth = pdf.GetStringWidth("Terima Kasih!") + constants.INVOICE_MARGIN
+		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, "Terima Kasih!", "RTB", 1, "L", false, 0, "")
 	}
 
 	if pdf.Error() != nil {
