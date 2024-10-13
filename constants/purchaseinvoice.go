@@ -1,0 +1,37 @@
+package constants
+
+// measurement in cm
+const PI_WIDTH = 21
+const PI_HEIGHT = 14
+const PI_MARGIN = 0.2
+
+const PI_LOGO_WIDTH = 1.9
+const PI_LOGO_HEIGHT = 1.9
+
+const PI_STD_CELL_HEIGHT = 0.4
+const PI_INFO_HEIGHT = 0.5
+
+const PI_FOOTER_CELL_HEIGHT = 0.5
+
+const PI_INFO_NUMBER_WIDTH = 1.7
+const PI_INFO_DATE_WIDTH = 2.5
+const PI_INFO_TERMS_WIDTH = 1.7
+const PI_INFO_VENDOR_IS_TAX_WIDTH = 1.0
+const PI_INFO_CASHIER_WIDTH = 1.7
+
+const PI_HEADER_HEIGHT = 0.3
+const PI_TABLE_HEIGHT = 0.6
+const PI_NO_COL_WIDTH = 0.8
+const PI_ITEM_COL_WIDTH = 6.2
+const PI_QTY_COL_WIDTH = 1.8
+const PI_UNIT_COL_WIDTH = 1.8
+const PI_PRICE_COL_WIDTH = 3.2
+const PI_DISC_COL_WIDTH = 1.5
+const PI_TAX_COL_WIDTH = 1.5
+const PI_SUBTOTAL_COL_WIDTH = 0
+
+const PI_SUPPLIER_FONT_SZ = 9
+const PI_STD_FONT_SZ = 11
+const PI_HEADER_FONT_SZ = 8
+const PI_TABLE_HEADER_FONT_SZ = PI_STD_FONT_SZ
+const PI_TABLE_DATA_FONT_SZ = PI_TABLE_HEADER_FONT_SZ - 1
