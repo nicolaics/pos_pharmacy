@@ -11,6 +11,7 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
+	"github.com/nicolaics/pos_pharmacy/types"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
@@ -18,7 +19,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreatePurchaseInvoicePDF() (string, error) {
+func CreatePurchaseInvoicePDF(poStore types.PurchaseOrderStore, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/purchase-invoice/")
 	if err != nil {
 		return "", err
@@ -131,12 +132,30 @@ func CreatePurchaseInvoicePDF() (string, error) {
 		return "", err
 	}
 
-	err = pdf.OutputFileAndClose("pi.pdf")
+	fileName := prevFileName
+
+	if prevFileName == "" {
+		fileName := "pi-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+		isExist, err := poStore.IsPDFUrlExist(fileName)
+		if err != nil {
+			return "", err
+		}
+
+		for isExist {
+			fileName = "pi-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+			isExist, err = poStore.IsPDFUrlExist(fileName)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
 	if err != nil {
 		return "", err
 	}
 
-	return "", nil
+	return fileName, nil
 }
 
 func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
@@ -174,6 +193,15 @@ func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
 }
 
 func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf) error {
+	var caser = cases.Title(language.Indonesian)
+
+	// DATA
+	supplierName := "PT. AMS"
+	supplierPhoneNumber := "1555-1222"
+	supplierAddress := "SDLAKJDSFOIHSFLKSJADLSKJDLASIDJsaidjsdaslk"
+	cpName := "Amin"
+	cpPhoneNumber := "0819-8761-9281"
+
 	pdf.Image(config.Envs.CompanyLogoURL, pdf.GetX(), pdf.GetY(), constants.PI_LOGO_WIDTH, constants.PI_LOGO_HEIGHT, false, "", 0, "")
 
 	startBesideLogoX := constants.PI_MARGIN + constants.PI_LOGO_WIDTH + 0.1
@@ -229,17 +257,19 @@ func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf) error {
 	// uppercase the supplier name
 	pdf.SetX(startSupplierDataX)
 	pdf.SetFont("Arial", constants.REGULAR, constants.PI_SUPPLIER_FONT_SZ)
-	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, "PT. AMS | T. 1550-1222", "", 1, "L", false, 0, "")
+	supplier := fmt.Sprintf("%s | T. %s", strings.ToUpper(supplierName), supplierPhoneNumber)
+	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, supplier, "", 1, "L", false, 0, "")
 
 	// Address
 	pdf.SetX(startSupplierDataX)
 	pdf.SetFont("Arial", constants.REGULAR, constants.PI_SUPPLIER_FONT_SZ)
-	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, "SDLAKJDSFOIHSFLKSJADLSKJDLASIDJsaidjsdaslk", "", 1, "L", false, 0, "")
+	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, supplierAddress, "", 1, "L", false, 0, "")
 
 	// Contact Person
 	pdf.SetX(startSupplierDataX)
 	pdf.SetFont("Arial", constants.REGULAR, constants.PI_SUPPLIER_FONT_SZ)
-	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, "CP. Amin | CP. T. 0819-8761-9281", "", 1, "L", false, 0, "")
+	contactPerson := fmt.Sprintf("CP. %s | CP.T. %s", caser.String(cpName), cpPhoneNumber)
+	pdf.CellFormat(0, constants.PI_STD_CELL_HEIGHT, contactPerson, "", 1, "L", false, 0, "")
 
 	pdf.SetLineWidth(0.02)
 	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
