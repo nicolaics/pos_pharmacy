@@ -18,7 +18,6 @@
   align-content: center;
 }
 
-
 .inventory-search-input {
   flex-grow: 1;
   padding: 10px;
@@ -43,7 +42,7 @@
   vertical-align: middle;
   padding: 10px 15px;
   font-size: 20px;
-  background-color: #828A95;
+  background-color: #828a95;
   color: white;
   border: none;
   border-radius: 10px;
@@ -67,16 +66,39 @@
   vertical-align: middle;
   padding: 10px 15px;
   font-size: 20px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   margin-bottom: 50px;
-
+  margin-right: 20px;
 }
 
 .inventory-add-button:hover {
+  background-color: #45a049;
+}
+
+#inventory-history-icon {
+  margin-right: 10px;
+}
+
+.inventory-history-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+}
+
+.inventory-history-button:hover {
   background-color: #45a049;
 }
 
@@ -99,7 +121,7 @@
   font-weight: normal;
 }
 
-.inventory-search-radio-grp input[type="radio"]{
+.inventory-search-radio-grp input[type="radio"] {
   margin-right: 10px;
   width: 20px;
   height: 20px;
@@ -186,7 +208,7 @@ td {
   padding: 10px 15px;
   font-size: 20px;
   margin: 10px;
-  background-color: #008CBA;
+  background-color: #008cba;
   color: white;
   border: none;
   border-radius: 10px;
@@ -198,5 +220,5 @@ td {
 }
 
 .view-inventory-home-button:hover {
-  background-color: #007B9A;
+  background-color: #007b9a;
 }

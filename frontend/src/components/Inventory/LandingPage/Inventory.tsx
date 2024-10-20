@@ -165,6 +165,14 @@ const ViewInventoryPage: React.FC = () => {
     //   });
   };
 
+  const viewHistory = () => {
+    navigate("/inventory/history", {
+      state: {
+        reqType: "view",
+      },
+    });
+  };
+
   const returnToHome = () => {
     navigate("/home");
   };
@@ -198,6 +206,11 @@ const ViewInventoryPage: React.FC = () => {
           <button onClick={register} className="inventory-add-button">
             <BsPersonFillAdd size={30} id="inventory-add-icon" />
             Add
+          </button>
+
+          <button onClick={viewHistory} className="inventory-history-button">
+            <BsPersonFillAdd size={30} id="inventory-history-icon" />
+            History
           </button>
         </div>
 
