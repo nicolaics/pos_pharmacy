@@ -18,6 +18,7 @@ import ModifyDoctorPage from "./components/Doctor/Modify/Modify";
 import ModifyCompanyPage from "./components/Company/Modify";
 import ViewInventoryPage from "./components/Inventory/LandingPage/Inventory";
 import ModifyInventoryPage from "./components/Inventory/Modify/Modify";
+import HistoryInventoryPage from "./components/Inventory/History/History";
 
 export const BACKEND_BASE_URL = "ion-suhalim:9988/api/v1";
 
@@ -25,11 +26,11 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <Routes>
-        { /* NOT PROTECTED */ }
+        {/* NOT PROTECTED */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        { /* ----------------FOR TESTING PURPOSE ONLY------------------------ */ }
+        {/* ----------------FOR TESTING PURPOSE ONLY------------------------ */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/user" element={<UserLandingPage />} />
         <Route path="/user/view" element={<ViewUserPage />} />
@@ -51,7 +52,8 @@ const App: React.FC = () => {
 
         <Route path="/inventory" element={<ViewInventoryPage />} />
         <Route path="/inventory/detail" element={<ModifyInventoryPage />} />
-        { /* ----------------------------------------------------------------- */ }
+        <Route path="/inventory/history" element={<HistoryInventoryPage />} />
+        {/* ----------------------------------------------------------------- */}
 
         {/* <Route
           path="/home"
@@ -154,7 +156,6 @@ const App: React.FC = () => {
             <ProtectedRoute children={<ModifyInventoryPage />} admin={false} />
           }
         /> */}
-
       </Routes>
     </div>
   );
