@@ -1,0 +1,80 @@
+/* history.css */
+
+.history-page {
+  padding: 20px;
+}
+
+.date-range-container {
+  margin-bottom: 20px;
+}
+
+.date-range-container input {
+  margin-right: 10px;
+}
+
+.history-table-container {
+  overflow-x: auto;
+  margin: 0px auto;
+  width: 100%;
+}
+
+#history-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#history-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#history-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#history-data-table tbody {
+  font-size: 16px;
+}
+
+.history-id-column {
+  width: 50px;
+}
+
+.history-date-column {
+  width: 200px;
+}
+
+.history-in-column {
+  width: 250px;
+}
+
+.history-unit-column {
+  width: 100px;
+}
+
+.history-out-column {
+  width: 80px;
+}
+
+.history-cashier-column {
+  width: 150px;
+}
+
+.history-supplier-column {
+  width: 150px;
+}
+
+.history-button {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
