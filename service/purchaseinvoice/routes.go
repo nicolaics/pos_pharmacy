@@ -604,6 +604,7 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 		CreatedAt:              purchaseInvoice.CreatedAt,
 		LastModified:           purchaseInvoice.LastModified,
 		LastModifiedByUserName: lastModifiedUser.Name,
+		PdfURL:                 purchaseInvoice.PdfURL,
 
 		Supplier: struct {
 			ID                  int    "json:\"id\""
@@ -761,6 +762,20 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check supplier
+	supplier, err := h.supplierStore.GetSupplierByID(payload.NewData.SupplierID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", payload.NewData.SupplierID))
+		return
+	}
+
+	// check purchase order
+	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(payload.NewData.PurchaseOrderNumber)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order number %d not exist", payload.NewData.PurchaseOrderNumber))
+		return
+	}
+
 	invoiceDate, err := utils.ParseDate(payload.NewData.InvoiceDate)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"))
@@ -833,6 +848,56 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err))
 				return
 			}
+		}
+
+		purchaseInvoicePdf := types.PurchaseInvoicePDFPayload{
+			Number:             payload.NewData.Number,
+			Subtotal:           payload.NewData.Subtotal,
+			DiscountPercentage: payload.NewData.DiscountPercentage,
+			DiscountAmount:     payload.NewData.DiscountAmount,
+			TaxPercentage:      payload.NewData.TaxPercentage,
+			TaxAmount:          payload.NewData.TaxAmount,
+			TotalPrice:         payload.NewData.TotalPrice,
+			Description:        payload.NewData.Description,
+			InvoiceDate:        *invoiceDate,
+
+			Supplier: struct {
+				Name                string "json:\"name\""
+				Address             string "json:\"address\""
+				CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
+				ContactPersonName   string "json:\"contactPersonName\""
+				ContactPersonNumber string "json:\"contactPersonNumber\""
+				Terms               string "json:\"terms\""
+				VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
+			}{
+				Name:                supplier.Name,
+				Address:             supplier.Address,
+				CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
+				ContactPersonName:   supplier.ContactPersonName,
+				ContactPersonNumber: supplier.ContactPersonNumber,
+				Terms:               supplier.Terms,
+				VendorIsTaxable:     supplier.VendorIsTaxable,
+			},
+
+			UserName: user.Name,
+
+			PurchaseOrderNumber: purchaseOrder.Number,
+			PurchaseOrderDate:   purchaseOrder.InvoiceDate,
+
+			MedicineLists: payload.NewData.MedicineLists,
+		}
+
+		// create pdf
+		fileName, err := utils.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
+			return
+		}
+
+		err = h.purchaseInvoiceStore.UpdatePDFUrl(purchaseInvoice.ID, fileName)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err))
+			return
 		}
 	}
 

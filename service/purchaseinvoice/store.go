@@ -189,7 +189,7 @@ func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time
 				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url  
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -245,7 +245,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 					pi.purchase_order_number, 
 					pi.total_price, pi.description, 
 					user.name, 
-					pi.invoice_date 
+					pi.invoice_date, pi.pdf_url 
 					FROM purchase_invoice AS pi 
 					JOIN supplier ON supplier.id = pi.supplier_id 
 					JOIN user ON user.id = pi.user_id 
@@ -318,7 +318,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endD
 				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -354,7 +354,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate 
 				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -390,7 +390,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndPONumber(startDate time.Time, endDat
 				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -588,6 +588,7 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.CreatedAt,
 		&purchaseInvoice.LastModified,
 		&purchaseInvoice.LastModifiedByUserID,
+		&purchaseInvoice.PdfURL,
 		&purchaseInvoice.DeletedAt,
 		&purchaseInvoice.DeletedByUserID,
 	)
@@ -615,6 +616,7 @@ func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceList
 		&purchaseInvoice.Description,
 		&purchaseInvoice.UserName,
 		&purchaseInvoice.InvoiceDate,
+		&purchaseInvoice.PdfURL,
 	)
 
 	if err != nil {
