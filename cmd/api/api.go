@@ -33,21 +33,22 @@ import (
 type APIServer struct {
 	addr string
 	db   *sql.DB
+	router *mux.Router
 }
 
-func NewAPIServer(addr string, db *sql.DB) *APIServer {
+func NewAPIServer(addr string, db *sql.DB, router *mux.Router) *APIServer {
 	return &APIServer{
 		addr: addr,
 		db:   db,
+		router: router,
 	}
 }
 
 func (s *APIServer) Run() error {
 	loggerVar := log.New(os.Stdout, "", log.LstdFlags)
 
-	router := mux.NewRouter()
-	subrouter := router.PathPrefix("/api/v1").Subrouter()
-	subrouterUnprotected := router.PathPrefix("/api/v1").Subrouter()
+	subrouter := s.router.PathPrefix("/api/v1").Subrouter()
+	subrouterUnprotected := s.router.PathPrefix("/api/v1").Subrouter()
 
 	userStore := user.NewStore(s.db)
 	customerStore := customer.NewStore(s.db)
@@ -117,10 +118,10 @@ func (s *APIServer) Run() error {
 	log.Println("Listening on: ", s.addr)
 
 	logMiddleware := logger.NewLogMiddleware(loggerVar)
-	router.Use(logMiddleware.Func())
+	s.router.Use(logMiddleware.Func())
 
-	router.Use(auth.CorsMiddleware())
+	s.router.Use(auth.CorsMiddleware())
 	subrouter.Use(auth.AuthMiddleware())
 
-	return http.ListenAndServe(s.addr, router)
+	return http.ListenAndServe(s.addr, s.router)
 }
