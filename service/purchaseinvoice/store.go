@@ -531,6 +531,34 @@ func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 	return nil
 }
 
+func (s *Store) UpdatePDFUrl(piId int, pdfUrl string) error {
+	query := `UPDATE purchase_invoice SET pdf_url = ? WHERE id = ?`
+	_, err := s.db.Exec(query, pdfUrl, piId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// false means doesn't exist
+func (s *Store) IsPDFUrlExist(pdfUrl string) (bool, error) {
+	query := `SELECT COUNT(*) FROM purchase_invoice WHERE pdf_url = ?`
+	row := s.db.QueryRow(query, pdfUrl)
+	if row.Err() != nil {
+		return true, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
+}
+
 func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) {
 	purchaseInvoice := new(types.PurchaseInvoice)
 

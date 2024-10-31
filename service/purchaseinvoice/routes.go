@@ -70,9 +70,16 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check supplierID
-	_, err = h.supplierStore.GetSupplierByID(payload.SupplierID)
+	supplier, err := h.supplierStore.GetSupplierByID(payload.SupplierID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", payload.SupplierID))
+		return
+	}
+
+	// get purchase order
+	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(payload.PurchaseOrderNumber)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("po number %d not found", payload.PurchaseOrderNumber))
 		return
 	}
 
@@ -94,8 +101,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		SupplierID:           payload.SupplierID,
 		PurchaseOrderNumber:  payload.PurchaseOrderNumber,
 		Subtotal:             payload.Subtotal,
-		Discount:             payload.Discount,
-		Tax:                  payload.Tax,
+		Discount:             payload.DiscountPercentage,
+		Tax:                  payload.TaxPercentage,
 		TotalPrice:           payload.TotalPrice,
 		Description:          payload.Description,
 		UserID:               user.ID,
@@ -303,6 +310,55 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	}
+
+	purchaseInvoicePdf := types.PurchaseInvoicePDFPayload{
+		Number: payload.Number,
+		Subtotal: payload.Subtotal,
+		DiscountPercentage: payload.DiscountPercentage,
+		DiscountAmount: payload.DiscountAmount,
+		TaxPercentage: payload.TaxPercentage,
+		TaxAmount: payload.TaxAmount,
+		TotalPrice: payload.TotalPrice,
+		Description: payload.Description,
+		InvoiceDate: *invoiceDate,
+
+		Supplier: struct{
+			Name string "json:\"name\"";
+			Address string "json:\"address\"";
+			CompanyPhoneNumber string "json:\"companyPhoneNumber\"";
+			ContactPersonName string "json:\"contactPersonName\"";
+			ContactPersonNumber string "json:\"contactPersonNumber\"";
+			Terms string "json:\"terms\"";
+			VendorIsTaxable bool "json:\"vendorIsTaxable\""}{
+				Name: supplier.Name,
+				Address: supplier.Address,
+				CompanyPhoneNumber: supplier.CompanyPhoneNumber,
+				ContactPersonName: supplier.ContactPersonName,
+				ContactPersonNumber: supplier.ContactPersonNumber,
+				Terms: supplier.Terms,
+				VendorIsTaxable: supplier.VendorIsTaxable,
+		},
+
+		UserName: user.Name,
+
+		PurchaseOrderNumber: purchaseOrder.Number,
+		PurchaseOrderDate: purchaseOrder.InvoiceDate,
+
+		MedicineLists: payload.MedicineLists,
+	}
+
+	// create pdf
+	fileName, err := utils.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
+		return
+	}
+
+	err = h.purchaseInvoiceStore.UpdatePDFUrl(purchaseInvoiceId, fileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err))
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase invoice %d successfully created by %s", payload.Number, user.Name))
@@ -824,7 +880,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 // req_type == 0, means subtract
 // req_typ == 1, means add
 func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty float64, receivedPurchasedUnit *types.Unit, user *types.User, req_type int) error {
-	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrdersByNumber(poinn)
+	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(poinn)
 	if err != nil {
 		return fmt.Errorf("purchase order invoice %d not found: %v", poinn, err)
 	}
