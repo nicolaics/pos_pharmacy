@@ -32,7 +32,7 @@ type PurchaseInvoiceStore interface {
 	IsPDFUrlExist(pdfUrl string) (bool, error)
 }
 
-type PurchaseInvoicePayload struct {
+type RegisterPurchaseInvoicePayload struct {
 	Number              int                           `json:"number" validate:"required"`
 	SupplierID          int                           `json:"supplierId" validate:"required"`
 	PurchaseOrderNumber int                           `json:"purchaseOrderNumber"`
@@ -74,8 +74,8 @@ type ViewPurchaseMedicineItemPayload struct {
 }
 
 type ModifyPurchaseInvoicePayload struct {
-	ID      int                    `json:"id" validate:"required"`
-	NewData PurchaseInvoicePayload `json:"newData" validate:"required"`
+	ID      int                            `json:"id" validate:"required"`
+	NewData RegisterPurchaseInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseMedicineItemReturn struct {
