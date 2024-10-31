@@ -1,5 +1,3 @@
-# with @, doesn't show the command in the CLI
-
 build:
 	@go build -o bin/pos_pharmacy cmd/main.go
 
