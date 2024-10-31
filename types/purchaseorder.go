@@ -6,7 +6,7 @@ import (
 )
 
 type PurchaseOrderStore interface {
-	GetPurchaseOrdersByNumber(int) (*PurchaseOrder, error)
+	GetPurchaseOrderByNumber(int) (*PurchaseOrder, error)
 	GetPurchaseOrderByID(int) (*PurchaseOrder, error)
 	GetPurchaseOrderID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error)
 	GetNumberOfPurchaseOrders() (int, error)
@@ -87,6 +87,7 @@ type PurchaseOrderListsReturnPayload struct {
 	UserName     string    `json:"userName"`
 	TotalItem    int       `json:"totalItem"`
 	InvoiceDate  time.Time `json:"invoiceDate"`
+	PdfURL              string    `json:"pdfUrl"`
 }
 
 type PurchaseOrderDetailPayload struct {
@@ -97,6 +98,7 @@ type PurchaseOrderDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
+	PdfURL              string    `json:"pdfUrl"`
 
 	Supplier struct {
 		ID                  int    `json:"id"`
@@ -131,6 +133,7 @@ type PurchaseOrder struct {
 	CreatedAt            time.Time     `json:"createdAt"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	PdfURL               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }

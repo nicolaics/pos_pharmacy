@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPurchaseOrdersByNumber(number int) (*types.PurchaseOrder, error) {
+func (s *Store) GetPurchaseOrderByNumber(number int) (*types.PurchaseOrder, error) {
 	query := "SELECT * FROM purchase_order WHERE number = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
