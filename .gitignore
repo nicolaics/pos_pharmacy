@@ -1,3 +1,4 @@
+# BACKEND
 *.env
 *.sql
 ./migrate/migrations
