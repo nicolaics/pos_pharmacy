@@ -3,8 +3,6 @@
 *.sql
 ./migrate/migrations
 bin
-*.mod
-*.sum
 
 # dependencies
 frontend/node_modules
