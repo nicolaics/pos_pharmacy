@@ -18,8 +18,8 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetPurchaseOrdersByNumber(number int) (*types.PurchaseOrder, error) {
-	query := "SELECT * FROM purchase_order_invoice WHERE number = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
+func (s *Store) GetPurchaseOrderByNumber(number int) (*types.PurchaseOrder, error) {
+	query := "SELECT * FROM purchase_order WHERE number = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, number)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *Store) GetPurchaseOrdersByNumber(number int) (*types.PurchaseOrder, err
 }
 
 func (s *Store) GetPurchaseOrderByID(id int) (*types.PurchaseOrder, error) {
-	query := "SELECT * FROM purchase_order_invoice WHERE id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
+	query := "SELECT * FROM purchase_order WHERE id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC"
 	rows, err := s.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (s *Store) GetPurchaseOrderByID(id int) (*types.PurchaseOrder, error) {
 }
 
 func (s *Store) GetPurchaseOrderID(number int, supplierId int, totalItem int, invoiceDate time.Time) (int, error) {
-	query := `SELECT id FROM purchase_order_invoice 
+	query := `SELECT id FROM purchase_order 
 				WHERE number = ? 
 				AND supplier_id = ? AND total_item = ? 
 				AND invoice_date = ? AND deleted_at IS NULL 
@@ -98,7 +98,7 @@ func (s *Store) GetPurchaseOrderID(number int, supplierId int, totalItem int, in
 }
 
 func (s *Store) GetNumberOfPurchaseOrders() (int, error) {
-	query := `SELECT COUNT(*) FROM purchase_order_invoice`
+	query := `SELECT COUNT(*) FROM purchase_order`
 	row := s.db.QueryRow(query)
 	if row.Err() != nil {
 		return -1, row.Err()
@@ -120,7 +120,7 @@ func (s *Store) CreatePurchaseOrder(poInvoice types.PurchaseOrder) error {
 		values += ", ?"
 	}
 
-	query := `INSERT INTO purchase_order_invoice (
+	query := `INSERT INTO purchase_order (
 		number, supplier_id, user_id, total_item, 
 		invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
@@ -143,7 +143,7 @@ func (s *Store) CreatePurchaseOrderItem(purchaseMedItem types.PurchaseOrderItem)
 	}
 
 	query := `INSERT INTO purchase_order_item (
-		purchase_order_invoice_id, medicine_id, order_qty, received_qty, unit_id, remarks
+		purchase_order_id, medicine_id, order_qty, received_qty, unit_id, remarks
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
@@ -160,7 +160,7 @@ func (s *Store) GetPurchaseOrdersByDate(startDate time.Time, endDate time.Time) 
 	query := `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_item, poi.invoice_date 
-					FROM purchase_order_invoice AS poi 
+					FROM purchase_order AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
 					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
@@ -190,7 +190,7 @@ func (s *Store) GetPurchaseOrdersByDate(startDate time.Time, endDate time.Time) 
 
 func (s *Store) GetPurchaseOrdersByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]types.PurchaseOrderListsReturnPayload, error) {
 	query := `SELECT COUNT(*)
-					FROM purchase_order_invoice 
+					FROM purchase_order 
 					WHERE invoice_date >= ? AND invoice_date < ? 
 					AND number = ? 
 					AND deleted_at IS NULL`
@@ -213,7 +213,7 @@ func (s *Store) GetPurchaseOrdersByDateAndNumber(startDate time.Time, endDate ti
 		query := `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_item, poi.invoice_date 
-					FROM purchase_order_invoice AS poi 
+					FROM purchase_order AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
 					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
@@ -249,7 +249,7 @@ func (s *Store) GetPurchaseOrdersByDateAndNumber(startDate time.Time, endDate ti
 	query = `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_item, poi.invoice_date 
-					FROM purchase_order_invoice AS poi 
+					FROM purchase_order AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
 					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
@@ -280,7 +280,7 @@ func (s *Store) GetPurchaseOrdersByDateAndUserID(startDate time.Time, endDate ti
 	query := `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_item, poi.invoice_date 
-					FROM purchase_order_invoice AS poi 
+					FROM purchase_order AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
 					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
@@ -313,7 +313,7 @@ func (s *Store) GetPurchaseOrdersByDateAndSupplierID(startDate time.Time, endDat
 	query := `SELECT poi.id, poi.number, 
 					supplier.name, user.name, 
 					poi.total_item, poi.invoice_date 
-					FROM purchase_order_invoice AS poi 
+					FROM purchase_order AS poi 
 					JOIN supplier ON poi.supplier_id = supplier.id 
 					JOIN user ON poi.user_id = user.id 
 					WHERE poi.invoice_date >= ? AND poi.invoice_date < ? 
@@ -350,8 +350,8 @@ func (s *Store) GetPurchaseOrderItem(purchaseOrderId int) ([]types.PurchaseOrder
 				unit.name, 
 				poit.remarks  
 				FROM purchase_order_item as poit 
-				JOIN purchase_order_invoice as poin 
-					ON poit.purchase_order_invoice_id = poin.id 
+				JOIN purchase_order as poin 
+					ON poit.purchase_order_id = poin.id 
 				JOIN medicine ON poit.medicine_id = medicine.id 
 				JOIN unit ON poit.unit_id = unit.id 
 				WHERE poin.id = ? AND poin.deleted_at IS NULL 
@@ -379,7 +379,7 @@ func (s *Store) GetPurchaseOrderItem(purchaseOrderId int) ([]types.PurchaseOrder
 }
 
 func (s *Store) DeletePurchaseOrder(purchaseOrder *types.PurchaseOrder, user *types.User) error {
-	query := "UPDATE purchase_order_invoice SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
+	query := "UPDATE purchase_order SET deleted_at = ?, deleted_by_user_id = ? WHERE id = ?"
 	_, err := s.db.Exec(query, time.Now(), user.ID, purchaseOrder.ID)
 	if err != nil {
 		return err
@@ -390,7 +390,7 @@ func (s *Store) DeletePurchaseOrder(purchaseOrder *types.PurchaseOrder, user *ty
 		return err
 	}
 
-	err = logger.WriteLog("delete", "purchase-order-invoice", user.Name, data.ID, data)
+	err = logger.WriteLog("delete", "purchase-order", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -405,16 +405,16 @@ func (s *Store) DeletePurchaseOrderItem(purchaseOrder *types.PurchaseOrder, user
 	}
 
 	writeData := map[string]interface{}{
-		"purchase_order_invoice": purchaseOrder,
-		"deleted_medicine_item":  data,
+		"purchase_order":        purchaseOrder,
+		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteLog("delete", "purchase-order-invoice", user.Name, purchaseOrder.ID, writeData)
+	err = logger.WriteLog("delete", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
 
-	_, err = s.db.Exec("DELETE FROM purchase_order_item WHERE purchase_order_invoice_id = ? ", purchaseOrder.ID)
+	_, err = s.db.Exec("DELETE FROM purchase_order_item WHERE purchase_order_id = ? ", purchaseOrder.ID)
 	if err != nil {
 		return err
 	}
@@ -432,12 +432,12 @@ func (s *Store) ModifyPurchaseOrder(poiid int, purchaseOrder types.PurchaseOrder
 		"previous_dataa": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-order-invoice", user.Name, poiid, writeData)
+	err = logger.WriteLog("modify", "purchase-order", user.Name, poiid, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
 
-	query := `UPDATE purchase_order_invoice 
+	query := `UPDATE purchase_order 
 				SET number = ?, supplier_id = ?, total_item = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
@@ -465,24 +465,24 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 	}
 
 	writeData := map[string]interface{}{
-		"purchase_order_invoice": purchaseOrder,
-		"previous_data":          data,
+		"purchase_order": purchaseOrder,
+		"previous_data":  data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-order-invoice", user.Name, purchaseOrder.ID, writeData)
+	err = logger.WriteLog("modify", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
 
 	query := `UPDATE purchase_order_item 
-				SET received_qty = ? WHERE purchase_order_invoice_id = ? AND medicine_id = ?`
+				SET received_qty = ? WHERE purchase_order_id = ? AND medicine_id = ?`
 
 	_, err = s.db.Exec(query, newQty, poinid, mid)
 	if err != nil {
 		return err
 	}
 
-	query = `UPDATE purchase_order_invoice 
+	query = `UPDATE purchase_order 
 				SET last_modified = ?, last_modified_by_user_id = ? 
 				WHERE id = ?`
 
@@ -495,7 +495,7 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 }
 
 func (s *Store) AbsoluteDeletePurchaseOrder(poi types.PurchaseOrder) error {
-	query := `SELECT id FROM purchase_order_invoice 
+	query := `SELECT id FROM purchase_order 
 				WHERE number = ? 
 				AND supplier_id = ? AND total_item = ? 
 				AND invoice_date = ?`
@@ -519,13 +519,41 @@ func (s *Store) AbsoluteDeletePurchaseOrder(poi types.PurchaseOrder) error {
 		return nil
 	}
 
-	query = "DELETE FROM purchase_order_item WHERE purchase_order_invoice_id = ?"
+	query = "DELETE FROM purchase_order_item WHERE purchase_order_id = ?"
 	_, _ = s.db.Exec(query, id)
 
-	query = `DELETE FROM purchase_order_invoice WHERE id = ?`
+	query = `DELETE FROM purchase_order WHERE id = ?`
 	_, _ = s.db.Exec(query, id)
 
 	return nil
+}
+
+func (s *Store) UpdatePDFUrl(poId int, pdfUrl string) error {
+	query := `UPDATE purchase_order SET pdf_url = ? WHERE id = ?`
+	_, err := s.db.Exec(query, pdfUrl, poId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// false means doesn't exist
+func (s *Store) IsPDFUrlExist(pdfUrl string) (bool, error) {
+	query := `SELECT COUNT(*) FROM purchase_order WHERE pdf_url = ?`
+	row := s.db.QueryRow(query, pdfUrl)
+	if row.Err() != nil {
+		return true, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
 }
 
 func scanRowIntoPurchaseOrder(rows *sql.Rows) (*types.PurchaseOrder, error) {

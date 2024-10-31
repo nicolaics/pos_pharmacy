@@ -97,19 +97,21 @@ func (s *Store) GetPurchaseInvoiceID(number int, supplierId int, subtotal float6
 
 func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) error {
 	values := "?"
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 12; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_invoice (
-		number, supplier_id, purchase_order_invoice_number, subtotal, discount, tax, 
+		number, supplier_id, purchase_order_number, subtotal, discount_percentage, 
+		discount_amount, tax_percentage, tax_amount,  
 		total_price, description, user_id, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.SupplierID,
 		purchaseInvoice.PurchaseOrderNumber, purchaseInvoice.Subtotal,
-		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice,
+		purchaseInvoice.DiscountPercentage, purchaseInvoice.DiscountAmount, 
+		purchaseInvoice.TaxPercentage, purchaseInvoice.TaxAmount, purchaseInvoice.TotalPrice,
 		purchaseInvoice.Description, purchaseInvoice.UserID, purchaseInvoice.InvoiceDate,
 		purchaseInvoice.UserID)
 	if err != nil {
@@ -121,20 +123,22 @@ func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) err
 
 func (s *Store) CreatePurchaseMedicineItem(purchaseMedItem types.PurchaseMedicineItem) error {
 	values := "?"
-	for i := 0; i < 9; i++ {
+	for i := 0; i < 11; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO purchase_medicine_item (
 				purchase_invoice_id, medicine_id, qty, unit_id, 
-				purchase_price, purchase_discount, purchase_tax, 
+				price, discount_percentage, discount_amount, 
+				tax_percentage, tax_amount, 
 				subtotal, batch_number, expired_date
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		purchaseMedItem.PurchaseInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.Qty,
-		purchaseMedItem.UnitID, purchaseMedItem.PurchasePrice, purchaseMedItem.PurchaseDiscount,
-		purchaseMedItem.PurchaseTax, purchaseMedItem.Subtotal, purchaseMedItem.BatchNumber,
+		purchaseMedItem.UnitID, purchaseMedItem.Price, purchaseMedItem.DiscountPercentage,
+		purchaseMedItem.DiscountAmount, purchaseMedItem.TaxPercentage, 
+		purchaseMedItem.TaxAmount, purchaseMedItem.Subtotal, purchaseMedItem.BatchNumber,
 		purchaseMedItem.ExpDate)
 	if err != nil {
 		return err
@@ -149,9 +153,9 @@ func (s *Store) GetPurchaseMedicineItem(purchaseInvoiceId int) ([]types.Purchase
 			medicine.barcode, medicine.name, 
 			pmi.qty, 
 			unit.name, 
-			pmi.purchase_price, pmi.purchase_discount, 
-			pmi.purchase_tax, pmi.subtotal, pmi.batch_number, pmi.expired_date 
-			
+			pmi.price, pmi.discount_percentage, pmi.discount_amount, 
+			pmi.tax_percentage, pmi.tax_amount, 
+			pmi.subtotal, pmi.batch_number, pmi.expired_date 
 			FROM purchase_medicine_item as pmi 
 			JOIN purchase_invoice as pi ON pmi.purchase_invoice_id = pi.id 
 			JOIN medicine ON pmi.medicine_id = medicine.id 
@@ -182,10 +186,10 @@ func (s *Store) GetPurchaseMedicineItem(purchaseInvoiceId int) ([]types.Purchase
 func (s *Store) GetPurchaseInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url  
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -238,10 +242,10 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 	if count == 0 {
 		query = `SELECT pi.id, pi.number, 
 					supplier.name, 
-					pi.purchase_order_invoice_number, 
+					pi.purchase_order_number, 
 					pi.total_price, pi.description, 
 					user.name, 
-					pi.invoice_date 
+					pi.invoice_date, pi.pdf_url 
 					FROM purchase_invoice AS pi 
 					JOIN supplier ON supplier.id = pi.supplier_id 
 					JOIN user ON user.id = pi.user_id 
@@ -277,7 +281,7 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 
 	query = `SELECT pi.id, pi.number, 
 					supplier.name, 
-					pi.purchase_order_invoice_number, 
+					pi.purchase_order_number, 
 					pi.total_price, pi.description, 
 					user.name, 
 					pi.invoice_date 
@@ -311,10 +315,10 @@ func (s *Store) GetPurchaseInvoicesByDateAndNumber(startDate time.Time, endDate 
 func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endDate time.Time, sid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -347,10 +351,10 @@ func (s *Store) GetPurchaseInvoicesByDateAndSupplierID(startDate time.Time, endD
 func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
@@ -383,15 +387,15 @@ func (s *Store) GetPurchaseInvoicesByDateAndUserID(startDate time.Time, endDate 
 func (s *Store) GetPurchaseInvoicesByDateAndPONumber(startDate time.Time, endDate time.Time, poiNumber int) ([]types.PurchaseInvoiceListsReturnPayload, error) {
 	query := `SELECT pi.id, pi.number, 
 				supplier.name, 
-				pi.purchase_order_invoice_number, 
+				pi.purchase_order_number, 
 				pi.total_price, pi.description, 
 				user.name, 
-				pi.invoice_date 
+				pi.invoice_date, pi.pdf_url 
 				FROM purchase_invoice AS pi 
 				JOIN supplier ON supplier.id = pi.supplier_id 
 				JOIN user ON user.id = pi.user_id 
 				WHERE pi.invoice_date >= ? AND pi.invoice_date < ? 
-				AND pi.purchase_order_invoice_number = ? 
+				AND pi.purchase_order_number = ? 
 				AND pi.deleted_at IS NULL 
 				ORDER BY pi.invoice_date DESC`
 
@@ -476,15 +480,18 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 	}
 
 	query := `UPDATE purchase_invoice SET 
-				number = ?, supplier_id = ?, purchase_order_invoice_number = ?, 
-				subtotal = ?, discount = ?, tax = ?, total_price = ?, description = ?, 
+				number = ?, supplier_id = ?, purchase_order_number = ?, 
+				subtotal = ?, discount_percentage = ?, discount_amount = ?, 
+				tax_percentage = ?, tax_amount = ?, total_price = ?, description = ?, 
 				invoice_date = ?, last_modified = ?, last_modified_by_user_id = ? 
 				 WHERE id = ?`
 
 	_, err = s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.SupplierID,
 		purchaseInvoice.PurchaseOrderNumber, purchaseInvoice.Subtotal,
-		purchaseInvoice.Discount, purchaseInvoice.Tax, purchaseInvoice.TotalPrice,
+		purchaseInvoice.DiscountPercentage, purchaseInvoice.DiscountAmount,
+		purchaseInvoice.TaxPercentage, purchaseInvoice.TaxAmount,
+		purchaseInvoice.TotalPrice,
 		purchaseInvoice.Description, purchaseInvoice.InvoiceDate,
 		time.Now(), purchaseInvoice.LastModifiedByUserID, piid)
 	if err != nil {
@@ -497,12 +504,14 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 	query := `SELECT id FROM purchase_invoice 
 				WHERE number = ? AND supplier_id = ? 
-				AND purchase_order_invoice_number = ? AND subtotal = ? 
-				AND discount = ? AND tax = ? AND total_price = ? 
+				AND purchase_order_number = ? AND subtotal = ? 
+				AND discount_percentage = ? AND discount_amount = ? 
+				AND tax_percentage = ? AND tax_amount = ? AND total_price = ? 
 				AND description = ? AND invoice_date = ?`
 
 	rows, err := s.db.Query(query, pi.Number, pi.SupplierID, pi.PurchaseOrderNumber,
-		pi.Subtotal, pi.Discount, pi.Tax, pi.TotalPrice,
+		pi.Subtotal, pi.DiscountPercentage, pi.DiscountAmount, 
+		pi.TaxPercentage, pi.TaxAmount, pi.TotalPrice,
 		pi.Description, pi.InvoiceDate)
 	if err != nil {
 		return err
@@ -531,6 +540,34 @@ func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 	return nil
 }
 
+func (s *Store) UpdatePDFUrl(piId int, pdfUrl string) error {
+	query := `UPDATE purchase_invoice SET pdf_url = ? WHERE id = ?`
+	_, err := s.db.Exec(query, pdfUrl, piId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// false means doesn't exist
+func (s *Store) IsPDFUrlExist(pdfUrl string) (bool, error) {
+	query := `SELECT COUNT(*) FROM purchase_invoice WHERE pdf_url = ?`
+	row := s.db.QueryRow(query, pdfUrl)
+	if row.Err() != nil {
+		return true, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
+}
+
 func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) {
 	purchaseInvoice := new(types.PurchaseInvoice)
 
@@ -540,8 +577,10 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.SupplierID,
 		&purchaseInvoice.PurchaseOrderNumber,
 		&purchaseInvoice.Subtotal,
-		&purchaseInvoice.Discount,
-		&purchaseInvoice.Tax,
+		&purchaseInvoice.DiscountPercentage,
+		&purchaseInvoice.DiscountAmount,
+		&purchaseInvoice.TaxPercentage,
+		&purchaseInvoice.TaxAmount,
 		&purchaseInvoice.TotalPrice,
 		&purchaseInvoice.Description,
 		&purchaseInvoice.UserID,
@@ -549,6 +588,7 @@ func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) 
 		&purchaseInvoice.CreatedAt,
 		&purchaseInvoice.LastModified,
 		&purchaseInvoice.LastModifiedByUserID,
+		&purchaseInvoice.PdfURL,
 		&purchaseInvoice.DeletedAt,
 		&purchaseInvoice.DeletedByUserID,
 	)
@@ -576,6 +616,7 @@ func scanRowIntoPurchaseInvoiceLists(rows *sql.Rows) (*types.PurchaseInvoiceList
 		&purchaseInvoice.Description,
 		&purchaseInvoice.UserName,
 		&purchaseInvoice.InvoiceDate,
+		&purchaseInvoice.PdfURL,
 	)
 
 	if err != nil {
@@ -597,8 +638,10 @@ func scanRowIntoPurchaseMedicineItem(rows *sql.Rows) (*types.PurchaseMedicineIte
 		&purchaseMedicineItem.Qty,
 		&purchaseMedicineItem.Unit,
 		&purchaseMedicineItem.Price,
-		&purchaseMedicineItem.Discount,
-		&purchaseMedicineItem.Tax,
+		&purchaseMedicineItem.DiscountPercentage,
+		&purchaseMedicineItem.DiscountAmount,
+		&purchaseMedicineItem.TaxPercentage,
+		&purchaseMedicineItem.TaxAmount,
 		&purchaseMedicineItem.Subtotal,
 		&purchaseMedicineItem.BatchNumber,
 		&purchaseMedicineItem.ExpDate,

@@ -115,7 +115,7 @@ func CreateInvoicePDF(invoice types.InvoicePDFPayload, invoiceStore types.Invoic
 		}
 
 		for isExist {
-			fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+			fileName = "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
 			isExist, err = invoiceStore.IsPDFUrlExist(fileName)
 			if err != nil {
 				return "", err

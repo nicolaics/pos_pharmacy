@@ -27,15 +27,20 @@ type PurchaseInvoiceStore interface {
 
 	// delete entirely from the db if there's error
 	AbsoluteDeletePurchaseInvoice(pi PurchaseInvoice) error
+
+	UpdatePDFUrl(piId int, pdfUrl string) error
+	IsPDFUrlExist(pdfUrl string) (bool, error)
 }
 
-type PurchaseInvoicePayload struct {
+type RegisterPurchaseInvoicePayload struct {
 	Number              int                           `json:"number" validate:"required"`
 	SupplierID          int                           `json:"supplierId" validate:"required"`
 	PurchaseOrderNumber int                           `json:"purchaseOrderNumber"`
 	Subtotal            float64                       `json:"subtotal" validate:"required"`
-	Discount            float64                       `json:"discount"`
-	Tax                 float64                       `json:"tax" validate:"required"`
+	DiscountPercentage  float64                       `json:"discountPercentage"`
+	DiscountAmount      float64                       `json:"discountAmount"`
+	TaxPercentage       float64                       `json:"taxPercentage" validate:"required"`
+	TaxAmount           float64                       `json:"taxAmount" validate:"required"`
 	TotalPrice          float64                       `json:"totalPrice" validate:"required"`
 	Description         string                        `json:"description"`
 	InvoiceDate         string                        `json:"invoiceDate" validate:"required"`
@@ -43,16 +48,18 @@ type PurchaseInvoicePayload struct {
 }
 
 type PurchaseMedicineListPayload struct {
-	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
-	MedicineName    string  `json:"medicineName" validate:"required"`
-	Qty             float64 `json:"qty" validate:"required"`
-	Unit            string  `json:"unit" validate:"required"`
-	Price           float64 `json:"price" validate:"required"`
-	Discount        float64 `json:"discount"`
-	Tax             float64 `json:"tax"`
-	Subtotal        float64 `json:"subtotal" validate:"required"`
-	BatchNumber     string  `json:"batchNumber" validate:"required"`
-	ExpDate         string  `json:"expDate" validate:"required"`
+	MedicineBarcode    string  `json:"medicineBarcode" validate:"required"`
+	MedicineName       string  `json:"medicineName" validate:"required"`
+	Qty                float64 `json:"qty" validate:"required"`
+	Unit               string  `json:"unit" validate:"required"`
+	Price              float64 `json:"price" validate:"required"`
+	DiscountPercentage float64 `json:"discountPercentage"`
+	DiscountAmount     float64 `json:"discountAmount"`
+	TaxPercentage      float64 `json:"taxPercentage"`
+	TaxAmount          float64 `json:"taxAmount"`
+	Subtotal           float64 `json:"subtotal" validate:"required"`
+	BatchNumber        string  `json:"batchNumber" validate:"required"`
+	ExpDate            string  `json:"expDate" validate:"required"`
 }
 
 // only view the purchase invoice list
@@ -62,41 +69,46 @@ type ViewPurchaseInvoicePayload struct {
 }
 
 // view the detail of the purchase invoice
-type ViewPurchaseMedicineItemPayload struct {
+type ViewPurchaseInvoiceDetailPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 
 type ModifyPurchaseInvoicePayload struct {
-	ID      int                    `json:"id" validate:"required"`
-	NewData PurchaseInvoicePayload `json:"newData" validate:"required"`
+	ID      int                            `json:"id" validate:"required"`
+	NewData RegisterPurchaseInvoicePayload `json:"newData" validate:"required"`
 }
 
 type PurchaseMedicineItemReturn struct {
-	ID              int       `json:"id"`
-	MedicineBarcode string    `json:"medicineBarcode"`
-	MedicineName    string    `json:"medicineName"`
-	Qty             float64   `json:"qty"`
-	Unit            string    `json:"unit"`
-	Price           float64   `json:"price"`
-	Discount        float64   `json:"discount"`
-	Tax             float64   `json:"tax"`
-	Subtotal        float64   `json:"subtotal"`
-	BatchNumber     string    `json:"batchNumber"`
-	ExpDate         time.Time `json:"expDate"`
+	ID                 int       `json:"id"`
+	MedicineBarcode    string    `json:"medicineBarcode"`
+	MedicineName       string    `json:"medicineName"`
+	Qty                float64   `json:"qty"`
+	Unit               string    `json:"unit"`
+	Price              float64   `json:"price"`
+	DiscountPercentage float64   `json:"discountPercentage"`
+	DiscountAmount     float64   `json:"discountAmount"`
+	TaxPercentage      float64   `json:"taxPercentage"`
+	TaxAmount          float64   `json:"taxAmount"`
+	Subtotal           float64   `json:"subtotal"`
+	BatchNumber        string    `json:"batchNumber"`
+	ExpDate            time.Time `json:"expDate"`
 }
 
 type PurchaseInvoiceDetailPayload struct {
 	ID                     int       `json:"id"`
 	Number                 int       `json:"number"`
 	Subtotal               float64   `json:"subtotal"`
-	Discount               float64   `json:"discount"`
-	Tax                    float64   `json:"tax"`
+	DiscountPercentage     float64   `json:"discountPercentage"`
+	DiscountAmount         float64   `json:"discountAmount"`
+	TaxPercentage          float64   `json:"taxPercentage"`
+	TaxAmount              float64   `json:"taxAmount"`
 	TotalPrice             float64   `json:"totalPrice"`
 	Description            string    `json:"description"`
 	InvoiceDate            time.Time `json:"invoiceDate"`
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
+	PdfURL                 string    `json:"pdfUrl"`
 
 	Supplier struct {
 		ID                  int    `json:"id"`
@@ -129,10 +141,40 @@ type PurchaseInvoiceListsReturnPayload struct {
 	Description         string    `json:"description"`
 	UserName            string    `json:"userName"`
 	InvoiceDate         time.Time `json:"invoiceDate"`
+	PdfURL              string    `json:"pdfUrl"`
 }
 
 type DeletePurchaseInvoice struct {
 	ID int `json:"id" validate:"required"`
+}
+
+type PurchaseInvoicePDFPayload struct {
+	Number             int       `json:"number"`
+	Subtotal           float64   `json:"subtotal"`
+	DiscountPercentage float64   `json:"discountPercentage"`
+	DiscountAmount     float64   `json:"discountAmount"`
+	TaxPercentage      float64   `json:"taxPercentage"`
+	TaxAmount          float64   `json:"taxAmount"`
+	TotalPrice         float64   `json:"totalPrice"`
+	Description        string    `json:"description"`
+	InvoiceDate        time.Time `json:"invoiceDate"`
+
+	Supplier struct {
+		Name                string `json:"name"`
+		Address             string `json:"address"`
+		CompanyPhoneNumber  string `json:"companyPhoneNumber"`
+		ContactPersonName   string `json:"contactPersonName"`
+		ContactPersonNumber string `json:"contactPersonNumber"`
+		Terms               string `json:"terms"`
+		VendorIsTaxable     bool   `json:"vendorIsTaxable"`
+	} `json:"supplier"`
+
+	UserName string `json:"name"`
+
+	PurchaseOrderNumber int       `json:"purchaseOrderNumber"`
+	PurchaseOrderDate   time.Time `json:"purchaseOrderDate"`
+
+	MedicineLists []PurchaseMedicineListPayload `json:"medicineLists"`
 }
 
 type PurchaseInvoice struct {
@@ -141,8 +183,10 @@ type PurchaseInvoice struct {
 	SupplierID           int           `json:"supplierId"`
 	PurchaseOrderNumber  int           `json:"purchaseOrderNumber"`
 	Subtotal             float64       `json:"subtotal"`
-	Discount             float64       `json:"discount"`
-	Tax                  float64       `json:"tax"`
+	DiscountPercentage   float64       `json:"discountPercentage"`
+	DiscountAmount       float64       `json:"dicsountAmount"`
+	TaxPercentage        float64       `json:"taxPercentage"`
+	TaxAmount            float64       `json:"taxAmount"`
 	TotalPrice           float64       `json:"totalPrice"`
 	Description          string        `json:"description"`
 	UserID               int           `json:"userId"`
@@ -150,20 +194,23 @@ type PurchaseInvoice struct {
 	CreatedAt            time.Time     `json:"createdAt"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastModifiedByUserId"`
+	PdfURL               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
 
 type PurchaseMedicineItem struct {
-	ID                int       `json:"id"`
-	PurchaseInvoiceID int       `json:"purchaseInvoiceId"`
-	MedicineID        int       `json:"medicineId"`
-	Qty               float64   `json:"qty"`
-	UnitID            int       `json:"unitId"`
-	PurchasePrice     float64   `json:"purchasePrice"`
-	PurchaseDiscount  float64   `json:"purchaseDiscount"`
-	PurchaseTax       float64   `json:"purchaseTax"`
-	Subtotal          float64   `json:"subtotal"`
-	BatchNumber       string    `json:"batchNumber"`
-	ExpDate           time.Time `json:"expDate"`
+	ID                 int       `json:"id"`
+	PurchaseInvoiceID  int       `json:"purchaseInvoiceId"`
+	MedicineID         int       `json:"medicineId"`
+	Qty                float64   `json:"qty"`
+	UnitID             int       `json:"unitId"`
+	Price              float64   `json:"price"`
+	DiscountPercentage float64   `json:"discountPercentage"`
+	DiscountAmount     float64   `json:"dicsountAmount"`
+	TaxPercentage      float64   `json:"taxPercentage"`
+	TaxAmount          float64   `json:"taxAmount"`
+	Subtotal           float64   `json:"subtotal"`
+	BatchNumber        string    `json:"batchNumber"`
+	ExpDate            time.Time `json:"expDate"`
 }
