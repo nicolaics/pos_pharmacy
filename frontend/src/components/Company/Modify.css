@@ -1,0 +1,120 @@
+.modify-company-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.company-data-container {
+  background-color: #f9f9f9;
+  padding: 50px 20px 20px 0px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.company-data-form-group {
+  margin-bottom: 20px;
+}
+
+.company-data-form-group label {
+  display: inline-block;
+  padding-left: 0px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #555;
+  text-align: right;
+  margin-right: 10px;
+  font-size: 22px;
+  width: 350px;
+}
+
+.company-data-form-group input[type="text"],
+.company-data-form-group input[type="password"] {
+  width: 50%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 22px;
+}
+
+.company-data-form-group textarea {
+  width: 50%;
+  height: 80px;
+  vertical-align: middle;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 22px;
+  resize: none;
+  font-family: Arial, sans-serif;
+}
+
+.company-data-radio-grp {
+  display: inline-flex;
+  width: 50%;
+  align-items: first baseline;
+}
+
+.company-data-radio-grp input[type="radio"] {
+  margin-right: 5px;
+}
+
+.company-data-radio-grp label {
+  margin-right: 15px;
+  font-size: 22px;
+  text-align: left;
+  font-weight: normal;
+}
+
+.modify-company-buttons {
+  margin-top: 30px;
+}
+
+.modify-company-btns-grp button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 22px;
+  margin: 0px 20px 0px 20px;
+  transition: background-color 0.3s ease;
+  
+}
+
+.modify-company-ok-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.modify-company-ok-btn:hover {
+  background-color: #45a049;
+}
+
+.modify-company-delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.modify-company-delete-btn:hover {
+  background-color: #da190b;
+}
+
+.modify-company-cancel-btn {
+  background-color: #ff9800;
+  color: white;
+}
+
+.modify-company-cancel-btn:hover {
+  background-color: #e68a00;
+}
+
+.modify-company-send-btn {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: 700;
+}
+
+.modify-company-send-btn:hover {
+  background-color: #45a049;
+}

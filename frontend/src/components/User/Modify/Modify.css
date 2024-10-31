@@ -1,0 +1,113 @@
+.modify-user-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.user-data-container {
+  background-color: #f9f9f9;
+  padding: 50px 20px 20px 0px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-data-form-group {
+  margin-bottom: 20px;
+}
+
+.user-data-form-group label {
+  display: inline-block;
+  padding-left: 0px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #555;
+  text-align: right;
+  margin-right: 10px;
+  font-size: 22px;
+  width: 200px;
+}
+
+.user-data-form-group input[type="text"],
+.user-data-form-group input[type="password"] {
+  width: 50%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 22px;
+}
+
+.user-data-radio-grp {
+  display: inline-flex;
+  width: 50%;
+  align-items: first baseline;
+}
+
+.user-data-radio-grp input[type="radio"] {
+  margin-right: 5px;
+}
+
+.user-data-radio-grp label {
+  margin-right: 15px;
+  font-size: 22px;
+  text-align: left;
+  font-weight: normal;
+}
+
+.modify-user-buttons {
+  margin-top: 30px;
+}
+
+.modify-user-btns-grp {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.modify-user-btns-grp button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 22px;
+  margin: 0px 20px 0px 20px;
+  transition: background-color 0.3s ease;
+}
+
+.modify-user-ok-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.modify-user-ok-btn:hover {
+  background-color: #45a049;
+}
+
+.modify-user-delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.modify-user-delete-btn:hover {
+  background-color: #da190b;
+}
+
+.modify-user-cancel-btn {
+  background-color: #ff9800;
+  color: white;
+}
+
+.modify-user-cancel-btn:hover {
+  background-color: #e68a00;
+}
+
+.modify-user-send-btn {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: 700;
+}
+
+.modify-user-send-btn:hover {
+  background-color: #45a049;
+}

@@ -1,0 +1,44 @@
+.landing-page-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 50px;
+  text-align: center;
+  margin: 100px auto 20px auto;
+  max-width: 800px;
+  justify-content: center;
+}
+
+.landing-page-card h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+.landing-page-card p {
+  font-size: 1.2em;
+  margin-bottom: 30px;
+  color: #6b6b6b;
+}
+
+.go-to-login-btn {
+  font-size: 1.5em;
+  border-radius: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-bottom: 30px;
+}
+
+.go-to-login-btn:hover {
+  /* cursor: pointer; */
+  background-color: #0056b3;
+}
+
+/* main body background */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
+}

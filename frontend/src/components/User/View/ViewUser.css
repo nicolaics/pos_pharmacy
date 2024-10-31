@@ -1,0 +1,188 @@
+.view-user-page {
+  justify-content: center;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.user-search-container {
+  display: inline-block;
+  width: 1000px;
+  margin-bottom: 50px;
+}
+
+.user-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
+  margin-bottom: 20px;
+  width: 50%;
+}
+
+#user-search-icon {
+  margin-right: 10px;
+}
+
+.user-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  
+}
+
+.user-search-button:hover {
+  background-color: #45a049;
+}
+
+.user-search-radio-container {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+}
+
+.user-search-radio-container label {
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.user-search-radio-grp label {
+  font-size: 20px;
+  margin-right: 20px;
+  font-weight: normal;
+}
+
+.user-search-radio-grp input[type="radio"]{
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.user-search-radio-item {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+}
+
+.user-table-container {
+  overflow-x: auto;
+  margin: 0px auto;
+  width: 100%;
+}
+
+#user-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#user-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#user-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#user-data-table tbody {
+  font-size: 16px;
+}
+
+.user-id-column {
+  width: 20px;
+}
+
+.user-name-column {
+  width: 200px;
+}
+
+.user-admin-column {
+  width: 60px;
+}
+
+.user-phone-number-column {
+  width: 200px;
+}
+
+.user-last-logged-in-column, .user-created-at-column {
+  width: 230px;
+}
+
+.view-user-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-user-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.user-return-btns-grp {
+  display: flex;
+  justify-content: center;
+}
+
+.view-user-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 10px;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-user-home-icon {
+  margin-right: 10px;
+}
+
+.view-user-home-button:hover {
+  background-color: #007B9A;
+}
+
+.view-user-back-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 10px;
+  background-color: #8a8137;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-user-back-icon {
+  margin-right: 10px;
+}
+
+.view-user-back-button:hover {
+  background-color: #5e5725;
+}

@@ -1,0 +1,144 @@
+.view-customer-page {
+  justify-content: center;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.customer-search-container {
+  display: inline-flex;
+}
+
+.customer-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
+  margin-bottom: 50px;
+  width: 50%;
+}
+
+#customer-search-icon {
+  margin-right: 10px;
+}
+
+.customer-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #828A95;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+  margin-right: 20px;
+}
+
+.customer-search-button:hover {
+  background-color: #60666e;
+}
+
+#customer-add-icon {
+  margin-right: 10px;
+}
+
+.customer-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+
+}
+
+.customer-add-button:hover {
+  background-color: #45a049;
+}
+
+.customer-table-container {
+  overflow-x: auto;
+  margin: 0px auto;
+  width: 1000px;
+}
+
+#customer-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#customer-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#customer-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#customer-data-table tbody {
+  font-size: 16px;
+}
+
+.view-customer-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-customer-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.customer-id-column {
+  width: 20px;
+}
+
+.customer-name-column {
+  width: 200px;
+}
+
+.customer-created-at-column {
+  width: 230px;
+}
+
+.view-customer-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 50px auto;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-customer-home-icon {
+  margin-right: 10px;
+}
+
+.view-customer-home-button:hover {
+  background-color: #007B9A;
+}

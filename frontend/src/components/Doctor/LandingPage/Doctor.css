@@ -1,0 +1,143 @@
+.view-doctor-page {
+  justify-content: center;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.doctor-search-container {
+  display: inline-flex;
+}
+
+.doctor-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
+  margin-bottom: 50px;
+  width: 50%;
+}
+
+#doctor-search-icon {
+  margin-right: 10px;
+}
+
+.doctor-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #828A95;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+  margin-right: 20px;
+}
+
+.doctor-search-button:hover {
+  background-color: #60666e;
+}
+
+#doctor-add-icon {
+  margin-right: 10px;
+}
+
+.doctor-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 50px;
+}
+
+.doctor-add-button:hover {
+  background-color: #45a049;
+}
+
+.doctor-table-container {
+  overflow-x: auto;
+  margin: 0px auto;
+  width: 1000px;
+}
+
+#doctor-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#doctor-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#doctor-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#doctor-data-table tbody {
+  font-size: 16px;
+}
+
+.view-doctor-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.doctor-id-column {
+  width: 20px;
+}
+
+.doctor-name-column {
+  width: 200px;
+}
+
+.doctor-created-at-column {
+  width: 230px;
+}
+
+.view-doctor-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.view-doctor-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 50px auto;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-doctor-home-icon {
+  margin-right: 10px;
+}
+
+.view-doctor-home-button:hover {
+  background-color: #007B9A;
+}

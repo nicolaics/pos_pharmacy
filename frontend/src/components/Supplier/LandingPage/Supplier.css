@@ -1,0 +1,186 @@
+.view-supplier-page {
+  justify-content: center;
+  text-align: center;
+  max-width: 2300px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.supplier-search-container {
+  display: inline-block;
+  width: 1000px;
+  margin-bottom: 50px;
+}
+
+.supplier-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 25px;
+  margin-bottom: 20px;
+  width: 50%;
+}
+
+#supplier-search-icon {
+  margin-right: 10px;
+}
+
+.supplier-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #828A95;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  margin-right: 20px;
+}
+
+.supplier-search-button:hover {
+  background-color: #60666e;
+}
+
+#supplier-add-icon {
+  margin-right: 10px;
+}
+
+.supplier-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+  padding: 10px 15px;
+  font-size: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.supplier-add-button:hover {
+  background-color: #45a049;
+}
+
+/* TODO: make pretty search button radio group */
+.supplier-search-radio-container {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+}
+
+.supplier-search-radio-container label {
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.supplier-search-radio-grp label {
+  font-size: 20px;
+  margin-right: 20px;
+  font-weight: normal;
+}
+
+.supplier-search-radio-grp input[type="radio"]{
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.supplier-search-radio-item {
+  display: inline-flex;
+  align-items: center;
+  justify-items: baseline;
+  vertical-align: middle;
+}
+
+.supplier-table-container {
+  overflow-x: auto;
+  margin: 0px auto;
+  width: 100%;
+}
+
+#supplier-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#supplier-data-table th,
+td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#supplier-data-table th {
+  background-color: #c4c2c2;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#supplier-data-table tbody {
+  font-size: 16px;
+}
+
+.view-supplier-data-row {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-supplier-data-row:hover {
+  background-color: #afe6ff;
+}
+
+.supplier-id-column {
+  width: 20px;
+}
+
+.supplier-name-column {
+  width: 200px;
+}
+
+.supplier-address-column {
+  width: 300px;
+}
+
+.supplier-company-pn-column, .supplier-cp-pn-column {
+  width: 150px;
+}
+
+.supplier-cp-name-column {
+  width: 150px;
+}
+
+.view-supplier-home-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 20px;
+  margin: 50px auto;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#view-supplier-home-icon {
+  margin-right: 10px;
+}
+
+.view-supplier-home-button:hover {
+  background-color: #007B9A;
+}
