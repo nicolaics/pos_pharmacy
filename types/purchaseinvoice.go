@@ -69,7 +69,7 @@ type ViewPurchaseInvoicePayload struct {
 }
 
 // view the detail of the purchase invoice
-type ViewPurchaseMedicineItemPayload struct {
+type ViewPurchaseInvoiceDetailPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 
