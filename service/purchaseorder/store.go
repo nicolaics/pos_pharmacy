@@ -528,6 +528,34 @@ func (s *Store) AbsoluteDeletePurchaseOrder(poi types.PurchaseOrder) error {
 	return nil
 }
 
+func (s *Store) UpdatePDFUrl(poId int, pdfUrl string) error {
+	query := `UPDATE purchase_order SET pdf_url = ? WHERE id = ?`
+	_, err := s.db.Exec(query, pdfUrl, poId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// false means doesn't exist
+func (s *Store) IsPDFUrlExist(pdfUrl string) (bool, error) {
+	query := `SELECT COUNT(*) FROM purchase_order WHERE pdf_url = ?`
+	row := s.db.QueryRow(query, pdfUrl)
+	if row.Err() != nil {
+		return true, row.Err()
+	}
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
+}
+
 func scanRowIntoPurchaseOrder(rows *sql.Rows) (*types.PurchaseOrder, error) {
 	purchaseOrder := new(types.PurchaseOrder)
 

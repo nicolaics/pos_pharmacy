@@ -30,6 +30,9 @@ type PurchaseOrderStore interface {
 
 	// delete entirely from the db if there's error
 	AbsoluteDeletePurchaseOrder(poi PurchaseOrder) error
+
+	UpdatePDFUrl(poId int, pdfUrl string) error
+	IsPDFUrlExist(pdfUrl string) (bool, error)
 }
 
 // SHOW COMPANY ID AND SUPPLIER ID AS WELL IN THE FRONT-END
