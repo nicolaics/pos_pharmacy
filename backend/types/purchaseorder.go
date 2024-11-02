@@ -87,7 +87,7 @@ type PurchaseOrderListsReturnPayload struct {
 	UserName     string    `json:"userName"`
 	TotalItem    int       `json:"totalItem"`
 	InvoiceDate  time.Time `json:"invoiceDate"`
-	PdfURL              string    `json:"pdfUrl"`
+	PdfURL       string    `json:"pdfUrl"`
 }
 
 type PurchaseOrderDetailPayload struct {
@@ -98,7 +98,7 @@ type PurchaseOrderDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
-	PdfURL              string    `json:"pdfUrl"`
+	PdfURL                 string    `json:"pdfUrl"`
 
 	Supplier struct {
 		ID                  int    `json:"id"`
@@ -121,6 +121,15 @@ type PurchaseOrderDetailPayload struct {
 
 type DeletePurchaseOrder struct {
 	ID int `json:"id" validate:"required"`
+}
+
+type PurchaseOrderPDFPayload struct {
+	Number        int                                `json:"number"`
+	InvoiceDate   time.Time                          `json:"invoiceDate"`
+	UserName      string                             `json:"userName"`
+	MedicineLists []PurchaseOrderMedicineListPayload `json:"purchaseOrderMedicineList"`
+
+	Supplier SupplierInformationReturnPayload `json:"supplier"`
 }
 
 type PurchaseOrder struct {

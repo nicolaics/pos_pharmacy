@@ -69,7 +69,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check supplierID
-	_, err = h.supplierStore.GetSupplierByID(payload.SupplierID)
+	supplier, err := h.supplierStore.GetSupplierByID(payload.SupplierID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", payload.SupplierID))
 		return
@@ -203,6 +203,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				fmt.Errorf("purchase order invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err))
 			return
 		}
+	}
+
+	poiPdf := types.PurchaseOrderPDFPayload{
+		Number: payload.Number,
+		InvoiceDate: *invoiceDate,
+		UserName: user.Name,
+		MedicineLists: payload.MedicineLists,
+		Supplier: *supplier,
+	}
+	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, "")
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
+		return
+	}
+
+	err = h.poInvoiceStore.UpdatePDFUrl(purchaseOrderId, fileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf in database: %v", err))
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase order invoice %d successfully created by %s", payload.Number, user.Name))
@@ -530,6 +549,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check supplier
+	supplier, err := h.supplierStore.GetSupplierByID(payload.NewData.SupplierID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found: %v", payload.NewData.SupplierID, err))
+		return
+	}
+
 	// check if the purchase order invoice exists
 	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByID(payload.ID)
 	if err != nil {
@@ -599,5 +625,24 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("purchase order invoice modified by %s", user.Name))
+	poiPdf := types.PurchaseOrderPDFPayload{
+		Number: payload.NewData.Number,
+		InvoiceDate: *invoiceDate,
+		UserName: user.Name,
+		MedicineLists: payload.NewData.MedicineLists,
+		Supplier: *supplier,
+	}
+	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
+		return
+	}
+
+	err = h.poInvoiceStore.UpdatePDFUrl(purchaseOrder.ID, fileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf in database: %v", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("purchase order invoice modified by %s", user.Name))
 }
