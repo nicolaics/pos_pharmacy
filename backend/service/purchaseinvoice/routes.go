@@ -999,7 +999,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchaseInvoice with id %d doesn't exists", payload.ID))
+			fmt.Errorf("purchase invoice with id %d doesn't exists", payload.ID))
 		return
 	}
 
