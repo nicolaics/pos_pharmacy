@@ -3,6 +3,7 @@ package purchaseorder
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -39,10 +40,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice/purchase-order/detail", h.handleGetPurchaseOrderDetail).Methods(http.MethodPost)
 	router.HandleFunc("/invoice/purchase-order", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice/purchase-order", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/invoice/purchase-order/print", h.handlePrint).Methods(http.MethodPost)
 
 	router.HandleFunc("/invoice/purchase-order", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/purchase-order/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/purchase-order/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/purchase-order/print", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -206,11 +209,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	poiPdf := types.PurchaseOrderPDFPayload{
-		Number: payload.Number,
-		InvoiceDate: *invoiceDate,
-		UserName: user.Name,
+		Number:        payload.Number,
+		InvoiceDate:   *invoiceDate,
+		UserName:      user.Name,
 		MedicineLists: payload.MedicineLists,
-		Supplier: *supplier,
+		Supplier:      *supplier,
 	}
 	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, "")
 	if err != nil {
@@ -381,7 +384,7 @@ func (h *Handler) handleGetPurchaseOrders(w http.ResponseWriter, r *http.Request
 // only view the purchase invoice list
 func (h *Handler) handleGetPurchaseOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewPurchaseOrderItemPayload
+	var payload types.ViewPurchaseOrderDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -626,11 +629,11 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	poiPdf := types.PurchaseOrderPDFPayload{
-		Number: payload.NewData.Number,
-		InvoiceDate: *invoiceDate,
-		UserName: user.Name,
+		Number:        payload.NewData.Number,
+		InvoiceDate:   *invoiceDate,
+		UserName:      user.Name,
 		MedicineLists: payload.NewData.MedicineLists,
-		Supplier: *supplier,
+		Supplier:      *supplier,
 	}
 	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
 	if err != nil {
@@ -645,4 +648,52 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("purchase order invoice modified by %s", user.Name))
+}
+
+func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.ViewPurchaseOrderDetailPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// check if the purchase order exists
+	purchaseInvoice, err := h.poInvoiceStore.GetPurchaseOrderByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("purchase order with id %d doesn't exists", payload.ID))
+		return
+	}
+
+	pdfFile := "static/pdf/purchase-order/" + purchaseInvoice.PdfURL
+
+	file, err := os.Open(pdfFile)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order id %d file not found", payload.ID))
+		return
+	}
+	defer file.Close()
+
+	attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
+
+	http.ServeFile(w, r, pdfFile)
 }
