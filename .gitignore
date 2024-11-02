@@ -3,6 +3,8 @@
 *.sql
 ./migrate/migrations
 bin
+*.pdf
+*.bat
 
 # dependencies
 frontend/node_modules
