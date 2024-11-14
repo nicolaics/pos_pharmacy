@@ -114,8 +114,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		UserID:               user.ID,
 		CustomerID:           payload.CustomerID,
 		Subtotal:             payload.Subtotal,
-		Discount:             payload.Discount,
-		Tax:                  payload.Tax,
+		DiscountPercentage:   payload.DiscountPercentage,
+		DiscountAmount:       payload.DiscountAmount,
+		TaxPercentage:        payload.TaxPercentage,
+		TaxAmount:            payload.TaxAmount,
 		TotalPrice:           payload.TotalPrice,
 		PaidAmount:           payload.PaidAmount,
 		ChangeAmount:         payload.ChangeAmount,
@@ -183,13 +185,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.invoiceStore.CreateMedicineItem(types.InvoiceMedicineItem{
-			InvoiceID:  invoiceId,
-			MedicineID: medData.ID,
-			Qty:        medicine.Qty,
-			UnitID:     unit.ID,
-			Price:      medicine.Price,
-			Discount:   medicine.Discount,
-			Subtotal:   medicine.Subtotal,
+			InvoiceID:          invoiceId,
+			MedicineID:         medData.ID,
+			Qty:                medicine.Qty,
+			UnitID:             unit.ID,
+			Price:              medicine.Price,
+			DiscountPercentage: medicine.DiscountPercentage,
+			DiscountAmount:     medicine.DiscountAmount,
+			Subtotal:           medicine.Subtotal,
 		})
 		if err != nil {
 			errDel := h.invoiceStore.AbsoluteDeleteInvoice(newInvoice)
@@ -220,10 +223,10 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Number:             payload.Number,
 		UserName:           user.Name,
 		Subtotal:           payload.Subtotal,
-		Discount:           payload.Discount,
-		DiscountPercentage: ((payload.Discount / payload.Subtotal) * 100.0),
-		Tax:                payload.Tax,
-		TaxPercentage:      ((payload.Tax / payload.Subtotal) * 100.0),
+		DiscountPercentage: payload.DiscountPercentage,
+		DiscountAmount:     payload.DiscountAmount,
+		TaxPercentage:      payload.TaxPercentage,
+		TaxAmount:          payload.TaxAmount,
 		TotalPrice:         payload.TotalPrice,
 		PaidAmount:         payload.PaidAmount,
 		ChangeAmount:       payload.ChangeAmount,
@@ -413,17 +416,19 @@ func (h *Handler) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
 		}
 
 		invoices = append(invoices, types.InvoiceListsReturnPayload{
-			ID:                invoice.ID,
-			Number:            invoice.Number,
-			UserName:          user.Name,
-			CustomerName:      customer.Name,
-			Subtotal:          invoice.Subtotal,
-			Discount:          invoice.Discount,
-			Tax:               invoice.Tax,
-			TotalPrice:        invoice.TotalPrice,
-			PaymentMethodName: paymentMethod.Name,
-			Description:       invoice.Description,
-			InvoiceDate:       invoice.InvoiceDate,
+			ID:                 invoice.ID,
+			Number:             invoice.Number,
+			UserName:           user.Name,
+			CustomerName:       customer.Name,
+			Subtotal:           invoice.Subtotal,
+			DiscountPercentage: invoice.DiscountPercentage,
+			DiscountAmount:     invoice.DiscountAmount,
+			TaxPercentage:      invoice.TaxPercentage,
+			TaxAmount:          invoice.TaxAmount,
+			TotalPrice:         invoice.TotalPrice,
+			PaymentMethodName:  paymentMethod.Name,
+			Description:        invoice.Description,
+			InvoiceDate:        invoice.InvoiceDate,
 		})
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
@@ -550,8 +555,10 @@ func (h *Handler) handleGetInvoiceDetail(w http.ResponseWriter, r *http.Request)
 		ID:                     invoice.ID,
 		Number:                 invoice.Number,
 		Subtotal:               invoice.Subtotal,
-		Discount:               invoice.Discount,
-		Tax:                    invoice.Tax,
+		DiscountPercentage:     invoice.DiscountPercentage,
+		DiscountAmount:         invoice.DiscountAmount,
+		TaxPercentage:          invoice.TaxPercentage,
+		TaxAmount:              invoice.TaxAmount,
 		TotalPrice:             invoice.TotalPrice,
 		PaidAmount:             invoice.PaidAmount,
 		ChangeAmount:           invoice.ChangeAmount,
@@ -716,8 +723,10 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Number:               payload.NewData.Number,
 		CustomerID:           payload.NewData.CustomerID,
 		Subtotal:             payload.NewData.Subtotal,
-		Discount:             payload.NewData.Discount,
-		Tax:                  payload.NewData.Tax,
+		DiscountPercentage:   payload.NewData.DiscountPercentage,
+		DiscountAmount:       payload.NewData.DiscountAmount,
+		TaxPercentage:        payload.NewData.TaxPercentage,
+		TaxAmount:            payload.NewData.TaxAmount,
 		TotalPrice:           payload.NewData.TotalPrice,
 		PaidAmount:           payload.NewData.PaidAmount,
 		ChangeAmount:         payload.NewData.ChangeAmount,
@@ -784,13 +793,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = h.invoiceStore.CreateMedicineItem(types.InvoiceMedicineItem{
-			InvoiceID:  payload.ID,
-			MedicineID: medData.ID,
-			Qty:        medicine.Qty,
-			UnitID:     unit.ID,
-			Price:      medicine.Price,
-			Discount:   medicine.Discount,
-			Subtotal:   medicine.Subtotal,
+			InvoiceID:          payload.ID,
+			MedicineID:         medData.ID,
+			Qty:                medicine.Qty,
+			UnitID:             unit.ID,
+			Price:              medicine.Price,
+			DiscountPercentage: medicine.DiscountPercentage,
+			DiscountAmount:     medicine.DiscountAmount,
+			Subtotal:           medicine.Subtotal,
 		})
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
@@ -809,10 +819,10 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Number:             invoice.Number,
 		UserName:           user.Name,
 		Subtotal:           payload.NewData.Subtotal,
-		Discount:           payload.NewData.Discount,
-		DiscountPercentage: ((payload.NewData.Discount / payload.NewData.Subtotal) * 100.0),
-		Tax:                payload.NewData.Tax,
-		TaxPercentage:      ((payload.NewData.Tax / payload.NewData.Subtotal) * 100.0),
+		DiscountPercentage: payload.NewData.DiscountPercentage,
+		DiscountAmount:     payload.NewData.DiscountAmount,
+		TaxPercentage:      payload.NewData.TaxPercentage,
+		TaxAmount:          payload.NewData.TaxAmount,
 		TotalPrice:         payload.NewData.TotalPrice,
 		PaidAmount:         payload.NewData.PaidAmount,
 		ChangeAmount:       payload.NewData.ChangeAmount,
@@ -948,7 +958,6 @@ func (h *Handler) handlePrintReceipt(w http.ResponseWriter, r *http.Request) {
 	pdfFile := "static/pdf/invoice/receipt/" + invoice.ReceiptPDFUrl.String
 
 	// TODO: update the database with the pdf file
-
 
 	file, err := os.Open(pdfFile)
 	if err != nil {

@@ -104,8 +104,10 @@ func (s *Store) GetInvoicesByNumber(number int) ([]types.Invoice, error) {
 func (s *Store) GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]types.InvoiceListsReturnPayload, error) {
 	query := `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -159,8 +161,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 	if count == 0 {
 		query = `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -199,8 +203,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 
 	query = `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -234,8 +240,10 @@ func (s *Store) GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Tim
 func (s *Store) GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]types.InvoiceListsReturnPayload, error) {
 	query := `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -269,8 +277,10 @@ func (s *Store) GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Tim
 func (s *Store) GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]types.InvoiceListsReturnPayload, error) {
 	query := `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -305,8 +315,10 @@ func (s *Store) GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time
 func (s *Store) GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]types.InvoiceListsReturnPayload, error) {
 	query := `SELECT invoice.id, invoice.number, 
 					user.name, customer.name, 
-					invoice.subtotal, invoice.discount, 
-					invoice.tax, invoice.total_price, 
+					invoice.subtotal, 
+					invoice.discount_percentage, invoice.discount_amount, 
+					invoice.tax_percentage, invoice.tax_amount, 
+					invoice.total_price, 
 					payment_method.name, 
 					invoice.description, invoice.invoice_date 
 					FROM invoice 
@@ -356,22 +368,22 @@ func (s *Store) GetNumberOfInvoices(startDate time.Time, endDate time.Time) (int
 
 func (s *Store) CreateInvoice(invoice types.Invoice) error {
 	values := "?"
-	for i := 0; i < 12; i++ {
+	for i := 0; i < 14; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO invoice (
-			number, user_id, customer_id, subtotal, discount, tax, 
-			total_price, paid_amount, change_amount, payment_method_id, description, 
-			invoice_date, last_modified_by_user_id
+			number, user_id, customer_id, subtotal, discount_percentage, discount_amount, 
+			tax_percentage, tax_amount, total_price, paid_amount, change_amount, 
+			payment_method_id, description, invoice_date, last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		invoice.Number, invoice.UserID, invoice.CustomerID,
-		invoice.Subtotal, invoice.Discount, invoice.Tax,
-		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
-		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
-		invoice.LastModifiedByUserID)
+		invoice.Subtotal, invoice.DiscountPercentage, invoice.DiscountAmount,
+		invoice.TaxPercentage, invoice.TaxAmount, invoice.TotalPrice,
+		invoice.PaidAmount, invoice.ChangeAmount, invoice.PaymentMethodID,
+		invoice.Description, invoice.InvoiceDate, invoice.LastModifiedByUserID)
 	if err != nil {
 		return err
 	}
@@ -381,17 +393,18 @@ func (s *Store) CreateInvoice(invoice types.Invoice) error {
 
 func (s *Store) CreateMedicineItem(medicineItem types.InvoiceMedicineItem) error {
 	values := "?"
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO medicine_item (
-		invoice_id, medicine_id, qty, unit_id, price, discount, subtotal
+		invoice_id, medicine_id, qty, unit_id, price, 
+		discount_percentage, discount_amount, subtotal
 	) VALUES (` + values + `)`
 	_, err := s.db.Exec(query,
 		medicineItem.InvoiceID, medicineItem.MedicineID, medicineItem.Qty,
-		medicineItem.UnitID, medicineItem.Price, medicineItem.Discount,
-		medicineItem.Subtotal)
+		medicineItem.UnitID, medicineItem.Price, medicineItem.DiscountPercentage,
+		medicineItem.DiscountAmount, medicineItem.Subtotal)
 	if err != nil {
 		return err
 	}
@@ -405,7 +418,7 @@ func (s *Store) GetMedicineItem(invoiceId int) ([]types.InvoiceMedicineItemRetur
 				medicine.barcode, medicine.name, 
 				mi.qty, 
 				unit.name, 
-				mi.price, mi.discount, mi.subtotal 
+				mi.price, mi.discount_percentage, mi_discount_amount, mi.subtotal 
 				FROM medicine_item as mi 
 				JOIN invoice ON mi.invoice_id = invoice.id 
 				JOIN medicine ON mi.medicine_id = medicine.id 
@@ -493,15 +506,18 @@ func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice, user *types.
 	}
 
 	query := `UPDATE invoice SET 
-			number = ?, user_id = ?, customer_id = ?, subtotal = ?, discount = ?, 
-			tax = ?, total_price = ?, paid_amount = ?, change_amount = ?, 
+			number = ?, user_id = ?, customer_id = ?, subtotal = ?, 
+			discount_percentage = ?, discount_amount = ?, 
+			tax_percentage = ?, tax_amount = ?, 
+			total_price = ?, paid_amount = ?, change_amount = ?, 
 			payment_method_id = ?, description = ?, invoice_date = ?, last_modified = ?,
 			last_modified_by_user_id = ? 
 			WHERE id = ? AND deleted_at IS NULL`
 
 	_, err = s.db.Exec(query,
 		invoice.Number, invoice.UserID, invoice.CustomerID,
-		invoice.Subtotal, invoice.Discount, invoice.Tax,
+		invoice.Subtotal, invoice.DiscountPercentage, invoice.DiscountAmount,
+		invoice.TaxPercentage, invoice.TaxAmount,
 		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
 		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate,
 		time.Now(), invoice.LastModifiedByUserID, invoiceId)
@@ -542,7 +558,7 @@ func (s *Store) IsPDFUrlExist(fileName string) (bool, error) {
 }
 
 func (s *Store) UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error {
-	query := `UPDATE invoice SET print_receipt = ? WHERE id = ?`
+	query := `UPDATE invoice SET receipt_pdf_url = ? WHERE id = ?`
 	_, err := s.db.Exec(query, receiptPdfUrl, invoiceId)
 	if err != nil {
 		return err
@@ -553,13 +569,18 @@ func (s *Store) UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error {
 
 func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
 	query := `SELECT id FROM invoice WHERE number = ? AND user_id = ? 
-				AND customer_id = ? AND subtotal = ? AND discount = ? 
-				AND tax = ? AND total_price = ? AND paid_amount = ? 
+				AND customer_id = ? AND subtotal = ? 
+				AND discount_percentage = ? AND discount_amount = ? 
+				AND tax_percentage = ? AND tax_amount = ? 
+				AND total_price = ? AND paid_amount = ? 
 				AND change_amount = ? AND payment_method_id = ? 
 				AND description = ? AND invoice_date = ?`
 
-	rows, err := s.db.Query(query, invoice.Number, invoice.UserID, invoice.CustomerID, invoice.Subtotal, invoice.Discount,
-		invoice.Tax, invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
+	rows, err := s.db.Query(query, invoice.Number, invoice.UserID,
+		invoice.CustomerID, invoice.Subtotal,
+		invoice.DiscountPercentage, invoice.DiscountAmount,
+		invoice.TaxPercentage, invoice.TaxAmount,
+		invoice.TotalPrice, invoice.PaidAmount, invoice.ChangeAmount,
 		invoice.PaymentMethodID, invoice.Description, invoice.InvoiceDate)
 	if err != nil {
 		return err
@@ -597,8 +618,10 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		&invoice.UserID,
 		&invoice.CustomerID,
 		&invoice.Subtotal,
-		&invoice.Discount,
-		&invoice.Tax,
+		&invoice.DiscountPercentage,
+		&invoice.DiscountAmount,
+		&invoice.TaxPercentage,
+		&invoice.TaxAmount,
 		&invoice.TotalPrice,
 		&invoice.PaidAmount,
 		&invoice.ChangeAmount,
@@ -634,8 +657,10 @@ func scanRowIntoInvoiceLists(rows *sql.Rows) (*types.InvoiceListsReturnPayload, 
 		&invoice.UserName,
 		&invoice.CustomerName,
 		&invoice.Subtotal,
-		&invoice.Discount,
-		&invoice.Tax,
+		&invoice.DiscountPercentage,
+		&invoice.DiscountAmount,
+		&invoice.TaxPercentage,
+		&invoice.TaxAmount,
 		&invoice.TotalPrice,
 		&invoice.PaymentMethodName,
 		&invoice.Description,
@@ -661,7 +686,8 @@ func scanRowIntoMedicineItem(rows *sql.Rows) (*types.InvoiceMedicineItemReturnPa
 		&medicineItem.Qty,
 		&medicineItem.Unit,
 		&medicineItem.Price,
-		&medicineItem.Discount,
+		&medicineItem.DiscountPercentage,
+		&medicineItem.DiscountAmount,
 		&medicineItem.Subtotal,
 	)
 

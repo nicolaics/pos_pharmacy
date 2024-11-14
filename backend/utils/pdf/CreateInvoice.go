@@ -367,8 +367,7 @@ func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64, medicineLists 
 
 		pdf.SetXY(startX["discount"], startY)
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_TABLE_DATA_FONT_SZ)
-		discountInPercentage := (medicine.Discount / medicine.Price) * 100
-		discountString := printer.Sprintf("%.1f", discountInPercentage)
+		discountString := printer.Sprintf("%.1f", medicine.DiscountPercentage)
 		pdf.CellFormat(constants.INVOICE_DISC_COL_WIDTH, constants.INVOICE_TABLE_HEIGHT, discountString, "", 0, "C", false, 0, "")
 
 		pdf.SetXY(startX["subtotal"], startY)
@@ -430,7 +429,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, discountPercentageString, "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		discountString := printer.Sprintf("Rp. %.1f", invoice.Discount)
+		discountString := printer.Sprintf("Rp. %.1f", invoice.DiscountAmount)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, discountString, "", 1, "L", false, 0, "")
 	}
 
@@ -443,7 +442,7 @@ func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY
 		pdf.CellFormat(cellWidth, constants.INVOICE_FOOTER_CELL_HEIGHT, taxPercentageString, "", 0, "R", false, 0, "")
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.INVOICE_FOOTER_FONT_SZ)
-		taxString := printer.Sprintf("Rp. %.1f", invoice.Tax)
+		taxString := printer.Sprintf("Rp. %.1f", invoice.TaxAmount)
 		pdf.CellFormat(0, constants.INVOICE_FOOTER_CELL_HEIGHT, taxString, "", 1, "L", false, 0, "")
 	}
 
