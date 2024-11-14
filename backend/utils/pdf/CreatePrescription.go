@@ -1,4 +1,4 @@
-package utils
+package pdf
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
 	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pos_pharmacy/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -84,14 +85,14 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
     fileName := prevFileName
     
     if prevFileName == "" {
-        fileName = "p-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+        fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
         isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
         if err != nil {
             return "", err
         }
 
         for isExist {
-            fileName = "p-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+            fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
             isExist, err = prescStore.IsPDFUrlExist("prescription", fileName)
             if err != nil {
                 return "", err

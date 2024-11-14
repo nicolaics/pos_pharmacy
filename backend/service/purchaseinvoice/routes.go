@@ -11,6 +11,7 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pos_pharmacy/utils/pdf"
 )
 
 type Handler struct {
@@ -373,7 +374,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create pdf
-	fileName, err := utils.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
+	fileName, err := pdf.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
 		return
@@ -891,7 +892,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// create pdf
-		fileName, err := utils.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
+		fileName, err := pdf.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
 			return

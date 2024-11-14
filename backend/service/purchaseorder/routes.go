@@ -11,6 +11,7 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pos_pharmacy/utils/pdf"
 )
 
 type Handler struct {
@@ -215,7 +216,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		MedicineLists: payload.MedicineLists,
 		Supplier:      *supplier,
 	}
-	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, "")
+	fileName, err := pdf.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
 		return
@@ -635,7 +636,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		MedicineLists: payload.NewData.MedicineLists,
 		Supplier:      *supplier,
 	}
-	fileName, err := utils.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
+	fileName, err := pdf.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
 		return

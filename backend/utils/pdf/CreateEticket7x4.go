@@ -1,4 +1,4 @@
-package utils
+package pdf
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/go-pdf/fpdf"
 	"github.com/nicolaics/pos_pharmacy/constants"
 	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pos_pharmacy/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -24,7 +25,7 @@ func CreateEticket7x4PDF(eticket types.EticketPDFReturnPayload, setNumber int, p
 		return "", err
 	}
 
-	pdf, err := initEticketPdf()
+	pdf, err := initEticket7x4Pdf()
 	if err != nil {
 		return "", err
 	}
@@ -34,14 +35,14 @@ func CreateEticket7x4PDF(eticket types.EticketPDFReturnPayload, setNumber int, p
 		return "", err
 	}
 
-	fileName := "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+	fileName := "e-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
 	isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
 	if err != nil {
 		return "", err
 	}
 
 	for isExist {
-		fileName = "e-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+		fileName = "e-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
 		isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
 		if err != nil {
 			return "", err
@@ -56,7 +57,7 @@ func CreateEticket7x4PDF(eticket types.EticketPDFReturnPayload, setNumber int, p
 	return fileName, nil
 }
 
-func initEticketPdf() (*fpdf.Fpdf, error) {
+func initEticket7x4Pdf() (*fpdf.Fpdf, error) {
 	s, _ := filepath.Abs("static/assets/font/")
 
 	pdf := fpdf.NewCustom(&fpdf.InitType{

@@ -1,4 +1,4 @@
-package utils
+package pdf
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/constants"
 	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pos_pharmacy/utils"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
@@ -122,14 +123,14 @@ func CreatePurchaseOrderInvoicePDF(poiStore types.PurchaseOrderStore, poi types.
 	fileName := prevFileName
 
 	if prevFileName == "" {
-		fileName := "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+		fileName := "poi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
 		isExist, err := poiStore.IsPDFUrlExist(fileName)
 		if err != nil {
 			return "", err
 		}
 
 		for isExist {
-			fileName = "i-" + GenerateRandomCodeAlphanumeric(8) + "-" + GenerateRandomCodeAlphanumeric(8) + ".pdf"
+			fileName = "poi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
 			isExist, err = poiStore.IsPDFUrlExist(fileName)
 			if err != nil {
 				return "", err
