@@ -89,13 +89,14 @@ type PrescriptionSetItemPayload struct {
 }
 
 type PrescriptionMedicineListPayload struct {
-	MedicineBarcode string  `json:"medicineBarcode" validate:"required"`
-	MedicineName    string  `json:"medicineName" validate:"required"`
-	Qty             string  `json:"qty" validate:"required"`
-	Unit            string  `json:"unit" validate:"required"`
-	Price           float64 `json:"price" validate:"required"`
-	Discount        float64 `json:"discount"`
-	Subtotal        float64 `json:"subtotal" validate:"required"`
+	MedicineBarcode    string  `json:"medicineBarcode" validate:"required"`
+	MedicineName       string  `json:"medicineName" validate:"required"`
+	Qty                string  `json:"qty" validate:"required"`
+	Unit               string  `json:"unit" validate:"required"`
+	Price              float64 `json:"price" validate:"required"`
+	DiscountPercentage float64 `json:"discountPercentage"`
+	DiscountAmount     float64 `json:"discountAmount"`
+	Subtotal           float64 `json:"subtotal" validate:"required"`
 }
 
 // prescription list payload returned to user after searching
@@ -191,24 +192,26 @@ type PrescriptionSetItemReturn struct {
 
 // data of the medicine per row in the prescription
 type PrescriptionMedicineItemReturn struct {
-	MedicineBarcode string  `json:"medicineBarcode"`
-	MedicineName    string  `json:"medicineName"`
-	QtyString       string  `json:"qtyString"`
-	QtyFloat        float64 `json:"qtyFloat"`
-	Unit            string  `json:"unit"`
-	Price           float64 `json:"price"`
-	Discount        float64 `json:"discount"`
-	Subtotal        float64 `json:"subtotal"`
+	MedicineBarcode    string  `json:"medicineBarcode"`
+	MedicineName       string  `json:"medicineName"`
+	QtyString          string  `json:"qtyString"`
+	QtyFloat           float64 `json:"qtyFloat"`
+	Unit               string  `json:"unit"`
+	Price              float64 `json:"price"`
+	DiscountPercentage float64 `json:"discountPercentage"`
+	DiscountAmount     float64 `json:"discountAmount"`
+	Subtotal           float64 `json:"subtotal"`
 }
 
 type PrescriptionMedicineItemTemp struct {
-	MedicineBarcode string  `json:"medicineBarcode"`
-	MedicineName    string  `json:"medicineName"`
-	Qty             float64 `json:"qty"`
-	Unit            string  `json:"unit"`
-	Price           float64 `json:"price"`
-	Discount        float64 `json:"discount"`
-	Subtotal        float64 `json:"subtotal"`
+	MedicineBarcode    string  `json:"medicineBarcode"`
+	MedicineName       string  `json:"medicineName"`
+	Qty                float64 `json:"qty"`
+	Unit               string  `json:"unit"`
+	Price              float64 `json:"price"`
+	DiscountPercentage float64 `json:"discountPercentage"`
+	DiscountAmount     float64 `json:"discountAmount"`
+	Subtotal           float64 `json:"subtotal"`
 }
 
 type DeletePrescription struct {
@@ -222,7 +225,8 @@ type PrescriptionMedicineItem struct {
 	Qty                   float64 `json:"qty"`
 	UnitID                int     `json:"unitId"`
 	Price                 float64 `json:"price"`
-	Discount              float64 `json:"discount"`
+	DiscountPercentage    float64 `json:"discountPercentage"`
+	DiscountAmount        float64 `json:"discountAmount"`
 	Subtotal              float64 `json:"subtotal"`
 }
 

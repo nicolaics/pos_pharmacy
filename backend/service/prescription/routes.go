@@ -526,7 +526,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				Qty:                   medicineQty,
 				UnitID:                unit.ID,
 				Price:                 medicine.Price,
-				Discount:              medicine.Discount,
+				DiscountPercentage:    medicine.DiscountPercentage,
+				DiscountAmount:        medicine.DiscountAmount,
 				Subtotal:              medicine.Subtotal,
 			}
 			err = h.prescriptionStore.CreatePrescriptionMedicineItem(medicineItem)
@@ -1369,7 +1370,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			
+
 			var eticketFileName string
 			if setItem.Eticket.Size == "7x4" {
 				eticketFileName, err = pdf.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
@@ -1432,7 +1433,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				Qty:                   medicineQty,
 				UnitID:                unit.ID,
 				Price:                 medicine.Price,
-				Discount:              medicine.Discount,
+				DiscountPercentage:    medicine.DiscountPercentage,
+				DiscountAmount:        medicine.DiscountAmount,
 				Subtotal:              medicine.Subtotal,
 			}
 			err = h.prescriptionStore.CreatePrescriptionMedicineItem(medicineItem)

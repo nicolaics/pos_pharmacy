@@ -439,19 +439,19 @@ func (s *Store) CreateSetItem(medicineSet types.PrescriptionSetItem) error {
 
 func (s *Store) CreatePrescriptionMedicineItem(prescMedItem types.PrescriptionMedicineItem) error {
 	values := "?"
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO prescription_medicine_item (
 				prescription_set_item_id, medicine_id, qty, unit_id, 
-				price, discount, subtotal
+				price, discount_percentage, discount_amount, subtotal
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		prescMedItem.PrescriptionSetItemID, prescMedItem.MedicineID,
 		prescMedItem.Qty, prescMedItem.UnitID, prescMedItem.Price,
-		prescMedItem.Discount, prescMedItem.Subtotal)
+		prescMedItem.DiscountPercentage, prescMedItem.DiscountAmount, prescMedItem.Subtotal)
 	if err != nil {
 		return err
 	}
@@ -464,7 +464,7 @@ func (s *Store) GetPrescriptionMedicineItems(prescriptionSetItemId int) ([]types
 			medicine.barcode, medicine.name, 
 			pmi.qty, 
 			unit.name, 
-			pmi.price, pmi.discount, pmi.subtotal 
+			pmi.price, pmi.discount_percentage, pmi.discount_amount, pmi.subtotal 
 			
 			FROM prescription_medicine_item as pmi 
 			JOIN prescription_set_item as psi ON pmi.prescription_set_item_id = psi.id 
@@ -499,14 +499,15 @@ func (s *Store) GetPrescriptionMedicineItems(prescriptionSetItemId int) ([]types
 		}
 
 		prescMedItems = append(prescMedItems, types.PrescriptionMedicineItemReturn{
-			MedicineBarcode: prescMedItem.MedicineBarcode,
-			MedicineName:    prescMedItem.MedicineName,
-			QtyString:       qty,
-			QtyFloat:        prescMedItem.Qty,
-			Unit:            prescMedItem.Unit,
-			Price:           prescMedItem.Price,
-			Discount:        prescMedItem.Discount,
-			Subtotal:        prescMedItem.Subtotal,
+			MedicineBarcode:    prescMedItem.MedicineBarcode,
+			MedicineName:       prescMedItem.MedicineName,
+			QtyString:          qty,
+			QtyFloat:           prescMedItem.Qty,
+			Unit:               prescMedItem.Unit,
+			Price:              prescMedItem.Price,
+			DiscountPercentage: prescMedItem.DiscountPercentage,
+			DiscountAmount:     prescMedItem.DiscountAmount,
+			Subtotal:           prescMedItem.Subtotal,
 		})
 	}
 
@@ -673,12 +674,13 @@ func (s *Store) GetPrescriptionMedicineItemID(prescMedItem types.PrescriptionMed
 	query := `SELECT id FROM prescription_medicine_item 
 				WHERE prescription_set_item_id = ? AND medicine_id = ? 
 				AND qty = ? AND unit_id = ? 
-				AND price = ? AND discount = ? AND subtotal = ?`
+				AND price = ? AND discount_percentage = ? AND discount_amount = ? 
+				AND subtotal = ?`
 
 	rows, err := s.db.Query(query,
 		prescMedItem.PrescriptionSetItemID, prescMedItem.MedicineID,
 		prescMedItem.Qty, prescMedItem.UnitID, prescMedItem.Price,
-		prescMedItem.Discount, prescMedItem.Subtotal)
+		prescMedItem.DiscountPercentage, prescMedItem.DiscountAmount, prescMedItem.Subtotal)
 	if err != nil {
 		return 0, err
 	}
@@ -1133,7 +1135,8 @@ func scanRowIntoPrescriptionMedicineItem(rows *sql.Rows) (*types.PrescriptionMed
 		&prescMedItem.Qty,
 		&prescMedItem.Unit,
 		&prescMedItem.Price,
-		&prescMedItem.Discount,
+		&prescMedItem.DiscountPercentage,
+		&prescMedItem.DiscountAmount,
 		&prescMedItem.Subtotal,
 	)
 
