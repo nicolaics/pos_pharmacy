@@ -42,19 +42,19 @@ func initConfig() Config {
 		DBPassword: getEnv("DB_PASSWORD", ""),
 		DBAddress: fmt.Sprintf("%s:%s", getEnv("DB_HOST", "127.0.0.1"),
 			getEnv("DB_PORT", "3306")),
-		DBName:                     getEnv("DB_NAME", "pos_pharmacy"),
+		DBName:                     getEnv("DB_NAME", "pos_test"),
 		JWTExpirationInSeconds:     getEnvAsInt("JWT_EXP", (3600 * 12)), // for 12 hours
 		JWTSecret:                  getEnv("JWT_SECRET", "access-secret"),
 		CompanyName:                getEnv("COMPANY_NAME", "Apotek"),
 		Pharmacist:                 getEnv("PHARMACIST", ""),
 		PharmacistLicenseNumber:    getEnv("PHARMACIST_LICENSE_NUMBER", ""),
-		MainDoctor:                 getEnv("MAIN_DOCTOR", "Justus Kadirman"),
+		MainDoctor:                 getEnv("MAIN_DOCTOR", ""),
 		MainDoctorLicenseNumber:    getEnv("MAIN_DOCTOR_LICENSE_NUMBER", ""),
 		BusinessRegistrationNumber: getEnv("BUSINESS_REGISTRATION_NUMBER", ""),
 		CompanyAddress:             getEnv("COMPANY_ADDRESS", ""),
 		CompanyPhoneNumber:         getEnv("COMPANY_PHONE_NUMBER", ""),
 		CompanyWhatsAppNumber:      getEnv("COMPANY_WHATSAPP_NUMBER", ""),
-		CompanyLogoURL:             getEnv("COMPANY_LOGO_URL", ""),
+		CompanyLogoURL:             getEnv("COMPANY_LOGO_URL", "static/assets/logo/Logo.png"),
 		CompanySlogan:              getEnv("COMPANY_SLOGAN", ""),
 	}
 }
