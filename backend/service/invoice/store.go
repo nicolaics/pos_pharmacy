@@ -541,6 +541,16 @@ func (s *Store) IsPDFUrlExist(fileName string) (bool, error) {
 	return (count > 0), nil
 }
 
+func (s *Store) UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error {
+	query := `UPDATE invoice SET print_receipt = ? WHERE id = ?`
+	_, err := s.db.Exec(query, receiptPdfUrl, invoiceId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Store) AbsoluteDeleteInvoice(invoice types.Invoice) error {
 	query := `SELECT id FROM invoice WHERE number = ? AND user_id = ? 
 				AND customer_id = ? AND subtotal = ? AND discount = ? 
@@ -599,6 +609,7 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		&invoice.LastModified,
 		&invoice.LastModifiedByUserID,
 		&invoice.PDFUrl,
+		&invoice.ReceiptPDFUrl,
 		&invoice.DeletedAt,
 		&invoice.DeletedByUserID,
 	)

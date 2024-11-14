@@ -46,11 +46,13 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/invoice", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/invoice", h.handleModify).Methods(http.MethodPatch)
 	router.HandleFunc("/invoice/print", h.handlePrint).Methods(http.MethodPost)
+	router.HandleFunc("/invoice/print-receipt", h.handlePrintReceipt).Methods(http.MethodPost)
 
 	router.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/invoice/print", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/invoice/print-receipt", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -893,6 +895,64 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	file, err := os.Open(pdfFile)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d file not found", payload.InvoiceID))
+		return
+	}
+	defer file.Close()
+
+	attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
+
+	http.ServeFile(w, r, pdfFile)
+}
+
+func (h *Handler) handlePrintReceipt(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.PrintReceiptPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// check if the invoice exists
+	invoice, err := h.invoiceStore.GetInvoiceByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("invoice with id %d doesn't exists", payload.ID))
+		return
+	}
+
+	if invoice.ReceiptPDFUrl.Valid {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("receipt for this invoice has been issued"))
+		return
+	}
+
+	// TODO: create the pdf files here
+
+	pdfFile := "static/pdf/invoice/receipt/" + invoice.ReceiptPDFUrl.String
+
+	// TODO: update the database with the pdf file
+
+
+	file, err := os.Open(pdfFile)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d file not found", payload.ID))
 		return
 	}
 	defer file.Close()
