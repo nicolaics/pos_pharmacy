@@ -84,6 +84,7 @@ type PrescriptionSetItemPayload struct {
 	Eticket       struct {
 		Number      int     `json:"number"`
 		MedicineQty float64 `json:"medicineQty"`
+		Size        string  `json:"size"`
 	} `json:"eticket"`
 }
 
@@ -264,6 +265,7 @@ type Eticket struct {
 	PrescriptionSetItemID int       `json:"prescriptionSetItemId"`
 	Number                int       `json:"number"`
 	MedicineQty           float64   `json:"medicineQty"`
+	Size                  string    `json:"size"`
 	PDFUrl                string    `json:"pdfUrl"`
 	CreatedAt             time.Time `json:"createdAt"`
 }

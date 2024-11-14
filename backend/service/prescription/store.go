@@ -777,10 +777,10 @@ func (s *Store) GetSetItemID(medicineSet types.PrescriptionSetItem) (int, error)
 
 func (s *Store) CreateEticket(eticket types.Eticket) error {
 	query := `INSERT INTO eticket 
-				(prescription_id, prescription_set_item_id, number, medicine_qty, pdf_url) 
-				VALUES (?, ?, ?, ?, ?)`
+				(prescription_id, prescription_set_item_id, number, medicine_qty, size, pdf_url) 
+				VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := s.db.Exec(query, eticket.PrescriptionID, eticket.PrescriptionSetItemID,
-		eticket.Number, eticket.MedicineQty, eticket.PDFUrl)
+		eticket.Number, eticket.MedicineQty, eticket.Size, eticket.PDFUrl)
 	if err != nil {
 		return err
 	}
@@ -1153,6 +1153,7 @@ func scanRowIntoEticket(rows *sql.Rows) (*types.Eticket, error) {
 		&eticket.PrescriptionSetItemID,
 		&eticket.Number,
 		&eticket.MedicineQty,
+		&eticket.Size,
 		&eticket.PDFUrl,
 		&eticket.CreatedAt,
 	)

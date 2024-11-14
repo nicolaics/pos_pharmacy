@@ -17,6 +17,7 @@ import (
 	// "github.com/nicolaics/pos_pharmacy/config"
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pos_pharmacy/utils/pdf"
 )
 
 type Handler struct {
@@ -381,6 +382,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
+				Size:                  setItem.Eticket.Size,
 				PDFUrl:                "",
 			}
 
@@ -431,9 +433,22 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err := utils.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+
+			var eticketFileName string
+			if setItem.Eticket.Size == "7x4" {
+				eticketFileName, err = pdf.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
+				if err != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+					return
+				}
+			} else if setItem.Eticket.Size == "7x5" {
+				eticketFileName, err = pdf.CreateEticket7x5PDF(eticketPDF, setNumber, h.prescriptionStore)
+				if err != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+					return
+				}
+			} else {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size))
 				return
 			}
 
@@ -560,7 +575,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
-	prescFileName, err := utils.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
+	prescFileName, err := pdf.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
 		return
@@ -1317,6 +1332,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				PrescriptionSetItemID: setItemStoreId,
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
+				Size:                  setItem.Eticket.Size,
 				PDFUrl:                "",
 			}
 			err = h.prescriptionStore.CreateEticket(eticket)
@@ -1353,9 +1369,22 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				MustFinish:  setItem.MustFinish,
 				MedicineQty: setItem.Eticket.MedicineQty,
 			}
-			eticketFileName, err := utils.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+			
+			var eticketFileName string
+			if setItem.Eticket.Size == "7x4" {
+				eticketFileName, err = pdf.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
+				if err != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+					return
+				}
+			} else if setItem.Eticket.Size == "7x5" {
+				eticketFileName, err = pdf.CreateEticket7x5PDF(eticketPDF, setNumber, h.prescriptionStore)
+				if err != nil {
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
+					return
+				}
+			} else {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size))
 				return
 			}
 
@@ -1434,7 +1463,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
-	prescFileName, err := utils.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, prescription.PDFUrl)
+	prescFileName, err := pdf.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, prescription.PDFUrl)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
 		return
