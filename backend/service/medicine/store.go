@@ -45,13 +45,19 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 func (s *Store) GetMedicineByID(id int) (*types.MedicineListsReturnPayload, error) {
 	query := `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -129,13 +135,19 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 	if count == 0 {
 		query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount,
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -176,13 +188,19 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 
 	query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -231,13 +249,19 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 	if count == 0 {
 		query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -278,13 +302,19 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 
 	query = `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -317,13 +347,19 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineListsReturnPayload, error) {
 	query := `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -364,22 +400,27 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 
 func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 	values := "?"
-	for i := 0; i < 18; i++ {
+	for i := 0; i < 20; i++ {
 		values += ", ?"
 	}
 
 	query := `INSERT INTO medicine (
-		barcode, name, qty, first_unit_id, first_subtotal, first_discount, first_price, 
-		second_unit_id, second_unit_to_first_unit_ratio, second_subtotal, second_discount, second_price, 
-		third_unit_id, third_unit_to_first_unit_ratio, third_subtotal, third_discount, third_price, description, 
+		barcode, name, qty, first_unit_id, first_subtotal, first_discount_percentage, 
+		first_discount_amount, first_price, second_unit_id, second_unit_to_first_unit_ratio, 
+		second_subtotal, second_discount_percentage, second_discount_amount, second_price, 
+		third_unit_id, third_unit_to_first_unit_ratio, third_subtotal, 
+		third_discount_percentage, third_discount_amount, third_price, description, 
 		last_modified_by_user_id
 	) VALUES (` + values + `)`
 
 	_, err := s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
-		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
-		med.SecondUnitID, med.SecondUnitToFirstUnitRatio, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
-		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage, 
+		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID, 
+		med.SecondUnitToFirstUnitRatio, med.SecondSubtotal, 
+		med.SecondDiscountPercentage, med.SecondDiscountAmount, med.SecondPrice,
+		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal, 
+		med.ThirdDiscountPercentage, med.ThirdDiscountAmount, med.ThirdPrice,
 		med.Description, userId)
 	if err != nil {
 		return err
@@ -391,13 +432,19 @@ func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 func (s *Store) GetAllMedicines() ([]types.MedicineListsReturnPayload, error) {
 	query := `SELECT med.id, med.barcode, med.name, med.qty, 
 					uot.name AS unit_one, 
-					med.first_discount, med.first_price, 
+					med.first_discount_percentage, 
+					med.first_discount_amount, 
+					med.first_price, 
 					utt.name AS unit_two, 
 					med.second_unit_to_first_unit_ratio, 
-					med.second_discount, med.second_price, 
+					med.second_discount_percentage, 
+					med.second_discount_amount, 
+					med.second_price, 
 					utht.name AS unit_three, 
 					med.third_unit_to_first_unit_ratio, 
-					med.third_discount, med.third_price, 
+					med.third_discount_percentage, 
+					med.third_discount_amount, 
+					med.third_price, 
 					med.description, med.created_at, 
 					med.last_modified, user.name 
 					FROM medicine AS med 
@@ -476,17 +523,23 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, user *types.User) er
 
 	query := `UPDATE medicine SET 
 		barcode = ?, name = ?, qty = ?, 
-		first_unit_id = ?, first_subtotal = ?, first_discount = ?, first_price = ?, 
-		second_unit_id = ?, second_unit_to_first_unit_ratio = ?, second_subtotal = ?, second_discount = ?, second_price = ?, 
-		third_unit_id = ?, third_unit_to_first_unit_ratio = ?, third_subtotal = ?, third_discount = ?, third_price = ?, description = ?, 
-		last_modified = ?, last_modified_by_user_id = ?
+		first_unit_id = ?, first_subtotal = ?, first_discount_percentage = ?, 
+		first_discount_amount = ?, first_price = ?, second_unit_id = ?, 
+		second_unit_to_first_unit_ratio = ?, second_subtotal = ?, 
+		second_discount_percentage = ?, second_discount_amount = ?, second_price = ?, 
+		third_unit_id = ?, third_unit_to_first_unit_ratio = ?, third_subtotal = ?, 
+		third_discount_percentage = ?, third_discount_amount = ?, third_price = ?, 
+		description = ?, last_modified = ?, last_modified_by_user_id = ?
 	WHERE id = ?`
 
 	_, err = s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
-		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscount, med.FirstPrice,
-		med.SecondUnitID, med.SecondUnitToFirstUnitRatio, med.SecondSubtotal, med.SecondDiscount, med.SecondPrice,
-		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal, med.ThirdDiscount, med.ThirdPrice,
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage, 
+		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID, 
+		med.SecondUnitToFirstUnitRatio, med.SecondSubtotal,
+		med.SecondDiscountPercentage, med.SecondDiscountAmount, med.SecondPrice,
+		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal,
+		med.ThirdDiscountPercentage, med.ThirdDiscountAmount, med.ThirdPrice,
 		med.Description, time.Now(), user.ID, mid)
 	if err != nil {
 		return err
@@ -532,17 +585,20 @@ func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 		&medicine.Qty,
 		&medicine.FirstUnitID,
 		&medicine.FirstSubtotal,
-		&medicine.FirstDiscount,
+		&medicine.FirstDiscountPercentage,
+		&medicine.FirstDiscountAmount,
 		&medicine.FirstPrice,
 		&medicine.SecondUnitID,
 		&medicine.SecondUnitToFirstUnitRatio,
 		&medicine.SecondSubtotal,
-		&medicine.SecondDiscount,
+		&medicine.SecondDiscountPercentage,
+		&medicine.SecondDiscountAmount,
 		&medicine.SecondPrice,
 		&medicine.ThirdUnitID,
 		&medicine.ThirdUnitToFirstUnitRatio,
 		&medicine.ThirdSubtotal,
-		&medicine.ThirdDiscount,
+		&medicine.ThirdDiscountPercentage,
+		&medicine.ThirdDiscountAmount,
 		&medicine.ThirdPrice,
 		&medicine.Description,
 		&medicine.CreatedAt,
@@ -571,15 +627,18 @@ func scanRowIntoMedicineLists(rows *sql.Rows) (*types.MedicineListsReturnPayload
 		&medicine.Name,
 		&medicine.Qty,
 		&medicine.FirstUnitName,
-		&medicine.FirstDiscount,
+		&medicine.FirstDiscountPercentage,
+		&medicine.FirstDiscountAmount,
 		&medicine.FirstPrice,
 		&medicine.SecondUnitName,
 		&medicine.SecondUnitToFirstUnitRatio,
-		&medicine.SecondDiscount,
+		&medicine.SecondDiscountPercentage,
+		&medicine.SecondDiscountAmount,
 		&medicine.SecondPrice,
 		&medicine.ThirdUnitName,
 		&medicine.ThirdUnitToFirstUnitRatio,
-		&medicine.ThirdDiscount,
+		&medicine.ThirdDiscountPercentage,
+		&medicine.ThirdDiscountAmount,
 		&medicine.ThirdPrice,
 		&medicine.Description,
 		&medicine.CreatedAt,

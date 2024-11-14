@@ -31,17 +31,20 @@ type RegisterMedicinePayload struct {
 	Qty                        float64 `json:"qty" validate:"required"`
 	FirstUnit                  string  `json:"firstUnit" validate:"required"`
 	FirstSubtotal              float64 `json:"firstSubtotal" validate:"required"`
-	FirstDiscount              float64 `json:"firstDiscount"`
+	FirstDiscountPercentage    float64 `json:"firstDiscountPercentage"`
+	FirstDiscountAmount        float64 `json:"firstDiscountAmount"`
 	FirstPrice                 float64 `json:"firstPrice" validate:"required"`
 	SecondUnit                 string  `json:"secondUnit"`
 	SecondUnitToFirstUnitRatio float64 `json:"secondUnitToFirstUnitRatio"`
 	SecondSubtotal             float64 `json:"secondSubtotal"`
-	SecondDiscount             float64 `json:"secondDiscount"`
+	SecondDiscountPercentage   float64 `json:"secondDiscountPercentage"`
+	SecondDiscountAmount       float64 `json:"secondDiscountAmount"`
 	SecondPrice                float64 `json:"secondPrice"`
 	ThirdUnit                  string  `json:"thirdUnit"`
 	ThirdUnitToFirstUnitRatio  float64 `json:"thirdUnitToFirstUnitRatio"`
 	ThirdSubtotal              float64 `json:"thirdSubtotal"`
-	ThirdDiscount              float64 `json:"thirdDiscount"`
+	ThirdDiscountPercentage    float64 `json:"thirdDiscountPercentage"`
+	ThirdDiscountAmount        float64 `json:"thirdDiscountAmount"`
 	ThirdPrice                 float64 `json:"thirdPrice"`
 	Description                string  `json:"description"`
 }
@@ -66,15 +69,18 @@ type MedicineListsReturnPayload struct {
 	Name                       string    `json:"name"`
 	Qty                        float64   `json:"qty"`
 	FirstUnitName              string    `json:"firstUnitName"`
-	FirstDiscount              float64   `json:"firstDiscount"`
+	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage"`
+	FirstDiscountAmount        float64   `json:"firstDiscountAmount"`
 	FirstPrice                 float64   `json:"firstPrice"`
 	SecondUnitName             string    `json:"secondUnitName"`
 	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio"`
-	SecondDiscount             float64   `json:"secondDiscount"`
+	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage"`
+	SecondDiscountAmount       float64   `json:"secondDiscountAmount"`
 	SecondPrice                float64   `json:"secondPrice"`
 	ThirdUnitName              string    `json:"thirdUnitName"`
 	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio"`
-	ThirdDiscount              float64   `json:"thirdDiscount"`
+	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage"`
+	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount"`
 	ThirdPrice                 float64   `json:"thirdPrice"`
 	Description                string    `json:"description"`
 	CreatedAt                  time.Time `json:"createdAt"`
@@ -89,17 +95,20 @@ type Medicine struct {
 	Qty                        float64       `json:"qty"`
 	FirstUnitID                int           `json:"firstUnitId"`
 	FirstSubtotal              float64       `json:"firstSubtotal"`
-	FirstDiscount              float64       `json:"firstDiscount"`
+	FirstDiscountPercentage    float64       `json:"firstDiscountPercentage"`
+	FirstDiscountAmount        float64       `json:"firstDiscountAmount"`
 	FirstPrice                 float64       `json:"firstPrice"`
 	SecondUnitID               int           `json:"secondUnitId"`
 	SecondUnitToFirstUnitRatio float64       `json:"secondUnitToFirstUnitRatio"`
 	SecondSubtotal             float64       `json:"secondSubtotal"`
-	SecondDiscount             float64       `json:"secondDiscount"`
+	SecondDiscountPercentage   float64       `json:"secondDiscountPercentage"`
+	SecondDiscountAmount       float64       `json:"secondDiscountAmount"`
 	SecondPrice                float64       `json:"secondPrice"`
 	ThirdUnitID                int           `json:"thirdUnitId"`
 	ThirdUnitToFirstUnitRatio  float64       `json:"thirdUnitToFirstUnitRatio"`
 	ThirdSubtotal              float64       `json:"thirdSubtotal"`
-	ThirdDiscount              float64       `json:"thirdDiscount"`
+	ThirdDiscountPercentage    float64       `json:"thirdDiscountPercentage"`
+	ThirdDiscountAmount        float64       `json:"thirdDiscountAmount"`
 	ThirdPrice                 float64       `json:"thirdPrice"`
 	Description                string        `json:"description"`
 	CreatedAt                  time.Time     `json:"createdAt"`
