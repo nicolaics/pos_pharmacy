@@ -13,6 +13,7 @@ import (
 
 	"github.com/nicolaics/pos_pharmacy/types"
 	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pos_pharmacy/utils/pdf"
 )
 
 type Handler struct {
@@ -228,7 +229,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		InvoiceDate:        *invoiceDate,
 		MedicineLists:      payload.MedicineLists,
 	}
-	invoiceFileName, err := utils.CreateInvoicePDF(invoicePDF, h.invoiceStore, "")
+	invoiceFileName, err := pdf.CreateInvoicePDF(invoicePDF, h.invoiceStore, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create invoice pdf: %v", err))
 		return
@@ -817,7 +818,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		InvoiceDate:        *invoiceDate,
 		MedicineLists:      payload.NewData.MedicineLists,
 	}
-	_, err = utils.CreateInvoicePDF(invoicePDF, h.invoiceStore, invoice.PDFUrl)
+	_, err = pdf.CreateInvoicePDF(invoicePDF, h.invoiceStore, invoice.PDFUrl)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update invoice pdf: %v", err))
 		return
