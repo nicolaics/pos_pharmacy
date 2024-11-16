@@ -1,4 +1,4 @@
-package paymentmethod
+package payment
 
 import (
 	"database/sql"

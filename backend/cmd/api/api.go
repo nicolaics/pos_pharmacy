@@ -9,22 +9,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nicolaics/pos_pharmacy/logger"
 	"github.com/nicolaics/pos_pharmacy/service/auth"
-	"github.com/nicolaics/pos_pharmacy/service/consumetime"
 	"github.com/nicolaics/pos_pharmacy/service/customer"
-	"github.com/nicolaics/pos_pharmacy/service/det"
-	"github.com/nicolaics/pos_pharmacy/service/doctor"
-	"github.com/nicolaics/pos_pharmacy/service/dose"
 	"github.com/nicolaics/pos_pharmacy/service/invoice"
-	"github.com/nicolaics/pos_pharmacy/service/maindoctorprescmeditem"
 	"github.com/nicolaics/pos_pharmacy/service/medicine"
-	"github.com/nicolaics/pos_pharmacy/service/mf"
-	"github.com/nicolaics/pos_pharmacy/service/patient"
-	"github.com/nicolaics/pos_pharmacy/service/paymentmethod"
+	"github.com/nicolaics/pos_pharmacy/service/payment"
+	"github.com/nicolaics/pos_pharmacy/service/pi"
+	"github.com/nicolaics/pos_pharmacy/service/poi"
 	"github.com/nicolaics/pos_pharmacy/service/prescription"
-	"github.com/nicolaics/pos_pharmacy/service/prescriptionsetusage"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/ct"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/det"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/doctor"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/dose"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/mdmi"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/mf"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/patient"
+	"github.com/nicolaics/pos_pharmacy/service/prescription/su"
 	"github.com/nicolaics/pos_pharmacy/service/production"
-	"github.com/nicolaics/pos_pharmacy/service/purchaseinvoice"
-	"github.com/nicolaics/pos_pharmacy/service/purchaseorder"
 	"github.com/nicolaics/pos_pharmacy/service/supplier"
 	"github.com/nicolaics/pos_pharmacy/service/unit"
 	"github.com/nicolaics/pos_pharmacy/service/user"
@@ -56,19 +56,19 @@ func (s *APIServer) Run() error {
 	medicineStore := medicine.NewStore(s.db)
 	doctorStore := doctor.NewStore(s.db)
 	patientStore := patient.NewStore(s.db)
-	consumeTimeStore := consumetime.NewStore(s.db)
+	consumeTimeStore := ct.NewStore(s.db)
 	detStore := det.NewStore(s.db)
 	doseStore := dose.NewStore(s.db)
 	mfStore := mf.NewStore(s.db)
-	prescSetUsageStore := prescriptionsetusage.NewStore(s.db)
+	prescSetUsageStore := su.NewStore(s.db)
 
-	mainDoctorPrescMedItemStore := maindoctorprescmeditem.NewStore(s.db)
+	mainDoctorPrescMedItemStore := mdmi.NewStore(s.db)
 
-	paymentMethodStore := paymentmethod.NewStore(s.db)
+	paymentMethodStore := payment.NewStore(s.db)
 	unitStore := unit.NewStore(s.db)
 
-	purchaseInvoiceStore := purchaseinvoice.NewStore(s.db)
-	poInvoiceStore := purchaseorder.NewStore(s.db)
+	purchaseInvoiceStore := pi.NewStore(s.db)
+	poInvoiceStore := poi.NewStore(s.db)
 	invoiceStore := invoice.NewStore(s.db)
 	prescriptionStore := prescription.NewStore(s.db)
 	productionStore := production.NewStore(s.db)
@@ -92,10 +92,10 @@ func (s *APIServer) Run() error {
 	patientHandler := patient.NewHandler(patientStore, userStore)
 	patientHandler.RegisterRoutes(subrouter)
 
-	purchaseInvoiceHandler := purchaseinvoice.NewHandler(purchaseInvoiceStore, userStore, supplierStore, medicineStore, unitStore, poInvoiceStore)
+	purchaseInvoiceHandler := pi.NewHandler(purchaseInvoiceStore, userStore, supplierStore, medicineStore, unitStore, poInvoiceStore)
 	purchaseInvoiceHandler.RegisterRoutes(subrouter)
 
-	poInvoiceHandler := purchaseorder.NewHandler(poInvoiceStore, userStore, supplierStore,
+	poInvoiceHandler := poi.NewHandler(poInvoiceStore, userStore, supplierStore,
 		medicineStore, unitStore)
 	poInvoiceHandler.RegisterRoutes(subrouter)
 
@@ -112,7 +112,7 @@ func (s *APIServer) Run() error {
 	productionHandler := production.NewHandler(productionStore, userStore, medicineStore, unitStore)
 	productionHandler.RegisterRoutes(subrouter)
 
-	mainDoctorPrescMedItemHandler := maindoctorprescmeditem.NewHandler(mainDoctorPrescMedItemStore, userStore, medicineStore, unitStore)
+	mainDoctorPrescMedItemHandler := mdmi.NewHandler(mainDoctorPrescMedItemStore, userStore, medicineStore, unitStore)
 	mainDoctorPrescMedItemHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on: ", s.addr)

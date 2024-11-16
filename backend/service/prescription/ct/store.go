@@ -1,4 +1,4 @@
-package consumetime
+package ct
 
 import (
 	"database/sql"

@@ -1,4 +1,4 @@
-package purchaseinvoice
+package pi
 
 import (
 	"fmt"

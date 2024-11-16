@@ -2,31 +2,31 @@ package types
 
 import "time"
 
-type MainDoctorPrescMedItemStore interface {
-	CreateMainDoctorPrescMedItem(item MainDoctorPrescMedItem) error
-	GetMainDoctorPrescMedItemByMedicineData(medId int) (*MainDoctorPrescMedItemReturn, error)
-	GetAllMainDoctorPrescMedItemByMedicineData() ([]MainDoctorPrescMedItemReturn, error)
+type MainDoctorMedItemStore interface {
+	CreateMainDoctorMedItem(item MainDoctorMedItem) error
+	GetMainDoctorMedItemByMedicineData(medId int) (*MainDoctorMedItemReturn, error)
+	GetAllMainDoctorMedItemByMedicineData() ([]MainDoctorMedItemReturn, error)
 	IsMedicineContentsExist(medId int) (bool, error)
 	IsMedicineBarcodeExist(barcode string) (bool, error)
 
-	DeleteMainDoctorPrescMedItem(medId int, user *User) error
+	DeleteMainDoctorMedItem(medId int, user *User) error
 }
 
-type RegisterMainDoctorPrescMedItemPayload struct {
+type RegisterMainDoctorMedItemPayload struct {
 	MedicineName     string                      `json:"medicineName" validate:"required"`
 	MedicineContents []MainDoctorPrescMedContent `json:"medicineContents" validate:"required"`
 }
 
-type ModifyMainDoctorPrescMedItemPayload struct {
+type ModifyMainDoctorMedItemPayload struct {
 	MedicineID          int                         `json:"medicineId" validate:"required"`
 	NewMedicineContents []MainDoctorPrescMedContent `json:"newMedicineContents" validate:"required"`
 }
 
-type ViewMainDoctorPrescMedItemPayload struct {
+type ViewMainDoctorMedItemPayload struct {
 	MedicineID          int                         `json:"medicineId" validate:"required"`
 }
 
-type MainDoctorPrescMedItemReturn struct {
+type MainDoctorMedItemReturn struct {
 	MedicineName           string                      `json:"medicine"`
 	MedicineContents       []MainDoctorPrescMedContent `json:"medicineContents"`
 	LastModified           time.Time                   `json:"lastModified"`
@@ -39,7 +39,7 @@ type MainDoctorPrescMedContent struct {
 	Unit string `json:"unit"`
 }
 
-type MainDoctorPrescMedItem struct {
+type MainDoctorMedItem struct {
 	ID                   int       `json:"id"`
 	MedicineID           int       `json:"medicineId"`
 	MedicineContentID    int       `json:"medicineContentId"`

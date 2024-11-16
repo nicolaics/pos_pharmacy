@@ -1,4 +1,4 @@
-package purchaseorder
+package poi
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package maindoctorprescmeditem
+package mdmi
 
 import (
 	"fmt"
@@ -14,18 +14,18 @@ import (
 )
 
 type Handler struct {
-	mainDoctorPrescMedItemStore types.MainDoctorPrescMedItemStore
+	mainDoctorMedItemStore types.MainDoctorMedItemStore
 	userStore                   types.UserStore
 	medStore                    types.MedicineStore
 	unitStore                   types.UnitStore
 }
 
-func NewHandler(mainDoctorPrescMedItemStore types.MainDoctorPrescMedItemStore,
+func NewHandler(mainDoctorMedItemStore types.MainDoctorMedItemStore,
 	userStore types.UserStore,
 	medStore types.MedicineStore,
 	unitStore types.UnitStore) *Handler {
 	return &Handler{
-		mainDoctorPrescMedItemStore: mainDoctorPrescMedItemStore,
+		mainDoctorMedItemStore: mainDoctorMedItemStore,
 		userStore:                   userStore,
 		medStore:                    medStore,
 		unitStore:                   unitStore,
@@ -47,7 +47,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.RegisterMainDoctorPrescMedItemPayload
+	var payload types.RegisterMainDoctorMedItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -103,11 +103,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	medicine, err := h.medStore.GetMedicineByName(payload.MedicineName)
 	if medicine == nil {
 		barcode := "RO-" + utils.GenerateRandomCodeNumbers(3)
-		isBarcodeExist, _ := h.mainDoctorPrescMedItemStore.IsMedicineBarcodeExist(barcode)
+		isBarcodeExist, _ := h.mainDoctorMedItemStore.IsMedicineBarcodeExist(barcode)
 
 		for isBarcodeExist {
 			barcode = "RO-" + utils.GenerateRandomCodeNumbers(3)
-			isBarcodeExist, _ = h.mainDoctorPrescMedItemStore.IsMedicineBarcodeExist(barcode)
+			isBarcodeExist, _ = h.mainDoctorMedItemStore.IsMedicineBarcodeExist(barcode)
 		}
 
 		err = h.medStore.CreateMedicine(types.Medicine{
@@ -134,7 +134,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	isExist, err := h.mainDoctorPrescMedItemStore.IsMedicineContentsExist(medicine.ID)
+	isExist, err := h.mainDoctorMedItemStore.IsMedicineContentsExist(medicine.ID)
 	if err != nil || isExist {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine already exist: %v", err))
 		return
@@ -176,7 +176,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			medicineQty = numerator / denum
 		}
 
-		medItem := types.MainDoctorPrescMedItem{
+		medItem := types.MainDoctorMedItem{
 			MedicineID:           medicine.ID,
 			MedicineContentID:    medData.ID,
 			Qty:                  medicineQty,
@@ -184,7 +184,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			UserID:               user.ID,
 			LastModifiedByUserID: user.ID,
 		}
-		err = h.mainDoctorPrescMedItemStore.CreateMainDoctorPrescMedItem(medItem)
+		err = h.mainDoctorMedItemStore.CreateMainDoctorMedItem(medItem)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("error creating presc med item %s for content %s: %v", medicine.Name, medData.Name, err))
@@ -207,10 +207,10 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	val := vars["val"]
 
-	var mainDoctorPrescMedItems []types.MainDoctorPrescMedItemReturn
+	var mainDoctorMedItems []types.MainDoctorMedItemReturn
 
 	if val == "all" {
-		mainDoctorPrescMedItems, err = h.mainDoctorPrescMedItemStore.GetAllMainDoctorPrescMedItemByMedicineData()
+		mainDoctorMedItems, err = h.mainDoctorMedItemStore.GetAllMainDoctorMedItemByMedicineData()
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
@@ -222,22 +222,22 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		mainDoctorPrescMedItem, err := h.mainDoctorPrescMedItemStore.GetMainDoctorPrescMedItemByMedicineData(medicine.ID)
+		mainDoctorMedItem, err := h.mainDoctorMedItemStore.GetMainDoctorMedItemByMedicineData(medicine.ID)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		mainDoctorPrescMedItems = append(mainDoctorPrescMedItems, *mainDoctorPrescMedItem)
+		mainDoctorMedItems = append(mainDoctorMedItems, *mainDoctorMedItem)
 	}
 
-	utils.WriteJSON(w, http.StatusOK, mainDoctorPrescMedItems)
+	utils.WriteJSON(w, http.StatusOK, mainDoctorMedItems)
 }
 
 // view one
 func (h *Handler) handleGetDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ViewMainDoctorPrescMedItemPayload
+	var payload types.ViewMainDoctorMedItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -259,7 +259,7 @@ func (h *Handler) handleGetDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get data
-	data, err := h.mainDoctorPrescMedItemStore.GetMainDoctorPrescMedItemByMedicineData(payload.MedicineID)
+	data, err := h.mainDoctorMedItemStore.GetMainDoctorMedItemByMedicineData(payload.MedicineID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine not found: %v", err))
 		return
@@ -271,7 +271,7 @@ func (h *Handler) handleGetDetail(w http.ResponseWriter, r *http.Request) {
 // only can modify the contents
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.ModifyMainDoctorPrescMedItemPayload
+	var payload types.ModifyMainDoctorMedItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -299,7 +299,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.mainDoctorPrescMedItemStore.DeleteMainDoctorPrescMedItem(medicine.ID, user)
+	err = h.mainDoctorMedItemStore.DeleteMainDoctorMedItem(medicine.ID, user)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting: %v", err))
 		return
@@ -341,7 +341,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			medicineQty = numerator / denum
 		}
 
-		medItem := types.MainDoctorPrescMedItem{
+		medItem := types.MainDoctorMedItem{
 			MedicineID:           medicine.ID,
 			MedicineContentID:    medData.ID,
 			Qty:                  medicineQty,
@@ -349,7 +349,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			UserID:               user.ID,
 			LastModifiedByUserID: user.ID,
 		}
-		err = h.mainDoctorPrescMedItemStore.CreateMainDoctorPrescMedItem(medItem)
+		err = h.mainDoctorMedItemStore.CreateMainDoctorMedItem(medItem)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("error creating presc med item %s for content %s: %v", medicine.Name, medData.Name, err))
@@ -362,7 +362,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.RegisterMainDoctorPrescMedItemPayload
+	var payload types.RegisterMainDoctorMedItemPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
@@ -418,11 +418,11 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 	medicine, err := h.medStore.GetMedicineByName(payload.MedicineName)
 	if medicine == nil {
 		barcode := "RO-" + utils.GenerateRandomCodeNumbers(3)
-		isBarcodeExist, _ := h.mainDoctorPrescMedItemStore.IsMedicineBarcodeExist(barcode)
+		isBarcodeExist, _ := h.mainDoctorMedItemStore.IsMedicineBarcodeExist(barcode)
 
 		for isBarcodeExist {
 			barcode = "RO-" + utils.GenerateRandomCodeNumbers(3)
-			isBarcodeExist, _ = h.mainDoctorPrescMedItemStore.IsMedicineBarcodeExist(barcode)
+			isBarcodeExist, _ = h.mainDoctorMedItemStore.IsMedicineBarcodeExist(barcode)
 		}
 
 		err = h.medStore.CreateMedicine(types.Medicine{
@@ -449,7 +449,7 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check duplicate
-	isExist, err := h.mainDoctorPrescMedItemStore.IsMedicineContentsExist(medicine.ID)
+	isExist, err := h.mainDoctorMedItemStore.IsMedicineContentsExist(medicine.ID)
 	if err != nil || isExist {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine already exist: %v", err))
 		return
@@ -511,7 +511,7 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 			medicineQty = numerator / denum
 		}
 
-		medItem := types.MainDoctorPrescMedItem{
+		medItem := types.MainDoctorMedItem{
 			MedicineID:           medicine.ID,
 			MedicineContentID:    medData.ID,
 			Qty:                  medicineQty,
@@ -519,7 +519,7 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 			UserID:               user.ID,
 			LastModifiedByUserID: user.ID,
 		}
-		err = h.mainDoctorPrescMedItemStore.CreateMainDoctorPrescMedItem(medItem)
+		err = h.mainDoctorMedItemStore.CreateMainDoctorMedItem(medItem)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError,
 				fmt.Errorf("error creating presc med item %s for content %s: %v", medicine.Name, medData.Name, err))

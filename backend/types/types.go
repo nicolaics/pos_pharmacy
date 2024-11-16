@@ -51,9 +51,9 @@ type MfStore interface {
 }
 type Mf PaymentMethod
 
-type PrescriptionSetUsageStore interface {
-	GetPrescriptionSetUsageByName(string) (*PrescriptionSetUsage, error)
-	GetPrescriptionSetUsageByID(int) (*PrescriptionSetUsage, error)
-	CreatePrescriptionSetUsage(string) error
+type SetUsageStore interface {
+	GetSetUsageByName(string) (*SetUsage, error)
+	GetSetUsageByID(int) (*SetUsage, error)
+	CreateSetUsage(string) error
 }
-type PrescriptionSetUsage PaymentMethod
+type SetUsage PaymentMethod

@@ -1,4 +1,4 @@
-package maindoctorprescmeditem
+package mdmi
 
 import (
 	"database/sql"
@@ -17,7 +17,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) CreateMainDoctorPrescMedItem(item types.MainDoctorPrescMedItem) error {
+func (s *Store) CreateMainDoctorMedItem(item types.MainDoctorMedItem) error {
 	query := `INSERT INTO main_doctor_presc_medicine_item (
 				medicine_id, medicine_content_id, qty, unit_id, user_id, last_modified_by_user_id) 
 				VALUES (?, ?, ?, ?)`
@@ -29,7 +29,7 @@ func (s *Store) CreateMainDoctorPrescMedItem(item types.MainDoctorPrescMedItem) 
 	return nil
 }
 
-func (s *Store) GetMainDoctorPrescMedItemByMedicineData(medId int) (*types.MainDoctorPrescMedItemReturn, error) {
+func (s *Store) GetMainDoctorMedItemByMedicineData(medId int) (*types.MainDoctorMedItemReturn, error) {
 	query := `SELECT medicine.name, md.qty, unit.name 
 				FROM main_doctor_presc_medicine_item AS md 
 				JOIN medicine ON medicine.id = md.medicine_content_id 
@@ -86,7 +86,7 @@ func (s *Store) GetMainDoctorPrescMedItemByMedicineData(medId int) (*types.MainD
 		return nil, fmt.Errorf("medicine id %d not found", medId)
 	}
 
-	returnPayload := types.MainDoctorPrescMedItemReturn{
+	returnPayload := types.MainDoctorMedItemReturn{
 		MedicineName: temp.Name,
 		MedicineContents: medContents,
 		LastModified: temp.LastModified.Local(),
@@ -95,7 +95,7 @@ func (s *Store) GetMainDoctorPrescMedItemByMedicineData(medId int) (*types.MainD
 	return &returnPayload, nil
 }
 
-func (s *Store) GetAllMainDoctorPrescMedItemByMedicineData() ([]types.MainDoctorPrescMedItemReturn, error) {
+func (s *Store) GetAllMainDoctorMedItemByMedicineData() ([]types.MainDoctorMedItemReturn, error) {
 	query := `SELECT DISTINCT medicine_id FROM main_doctor_presc_medicine_item`
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -114,7 +114,7 @@ func (s *Store) GetAllMainDoctorPrescMedItemByMedicineData() ([]types.MainDoctor
 		medIds = append(medIds, medId)
 	}
 
-	returnPayload := make([]types.MainDoctorPrescMedItemReturn, 0)
+	returnPayload := make([]types.MainDoctorMedItemReturn, 0)
 
 	for _, medId := range(medIds) {
 		query = `SELECT medicine.name, md.qty, unit.name 
@@ -173,7 +173,7 @@ func (s *Store) GetAllMainDoctorPrescMedItemByMedicineData() ([]types.MainDoctor
 			return nil, fmt.Errorf("medicine id %d not found", medId)
 		}
 
-		returnPayload = append(returnPayload, types.MainDoctorPrescMedItemReturn{
+		returnPayload = append(returnPayload, types.MainDoctorMedItemReturn{
 			MedicineName: temp.Name,
 			MedicineContents: medContents,
 			LastModified: temp.LastModified.Local(),
@@ -222,8 +222,8 @@ func (s *Store) IsMedicineBarcodeExist(barcode string) (bool, error) {
 	return (count > 0), nil
 }
 
-func (s *Store) DeleteMainDoctorPrescMedItem(medId int, user *types.User) error {
-	data, err := s.GetMainDoctorPrescMedItemByMedicineData(medId)
+func (s *Store) DeleteMainDoctorMedItem(medId int, user *types.User) error {
+	data, err := s.GetMainDoctorMedItemByMedicineData(medId)
 	if err != nil {
 		return err
 	}

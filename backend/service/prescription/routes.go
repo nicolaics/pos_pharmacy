@@ -21,19 +21,19 @@ import (
 )
 
 type Handler struct {
-	prescriptionStore         types.PrescriptionStore
-	userStore                 types.UserStore
-	customerStore             types.CustomerStore
-	medStore                  types.MedicineStore
-	unitStore                 types.UnitStore
-	invoiceStore              types.InvoiceStore
-	doctorStore               types.DoctorStore
-	patientStore              types.PatientStore
-	consumeTimeStore          types.ConsumeTimeStore
-	detStore                  types.DetStore
-	doseStore                 types.DoseStore
-	mfStore                   types.MfStore
-	prescriptionSetUsageStore types.PrescriptionSetUsageStore
+	prescriptionStore types.PrescriptionStore
+	userStore         types.UserStore
+	customerStore     types.CustomerStore
+	medStore          types.MedicineStore
+	unitStore         types.UnitStore
+	invoiceStore      types.InvoiceStore
+	doctorStore       types.DoctorStore
+	patientStore      types.PatientStore
+	consumeTimeStore  types.ConsumeTimeStore
+	detStore          types.DetStore
+	doseStore         types.DoseStore
+	mfStore           types.MfStore
+	SetUsageStore     types.SetUsageStore
 }
 
 func NewHandler(prescriptionStore types.PrescriptionStore,
@@ -48,21 +48,21 @@ func NewHandler(prescriptionStore types.PrescriptionStore,
 	detStore types.DetStore,
 	doseStore types.DoseStore,
 	mfStore types.MfStore,
-	prescriptionSetUsageStore types.PrescriptionSetUsageStore) *Handler {
+	SetUsageStore types.SetUsageStore) *Handler {
 	return &Handler{
-		prescriptionStore:         prescriptionStore,
-		userStore:                 userStore,
-		customerStore:             customerStore,
-		medStore:                  medStore,
-		unitStore:                 unitStore,
-		invoiceStore:              invoiceStore,
-		doctorStore:               doctorStore,
-		patientStore:              patientStore,
-		consumeTimeStore:          consumeTimeStore,
-		detStore:                  detStore,
-		doseStore:                 doseStore,
-		mfStore:                   mfStore,
-		prescriptionSetUsageStore: prescriptionSetUsageStore,
+		prescriptionStore: prescriptionStore,
+		userStore:         userStore,
+		customerStore:     customerStore,
+		medStore:          medStore,
+		unitStore:         unitStore,
+		invoiceStore:      invoiceStore,
+		doctorStore:       doctorStore,
+		patientStore:      patientStore,
+		consumeTimeStore:  consumeTimeStore,
+		detStore:          detStore,
+		doseStore:         doseStore,
+		mfStore:           mfStore,
+		SetUsageStore:     SetUsageStore,
 	}
 }
 
@@ -302,11 +302,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get set usage
-		setUsage, err := h.prescriptionSetUsageStore.GetPrescriptionSetUsageByName(setItem.Usage)
+		setUsage, err := h.SetUsageStore.GetSetUsageByName(setItem.Usage)
 		if setUsage == nil {
-			err = h.prescriptionSetUsageStore.CreatePrescriptionSetUsage(setItem.Usage)
+			err = h.SetUsageStore.CreateSetUsage(setItem.Usage)
 			if err == nil {
-				setUsage, err = h.prescriptionSetUsageStore.GetPrescriptionSetUsageByName(setItem.Usage)
+				setUsage, err = h.SetUsageStore.GetSetUsageByName(setItem.Usage)
 			}
 		}
 		if err != nil {
@@ -1271,11 +1271,11 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get set usage
-		setUsage, err := h.prescriptionSetUsageStore.GetPrescriptionSetUsageByName(setItem.Usage)
+		setUsage, err := h.SetUsageStore.GetSetUsageByName(setItem.Usage)
 		if setUsage == nil {
-			err = h.prescriptionSetUsageStore.CreatePrescriptionSetUsage(setItem.Usage)
+			err = h.SetUsageStore.CreateSetUsage(setItem.Usage)
 			if err == nil {
-				setUsage, err = h.prescriptionSetUsageStore.GetPrescriptionSetUsageByName(setItem.Usage)
+				setUsage, err = h.SetUsageStore.GetSetUsageByName(setItem.Usage)
 			}
 		}
 		if err != nil {
