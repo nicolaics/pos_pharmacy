@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/db"
-	"github.com/nicolaics/pos_pharmacy/service/auth"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/db"
+	"github.com/nicolaics/pharmacon/service/auth"
+	"github.com/nicolaics/pharmacon/utils"
 )
 
 func main() {
@@ -67,7 +67,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fh, err := os.OpenFile("admin.txt", os.O_CREATE | os.O_WRONLY, 0644)
+	fh, err := os.OpenFile("admin.txt", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

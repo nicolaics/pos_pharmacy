@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/service/auth"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/service/auth"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {

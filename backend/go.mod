@@ -1,4 +1,4 @@
-module github.com/nicolaics/pos_pharmacy
+module github.com/nicolaics/pharmacon
 
 go 1.22.4
 

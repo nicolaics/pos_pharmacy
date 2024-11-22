@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type contextKey string

@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/go-pdf/fpdf"
-	"github.com/nicolaics/pos_pharmacy/constants"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/constants"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

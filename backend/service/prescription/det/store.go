@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -59,7 +59,6 @@ func (s *Store) GetDetByID(id int) (*types.Det, error) {
 
 	return det, nil
 }
-
 
 func (s *Store) CreateDet(detName string) error {
 	_, err := s.db.Exec("INSERT INTO det (name) VALUES (?)", strings.ToLower(detName))

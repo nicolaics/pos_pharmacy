@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {

@@ -9,15 +9,15 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 )
 
 type Handler struct {
 	mainDoctorMedItemStore types.MainDoctorMedItemStore
-	userStore                   types.UserStore
-	medStore                    types.MedicineStore
-	unitStore                   types.UnitStore
+	userStore              types.UserStore
+	medStore               types.MedicineStore
+	unitStore              types.UnitStore
 }
 
 func NewHandler(mainDoctorMedItemStore types.MainDoctorMedItemStore,
@@ -26,9 +26,9 @@ func NewHandler(mainDoctorMedItemStore types.MainDoctorMedItemStore,
 	unitStore types.UnitStore) *Handler {
 	return &Handler{
 		mainDoctorMedItemStore: mainDoctorMedItemStore,
-		userStore:                   userStore,
-		medStore:                    medStore,
-		unitStore:                   unitStore,
+		userStore:              userStore,
+		medStore:               medStore,
+		unitStore:              unitStore,
 	}
 }
 
@@ -217,7 +217,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		medicine, err := h.medStore.GetMedicineByName(val)
-		if err != nil || medicine == nil{
+		if err != nil || medicine == nil {
 			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine not found"))
 			return
 		}
@@ -487,7 +487,7 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating medicine: %v", err))
 				return
 			}
-	
+
 			medData, err = h.medStore.GetMedicineByName(medContent.Name)
 		}
 		if err != nil {
@@ -529,4 +529,3 @@ func (h *Handler) handleTest(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Errorf("%s created by %s", payload.MedicineName, user.Name))
 }
-

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -110,7 +110,7 @@ func (s *Store) CreatePurchaseInvoice(purchaseInvoice types.PurchaseInvoice) err
 	_, err := s.db.Exec(query,
 		purchaseInvoice.Number, purchaseInvoice.SupplierID,
 		purchaseInvoice.PurchaseOrderNumber, purchaseInvoice.Subtotal,
-		purchaseInvoice.DiscountPercentage, purchaseInvoice.DiscountAmount, 
+		purchaseInvoice.DiscountPercentage, purchaseInvoice.DiscountAmount,
 		purchaseInvoice.TaxPercentage, purchaseInvoice.TaxAmount, purchaseInvoice.TotalPrice,
 		purchaseInvoice.Description, purchaseInvoice.UserID, purchaseInvoice.InvoiceDate,
 		purchaseInvoice.UserID)
@@ -137,7 +137,7 @@ func (s *Store) CreatePurchaseMedicineItem(purchaseMedItem types.PurchaseMedicin
 	_, err := s.db.Exec(query,
 		purchaseMedItem.PurchaseInvoiceID, purchaseMedItem.MedicineID, purchaseMedItem.Qty,
 		purchaseMedItem.UnitID, purchaseMedItem.Price, purchaseMedItem.DiscountPercentage,
-		purchaseMedItem.DiscountAmount, purchaseMedItem.TaxPercentage, 
+		purchaseMedItem.DiscountAmount, purchaseMedItem.TaxPercentage,
 		purchaseMedItem.TaxAmount, purchaseMedItem.Subtotal, purchaseMedItem.BatchNumber,
 		purchaseMedItem.ExpDate)
 	if err != nil {
@@ -510,7 +510,7 @@ func (s *Store) AbsoluteDeletePurchaseInvoice(pi types.PurchaseInvoice) error {
 				AND description = ? AND invoice_date = ?`
 
 	rows, err := s.db.Query(query, pi.Number, pi.SupplierID, pi.PurchaseOrderNumber,
-		pi.Subtotal, pi.DiscountPercentage, pi.DiscountAmount, 
+		pi.Subtotal, pi.DiscountPercentage, pi.DiscountAmount,
 		pi.TaxPercentage, pi.TaxAmount, pi.TotalPrice,
 		pi.Description, pi.InvoiceDate)
 	if err != nil {

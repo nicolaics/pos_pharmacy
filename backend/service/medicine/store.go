@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -160,7 +160,6 @@ func (s *Store) GetMedicinesBySearchName(name string) ([]types.MedicineListsRetu
 					ORDER BY med.name ASC`
 		searchVal := "%"
 
-
 		for _, val := range name {
 			if string(val) != " " {
 				searchVal += (string(val) + "%")
@@ -273,7 +272,6 @@ func (s *Store) GetMedicinesBySearchBarcode(barcode string) ([]types.MedicineLis
 					AND med.deleted_at IS NULL 
 					ORDER BY med.name ASC`
 		searchVal := "%"
-
 
 		for _, val := range barcode {
 			if string(val) != " " {
@@ -415,11 +413,11 @@ func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 
 	_, err := s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
-		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage, 
-		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID, 
-		med.SecondUnitToFirstUnitRatio, med.SecondSubtotal, 
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage,
+		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID,
+		med.SecondUnitToFirstUnitRatio, med.SecondSubtotal,
 		med.SecondDiscountPercentage, med.SecondDiscountAmount, med.SecondPrice,
-		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal, 
+		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal,
 		med.ThirdDiscountPercentage, med.ThirdDiscountAmount, med.ThirdPrice,
 		med.Description, userId)
 	if err != nil {
@@ -534,8 +532,8 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, user *types.User) er
 
 	_, err = s.db.Exec(query,
 		med.Barcode, med.Name, med.Qty,
-		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage, 
-		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID, 
+		med.FirstUnitID, med.FirstSubtotal, med.FirstDiscountPercentage,
+		med.FirstDiscountAmount, med.FirstPrice, med.SecondUnitID,
 		med.SecondUnitToFirstUnitRatio, med.SecondSubtotal,
 		med.SecondDiscountPercentage, med.SecondDiscountAmount, med.SecondPrice,
 		med.ThirdUnitID, med.ThirdUnitToFirstUnitRatio, med.ThirdSubtotal,

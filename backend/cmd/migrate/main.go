@@ -10,9 +10,9 @@ import (
 
 	mySqlConfig "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/db"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/db"
 )
 
 func main() {

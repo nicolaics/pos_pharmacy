@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 )
 
 type Handler struct {
@@ -202,7 +202,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.supplierStore.DeleteSupplier(&types.Supplier{
-		ID: supplier.ID,
+		ID:   supplier.ID,
 		Name: supplier.Name,
 	}, user)
 	if err != nil {

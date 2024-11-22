@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 func CheckStock(medData *types.Medicine, unit *types.Unit, additionalQty float64) error {
@@ -22,7 +22,7 @@ func CheckStock(medData *types.Medicine, unit *types.Unit, additionalQty float64
 	if tempStock > medData.Qty {
 		return fmt.Errorf("buy requested is higher than the available stock")
 	}
-	
+
 	return nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -59,7 +59,6 @@ func (s *Store) GetDoseByID(id int) (*types.Dose, error) {
 
 	return dose, nil
 }
-
 
 func (s *Store) CreateDose(doseName string) error {
 	_, err := s.db.Exec("INSERT INTO dose (name) VALUES (?)", strings.ToLower(doseName))

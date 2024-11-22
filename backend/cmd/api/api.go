@@ -7,39 +7,39 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/service/auth"
-	"github.com/nicolaics/pos_pharmacy/service/customer"
-	"github.com/nicolaics/pos_pharmacy/service/invoice"
-	"github.com/nicolaics/pos_pharmacy/service/medicine"
-	"github.com/nicolaics/pos_pharmacy/service/payment"
-	"github.com/nicolaics/pos_pharmacy/service/pi"
-	"github.com/nicolaics/pos_pharmacy/service/poi"
-	"github.com/nicolaics/pos_pharmacy/service/prescription"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/ct"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/det"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/doctor"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/dose"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/mdmi"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/mf"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/patient"
-	"github.com/nicolaics/pos_pharmacy/service/prescription/su"
-	"github.com/nicolaics/pos_pharmacy/service/production"
-	"github.com/nicolaics/pos_pharmacy/service/supplier"
-	"github.com/nicolaics/pos_pharmacy/service/unit"
-	"github.com/nicolaics/pos_pharmacy/service/user"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/service/auth"
+	"github.com/nicolaics/pharmacon/service/customer"
+	"github.com/nicolaics/pharmacon/service/invoice"
+	"github.com/nicolaics/pharmacon/service/medicine"
+	"github.com/nicolaics/pharmacon/service/payment"
+	"github.com/nicolaics/pharmacon/service/pi"
+	"github.com/nicolaics/pharmacon/service/poi"
+	"github.com/nicolaics/pharmacon/service/prescription"
+	"github.com/nicolaics/pharmacon/service/prescription/ct"
+	"github.com/nicolaics/pharmacon/service/prescription/det"
+	"github.com/nicolaics/pharmacon/service/prescription/doctor"
+	"github.com/nicolaics/pharmacon/service/prescription/dose"
+	"github.com/nicolaics/pharmacon/service/prescription/mdmi"
+	"github.com/nicolaics/pharmacon/service/prescription/mf"
+	"github.com/nicolaics/pharmacon/service/prescription/patient"
+	"github.com/nicolaics/pharmacon/service/prescription/su"
+	"github.com/nicolaics/pharmacon/service/production"
+	"github.com/nicolaics/pharmacon/service/supplier"
+	"github.com/nicolaics/pharmacon/service/unit"
+	"github.com/nicolaics/pharmacon/service/user"
 )
 
 type APIServer struct {
-	addr string
-	db   *sql.DB
+	addr   string
+	db     *sql.DB
 	router *mux.Router
 }
 
 func NewAPIServer(addr string, db *sql.DB, router *mux.Router) *APIServer {
 	return &APIServer{
-		addr: addr,
-		db:   db,
+		addr:   addr,
+		db:     db,
 		router: router,
 	}
 }

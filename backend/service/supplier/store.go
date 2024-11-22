@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -356,7 +356,6 @@ func scanRowIntoSupplier(rows *sql.Rows) (*types.Supplier, error) {
 
 	supplier.CreatedAt = supplier.CreatedAt.Local()
 	supplier.LastModified = supplier.LastModified.Local()
-
 
 	return supplier, nil
 }

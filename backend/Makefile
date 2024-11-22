@@ -1,11 +1,11 @@
 build:
-	@go build -o bin/pos_pharmacy cmd/main.go
+	@go build -o bin/pharmacon cmd/main.go
 
 test:
 	@go test -v ./...
 	
 run: build
-	@./bin/pos_pharmacy
+	@./bin/pharmacon
 
 # run:
 # 	@go run cmd/main.go

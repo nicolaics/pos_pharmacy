@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 )
 
 type Handler struct {
@@ -65,7 +65,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	err = h.patientStore.CreatePatient(types.Patient{
 		Name: payload.Name,
-		Age: payload.Age,
+		Age:  payload.Age,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

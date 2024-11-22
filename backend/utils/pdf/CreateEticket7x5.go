@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/go-pdf/fpdf"
-	"github.com/nicolaics/pos_pharmacy/constants"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/constants"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -39,7 +39,7 @@ func CreateEticket7x5PDF(eticket types.EticketPDFReturnPayload, setNumber int, p
 	}
 
 	err = createEtix7x5Data(pdf, eticket, setNumber)
-    if err != nil {
+	if err != nil {
 		return "", err
 	}
 
@@ -98,36 +98,36 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 	caser := cases.Title(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)
-    pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
-    pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+	pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
 
-    // Number
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
-        number := fmt.Sprintf("No.  %d-%d", eticket.Number, setNumber)
-        pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, number, "", 1, "L", false, 0, "")
-    }
+	// Number
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
+		number := fmt.Sprintf("No.  %d-%d", eticket.Number, setNumber)
+		pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, number, "", 1, "L", false, 0, "")
+	}
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
 
-    // Date and Time
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
-        dateTime := fmt.Sprintf("Tgl.  %s", time.Now().Format("02-01-2006"))
-        pdf.CellFormat(3.0, constants.ETIX_7X5_STD_CELL_HEIGHT, dateTime, "", 0, "L", false, 0, "")
+	// Date and Time
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
+		dateTime := fmt.Sprintf("Tgl.  %s", time.Now().Format("02-01-2006"))
+		pdf.CellFormat(3.0, constants.ETIX_7X5_STD_CELL_HEIGHT, dateTime, "", 0, "L", false, 0, "")
 
-        pdf.SetFont("Arial", constants.REGULAR, (constants.ETIX_7X5_STD_FONT_SZ - 2))
-        pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, time.Now().Format("15:04"), "", 1, "LM", false, 0, "")
-    }
+		pdf.SetFont("Arial", constants.REGULAR, (constants.ETIX_7X5_STD_FONT_SZ - 2))
+		pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, time.Now().Format("15:04"), "", 1, "LM", false, 0, "")
+	}
 
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
 
-    // Name
-    {
-        pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
-        pdf.CellFormat(1.1, (constants.ETIX_7X5_STD_CELL_HEIGHT * 3), "Nama:", "", 0, "LM", false, 0, "")
+	// Name
+	{
+		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
+		pdf.CellFormat(1.1, (constants.ETIX_7X5_STD_CELL_HEIGHT * 3), "Nama:", "", 0, "LM", false, 0, "")
 
 		nameSplit := strings.Split(eticket.PatientName, " ")
 		startName := pdf.GetX()
@@ -151,17 +151,17 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			pdf.SetX(startName)
 			pdf.CellFormat(0, 0.6, nameSplit[2], "", 1, "CT", false, 0, "")
 		}
-    }
-    
-    pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
+	}
 
-    // Usage
-    {
+	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
+
+	// Usage
+	{
 		eticket.SetUsage = caser.String(eticket.SetUsage)
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
 		pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, eticket.SetUsage, "", 1, "CM", false, 0, "")
-    }
+	}
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
 
@@ -182,7 +182,7 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 			aDay := strings.Split(doseSplit[0], "x")
 			aDay[0] = strings.TrimSpace(aDay[0])
 			aDay[1] = strings.TrimSpace(aDay[1])
-			
+
 			cellWidth := pdf.GetStringWidth(fmt.Sprintf("%s x ", aDay[0]))
 			pdf.CellFormat(cellWidth, constants.ETIX_7X5_STD_CELL_HEIGHT, fmt.Sprintf("%s x ", aDay[0]), "", 0, "L", false, 0, "")
 
@@ -190,7 +190,7 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 			pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
 			pdf.CellFormat(pdf.GetStringWidth("/"), constants.ETIX_7X5_STD_CELL_HEIGHT, "/", "", 0, "L", false, 0, "")
-			
+
 			pdf.SubWrite(constants.PRESC_STD_CELL_HEIGHT, doseSplit[1], 5, -4.8, 0, "")
 
 			pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
@@ -239,9 +239,9 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, se
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())
 
-    if pdf.Error() != nil {
-        return fmt.Errorf("error create eticket 7x5 data: %v", pdf.Error())
-    }
+	if pdf.Error() != nil {
+		return fmt.Errorf("error create eticket 7x5 data: %v", pdf.Error())
+	}
 
 	return nil
 }

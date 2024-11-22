@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {

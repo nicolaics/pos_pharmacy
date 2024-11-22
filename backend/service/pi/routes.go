@@ -9,9 +9,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
-	"github.com/nicolaics/pos_pharmacy/utils/pdf"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
+	"github.com/nicolaics/pharmacon/utils/pdf"
 )
 
 type Handler struct {
@@ -1020,7 +1020,6 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 
 	http.ServeFile(w, r, pdfFile)
 }
-
 
 // req_type == 0, means subtract
 // req_typ == 1, means add

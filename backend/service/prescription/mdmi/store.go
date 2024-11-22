@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/logger"
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/logger"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -64,9 +64,9 @@ func (s *Store) GetMainDoctorMedItemByMedicineData(medId int) (*types.MainDoctor
 	defer rows.Close()
 
 	var temp struct {
-		ID int
-		Name string
-		LastModified time.Time
+		ID                 int
+		Name               string
+		LastModified       time.Time
 		LastModifiedByUser string
 	}
 
@@ -87,9 +87,9 @@ func (s *Store) GetMainDoctorMedItemByMedicineData(medId int) (*types.MainDoctor
 	}
 
 	returnPayload := types.MainDoctorMedItemReturn{
-		MedicineName: temp.Name,
-		MedicineContents: medContents,
-		LastModified: temp.LastModified.Local(),
+		MedicineName:           temp.Name,
+		MedicineContents:       medContents,
+		LastModified:           temp.LastModified.Local(),
 		LastModifiedByUserName: temp.LastModifiedByUser,
 	}
 	return &returnPayload, nil
@@ -116,7 +116,7 @@ func (s *Store) GetAllMainDoctorMedItemByMedicineData() ([]types.MainDoctorMedIt
 
 	returnPayload := make([]types.MainDoctorMedItemReturn, 0)
 
-	for _, medId := range(medIds) {
+	for _, medId := range medIds {
 		query = `SELECT medicine.name, md.qty, unit.name 
 				FROM main_doctor_presc_medicine_item AS md 
 				JOIN medicine ON medicine.id = md.medicine_content_id 
@@ -151,12 +151,12 @@ func (s *Store) GetAllMainDoctorMedItemByMedicineData() ([]types.MainDoctorMedIt
 		defer rows.Close()
 
 		var temp struct {
-			ID int
-			Name string
-			LastModified time.Time
+			ID                 int
+			Name               string
+			LastModified       time.Time
 			LastModifiedByUser string
 		}
-	
+
 		for rows.Next() {
 			err = rows.Scan(
 				&temp.ID,
@@ -168,20 +168,19 @@ func (s *Store) GetAllMainDoctorMedItemByMedicineData() ([]types.MainDoctorMedIt
 				return nil, err
 			}
 		}
-	
+
 		if temp.ID == 0 {
 			return nil, fmt.Errorf("medicine id %d not found", medId)
 		}
 
 		returnPayload = append(returnPayload, types.MainDoctorMedItemReturn{
-			MedicineName: temp.Name,
-			MedicineContents: medContents,
-			LastModified: temp.LastModified.Local(),
+			MedicineName:           temp.Name,
+			MedicineContents:       medContents,
+			LastModified:           temp.LastModified.Local(),
 			LastModifiedByUserName: temp.LastModifiedByUser,
 		})
 	}
 
-	
 	return returnPayload, nil
 }
 

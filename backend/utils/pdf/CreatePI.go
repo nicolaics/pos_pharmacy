@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/constants"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/constants"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
@@ -28,7 +28,7 @@ func CreatePurchaseInvoicePDF(piStore types.PurchaseInvoiceStore, purchaseInvoic
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
-	
+
 	pdf, err := initPurchaseInvoicePdf()
 	if err != nil {
 		return "", err
@@ -101,7 +101,7 @@ func CreatePurchaseInvoicePDF(piStore types.PurchaseInvoiceStore, purchaseInvoic
 		}
 
 		pdf.SetPage(pdf.PageCount())
-		
+
 		pdf.Line(startTableX["number"], 0.5, startTableX["number"], (startFooterY - 0.5))
 		pdf.Line(startTableX["item"], 0.5, startTableX["item"], (startFooterY - 0.5))
 		pdf.Line(startTableX["qty"], 0.5, startTableX["qty"], (startFooterY - 0.5))
@@ -394,7 +394,7 @@ func createPurchaseInvoiceTableHeader(pdf *fpdf.Fpdf, startTableY float64) (map[
 	}
 
 	startX := map[string]float64{
-		"number": numberStartX,
+		"number":   numberStartX,
 		"item":     itemStartX,
 		"qty":      qtyStartX,
 		"unit":     unitStartX,
@@ -402,7 +402,7 @@ func createPurchaseInvoiceTableHeader(pdf *fpdf.Fpdf, startTableY float64) (map[
 		"discount": discStartX,
 		"tax":      taxStartX,
 		"subtotal": subtotalStartX,
-		"end": pdf.GetX(),
+		"end":      pdf.GetX(),
 	}
 
 	pdf.Ln(-1)
@@ -583,7 +583,7 @@ func createPurchaseInvoiceFooter(pdf *fpdf.Fpdf, startTableX map[string]float64,
 	// 	changeAmountString := printer.Sprintf("Rp. %.1f", changeAmount)
 	// 	pdf.CellFormat(0, constants.PI_FOOTER_CELL_HEIGHT, changeAmountString, "", 1, "L", false, 0, "")
 	// }
-	
+
 	if pdf.Error() != nil {
 		return fmt.Errorf("error create purchase invoice footer: %v", pdf.Error())
 	}

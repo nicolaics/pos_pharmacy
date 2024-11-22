@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
-	"github.com/nicolaics/pos_pharmacy/cmd/api"
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/db"
+	"github.com/nicolaics/pharmacon/cmd/api"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/db"
 )
 
 func main() {
@@ -65,7 +65,7 @@ func initStorage(db *sql.DB) {
 // 			http.NotFound(w, r)
 // 			return
 // 		}
-		
+
 // 		h.ServeHTTP(w, r)
 // 	}
 // }

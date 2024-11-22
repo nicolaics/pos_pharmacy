@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nicolaics/pos_pharmacy/types"
+	"github.com/nicolaics/pharmacon/types"
 )
 
 type Store struct {
@@ -59,7 +59,6 @@ func (s *Store) GetUnitByID(id int) (*types.Unit, error) {
 
 	return unit, nil
 }
-
 
 func (s *Store) CreateUnit(unitName string) error {
 	_, err := s.db.Exec("INSERT INTO unit (name) VALUES (?)", strings.ToUpper(unitName))

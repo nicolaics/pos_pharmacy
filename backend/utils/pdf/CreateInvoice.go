@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nicolaics/pos_pharmacy/config"
-	"github.com/nicolaics/pos_pharmacy/constants"
-	"github.com/nicolaics/pos_pharmacy/types"
-	"github.com/nicolaics/pos_pharmacy/utils"
+	"github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/constants"
+	"github.com/nicolaics/pharmacon/types"
+	"github.com/nicolaics/pharmacon/utils"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/cases"
