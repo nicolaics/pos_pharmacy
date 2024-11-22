@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
+	"github.com/nicolaics/pharmacon/constants"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
 	"github.com/nicolaics/pharmacon/utils/pdf"
@@ -299,6 +300,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
 			return
 		}
+
+		err = h.medStore.InsertIntoMedicineHistoryTable(medData.ID, invoiceId, constants.MEDICINE_HISTORY_OUT, medicine.Qty, unit.ID, *invoiceDate)
+		if err != nil {
+			errDel := h.invoiceStore.AbsoluteDeleteInvoice(newInvoice)
+			if errDel != nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete invoice: %v", errDel))
+				return
+			}
+
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error insert medicine history: %v", err))
+			return
+		}
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("invoice %d successfully created by %s", payload.Number, user.Name))
@@ -318,6 +331,7 @@ func (h *Handler) handleGetInvoiceNumberForToday(w http.ResponseWriter, r *http.
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse start date: %v", err))
 		return
 	}
+
 	endDate, err := utils.ParseEndDate(time.Now().Format("2006-01-02 -0700MST"))
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse end date: %v", err))
@@ -620,7 +634,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the purchase invoice exists
+	// check if the invoice exists
 	invoice, err := h.invoiceStore.GetInvoiceByID(payload.InvoiceID)
 	if invoice == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
@@ -656,6 +670,12 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		unit, err := h.unitStore.GetUnitByName(medicineItem.Unit)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = h.medStore.DeleteMedicineHistory(medData.ID, payload.InvoiceID, constants.MEDICINE_HISTORY_OUT, medicineItem.Qty, user)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error delete medicine history: %v", err))
 			return
 		}
 
@@ -862,6 +882,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		err = utils.SubtractStock(h.medStore, medData, unit, medicine.Qty, user)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err))
+			return
+		}
+
+		err = h.medStore.ModifyMedicineHistoryTable(medData.ID, payload.ID, constants.MEDICINE_HISTORY_OUT, medicine.Qty, unit.ID, *invoiceDate)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update medicine history: %v", err))
 			return
 		}
 	}

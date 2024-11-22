@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nicolaics/pharmacon/constants"
 	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 )
@@ -573,6 +574,146 @@ func (s *Store) UpdateMedicineStock(mid int, newStock float64, user *types.User)
 	return nil
 }
 
+func (s *Store) InsertIntoMedicineHistoryTable(mid, invoiceId, historyType int, qty float64, unitId int, invoiceDate time.Time) error {
+	if historyType == constants.MEDICINE_HISTORY_OUT {
+		query := `INSERT INTO medicine_history (medicine_id, qty, unit_id, invoice_id, history_type, invoice_date) 
+					VALUES (?, ?, ?, ?, ?, ?)`
+		_, err := s.db.Exec(query, mid, qty, unitId, invoiceId, constants.MEDICINE_HISTORY_OUT, invoiceDate)
+		if err != nil {
+			return err
+		}
+	} else if historyType == constants.MEDICINE_HISTORY_IN {
+		query := `INSERT INTO medicine_history (medicine_id, qty, unit_id, purchase_invoice_id, history_type, invoice_date) 
+					VALUES (?, ?, ?, ?, ?, ?)`
+		_, err := s.db.Exec(query, mid, qty, unitId, invoiceId, constants.MEDICINE_HISTORY_IN, invoiceDate)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) ModifyMedicineHistoryTable(mid, invoiceId, historyType int, qty float64, unitId int, invoiceDate time.Time) error {
+	if historyType == constants.MEDICINE_HISTORY_OUT {
+		query := `UPDATE medicine_history SET qty = ?, unit_id = ?, invoice_date = ? 
+					WHERE medicine_id = ? AND invoice_id = ?`
+		_, err := s.db.Exec(query, qty, unitId, invoiceDate, mid, invoiceId)
+		if err != nil {
+			return err
+		}
+	} else if historyType == constants.MEDICINE_HISTORY_IN {
+		query := `UPDATE medicine_history SET qty = ?, unit_id = ?, invoice_date = ? 
+					WHERE medicine_id = ? AND purchase_invoice_id = ?`
+		_, err := s.db.Exec(query, qty, unitId, invoiceDate, mid, invoiceId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) DeleteMedicineHistory(mid, invoiceId, historyType int, qty float64, user *types.User) error {
+	data, err := s.GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType, qty)
+	if err != nil {
+		return err
+	}
+
+	writeData := map[string]interface{}{
+		"previous_data": data,
+	}
+
+	err = logger.WriteLog("delete", "medicine-history", user.Name, data.ID, writeData)
+	if err != nil {
+		return fmt.Errorf("error write log file")
+	}
+
+	if historyType == constants.MEDICINE_HISTORY_OUT {
+		query := `DELETE FROM medicine_history WHERE medicine_id = ? AND invoice_id = ? AND history_type = ?`
+		_, err := s.db.Exec(query, mid, invoiceId, constants.MEDICINE_HISTORY_OUT)
+		if err != nil {
+			return err
+		}
+	} else if historyType == constants.MEDICINE_HISTORY_IN {
+		query := `DELETE FROM medicine_history WHERE medicine_id = ? AND purchase_invoice_id = ? AND history_type = ?`
+		_, err := s.db.Exec(query, mid, invoiceId, constants.MEDICINE_HISTORY_OUT)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType int, qty float64) (*types.MedicineHistory, error) {
+	row := new(sql.Row)
+
+	if historyType == constants.MEDICINE_HISTORY_OUT {
+		query := `SELECT * FROM medicine_history WHERE medicine_id = ? AND invoice_id = ? AND history_type = ? AND qty = ?`
+		row = s.db.QueryRow(query, mid, invoiceId, constants.MEDICINE_HISTORY_OUT, qty)
+	} else if historyType == constants.MEDICINE_HISTORY_IN {
+		query := `SELECT * FROM medicine_history WHERE medicine_id = ? AND purchase_invoice_id = ? AND history_type = ? AND qty = ?`
+		row = s.db.QueryRow(query, mid, invoiceId, constants.MEDICINE_HISTORY_IN, qty)
+	}
+
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, fmt.Errorf("not found")
+		}
+
+		return nil, row.Err()
+	}
+
+	medicineHistory := new(types.MedicineHistory)
+
+	err := row.Scan(
+		&medicineHistory.ID,
+		&medicineHistory.MedicineID,
+		&medicineHistory.Qty,
+		&medicineHistory.UnitID,
+		&medicineHistory.InvoiceID,
+		&medicineHistory.PurchaseInvoiceID,
+		&medicineHistory.HistoryType,
+		&medicineHistory.InvoiceDate,
+		&medicineHistory.LastModified,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	medicineHistory.InvoiceDate = medicineHistory.InvoiceDate.Local()
+	medicineHistory.LastModified = medicineHistory.LastModified.Local()
+
+	return medicineHistory, nil
+}
+
+func (s *Store) GetMedicineHistoryByMIDAndDate(mid int, startDate time.Time, endDate time.Time) ([]types.MedicineHistoryReturn, error) {
+	query := `SELECT * FROM medicine_history 
+				WHERE mid = ? 
+				AND invoice_date >= ? 
+				AND invoice_date < ? 
+				ORDER BY invoice_date DESC`
+	rows, err := s.db.Query(query, mid, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	medicineHistory := make([]types.MedicineHistoryReturn, 0)
+
+	for rows.Next() {
+		medicine, err := scanRowIntoMedicineHistory(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		medicineHistory = append(medicineHistory, *medicine)
+	}
+
+	return medicineHistory, nil
+}
+
 func scanRowIntoMedicine(rows *sql.Rows) (*types.Medicine, error) {
 	medicine := new(types.Medicine)
 
@@ -652,4 +793,41 @@ func scanRowIntoMedicineLists(rows *sql.Rows) (*types.MedicineListsReturnPayload
 	medicine.LastModified = medicine.LastModified.Local()
 
 	return medicine, nil
+}
+
+func scanRowIntoMedicineHistory(rows *sql.Rows) (*types.MedicineHistoryReturn, error) {
+	medicine := new(types.MedicineHistory)
+
+	err := rows.Scan(
+		&medicine.ID,
+		&medicine.MedicineID,
+		&medicine.Qty,
+		&medicine.UnitID,
+		&medicine.InvoiceID,
+		&medicine.PurchaseInvoiceID,
+		&medicine.HistoryType,
+		&medicine.InvoiceDate,
+		&medicine.LastModified,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	medicine.InvoiceDate = medicine.InvoiceDate.Local()
+	medicine.LastModified = medicine.LastModified.Local()
+
+	medicineReturn := &types.MedicineHistoryReturn{
+		ID: medicine.ID,
+		MedicineID: medicine.MedicineID,
+		Qty: medicine.Qty,
+		UnitID: medicine.UnitID,
+		InvoiceID: int(medicine.InvoiceID.Int64),
+		PurchaseInvoiceID: int(medicine.PurchaseInvoiceID.Int64),
+		HistoryType: medicine.HistoryType,
+		InvoiceDate: medicine.InvoiceDate,
+		LastModified: medicine.LastModified,
+	}
+
+	return medicineReturn, nil
 }

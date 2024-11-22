@@ -23,6 +23,13 @@ type MedicineStore interface {
 	ModifyMedicine(int, Medicine, *User) error
 
 	UpdateMedicineStock(mid int, newStock float64, user *User) error
+
+	InsertIntoMedicineHistoryTable(mid, invoiceId, historyType int, qty float64, unitId int, invoiceDate time.Time) error
+	ModifyMedicineHistoryTable(mid, invoiceId, historyType int, qty float64, unitId int, invoiceDate time.Time) error
+	DeleteMedicineHistory(mid, invoiceId, historyType int, qty float64, user *User) error
+
+	GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType int, qty float64) (*MedicineHistory, error)
+	GetMedicineHistoryByMIDAndDate(mid int, startDate time.Time, endDate time.Time) ([]MedicineHistoryReturn, error)
 }
 
 type RegisterMedicinePayload struct {
@@ -116,4 +123,34 @@ type Medicine struct {
 	LastModifiedByUserID       int           `json:"lastModifiedByUserId"`
 	DeletedAt                  sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID            sql.NullInt64 `json:"deletedByUserId"`
+}
+
+type GetMedicineHistoryPayload struct {
+	ID        int       `json:"id" validate:"required"`
+	StartDate time.Time `json:"startDate" validate:"required"`
+	EndDate   time.Time `json:"endDate" validate:"required"`
+}
+
+type MedicineHistoryReturn struct {
+	ID                int       `json:"id"`
+	MedicineID        int       `json:"medicineId"`
+	Qty               float64   `json:"qty"`
+	UnitID            int       `json:"unitId"`
+	InvoiceID         int       `json:"invoiceId"`
+	PurchaseInvoiceID int       `json:"purchaseInvoiceId"`
+	HistoryType       int       `json:"historyType"`
+	InvoiceDate       time.Time `json:"invoiceDate"`
+	LastModified      time.Time `json:"lastModified"`
+}
+
+type MedicineHistory struct {
+	ID                int           `json:"id"`
+	MedicineID        int           `json:"medicineId"`
+	Qty               float64       `json:"qty"`
+	UnitID            int           `json:"unitId"`
+	InvoiceID         sql.NullInt64 `json:"invoiceId"`
+	PurchaseInvoiceID sql.NullInt64 `json:"purchaseInvoiceId"`
+	HistoryType       int           `json:"historyType"`
+	InvoiceDate       time.Time     `json:"invoiceDate"`
+	LastModified      time.Time     `json:"lastModified"`
 }

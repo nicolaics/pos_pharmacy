@@ -27,10 +27,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine/detail", h.handleGetOne).Methods(http.MethodPost)
 	router.HandleFunc("/medicine", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/medicine", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/medicine/history", h.handleGetHistory).Methods(http.MethodPost)
 
 	router.HandleFunc("/medicine", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine/history", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -430,4 +432,49 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("medicine modified into %s by %s",
 		payload.NewData.Name, user.Name))
+}
+
+func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.GetMedicineHistoryPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	startDate, err := utils.ParseStartDate(payload.StartDate.Format("2006-01-02 -0700MST"))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse start date: %v", err))
+		return
+	}
+
+	endDate, err := utils.ParseEndDate(payload.EndDate.Format("2006-01-02 -0700MST"))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse end date: %v", err))
+		return
+	}
+
+	medicineHistories, err := h.medStore.GetMedicineHistoryByMIDAndDate(payload.ID, *startDate, *endDate)
+	if medicineHistories == nil || err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("medicine id %d doesn't exist", payload.ID))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, medicineHistories)
 }
