@@ -17,7 +17,7 @@ func WriteLog(logType string, logDataType string, userName string, dataId int, d
 		return "", err
 	}
 
-	currentDate := time.Now().Format("060102-1504") // YYMMDD 형식
+	currentDate := time.Now().Format("060102-T-150405") // YYMMDD 형식
 
 	fileName := fmt.Sprintf("%s/%s_%s_%d.log", logFolder, currentDate, userName, dataId)
 
