@@ -1008,7 +1008,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 
 	file, err := os.Open(pdfFile)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice id %d file not found", payload.ID))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error open pdf file: %v", err))
 		return
 	}
 	defer file.Close()
