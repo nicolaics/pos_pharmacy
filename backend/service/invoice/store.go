@@ -539,8 +539,14 @@ func (s *Store) UpdatePDFUrl(invoiceId int, pdfUrl string) error {
 }
 
 // false means doesn't exist
-func (s *Store) IsPDFUrlExist(fileName string) (bool, error) {
-	query := `SELECT COUNT(*) FROM invoice WHERE pdf_url = ?`
+func (s *Store) IsPDFUrlExist(fileName, columnName string) (bool, error) {
+	var query string
+
+	if columnName == "invoice" {
+		query = `SELECT COUNT(*) FROM invoice WHERE pdf_url = ?`
+	} else if columnName == "receipt" {
+		query = `SELECT COUNT(*) FROM invoice WHERE receipt_pdf_url = ?`
+	}
 
 	row := s.db.QueryRow(query, fileName)
 	if row.Err() != nil {

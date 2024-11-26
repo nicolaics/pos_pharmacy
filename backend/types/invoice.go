@@ -27,7 +27,7 @@ type InvoiceStore interface {
 	ModifyInvoice(int, Invoice, *User) error
 
 	UpdatePDFUrl(invoiceId int, pdfUrl string) error
-	IsPDFUrlExist(pdfUrl string) (bool, error)
+	IsPDFUrlExist(pdfUrl, columnName string) (bool, error)
 
 	UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error
 
@@ -202,4 +202,15 @@ type InvoicePDFPayload struct {
 	Description        string                        `json:"description"`
 	InvoiceDate        time.Time                     `json:"invoiceDate"`
 	MedicineLists      []InvoiceMedicineListsPayload `json:"medicineLists"`
+}
+
+// TODO: CHECK
+type ReceiptPDFPayload struct {
+	Number               int
+	Date                 time.Time
+	Patient              string
+	ReceivedAmountString string
+	ReceivedAmount       float64
+	Doctor               string
+	PrescriptionNumber   int
 }
