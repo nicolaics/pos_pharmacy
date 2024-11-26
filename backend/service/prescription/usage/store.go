@@ -1,4 +1,4 @@
-package su
+package usage
 
 import (
 	"database/sql"

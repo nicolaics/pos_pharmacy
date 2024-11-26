@@ -23,7 +23,7 @@ import (
 	"github.com/nicolaics/pharmacon/service/prescription/mdmi"
 	"github.com/nicolaics/pharmacon/service/prescription/mf"
 	"github.com/nicolaics/pharmacon/service/prescription/patient"
-	"github.com/nicolaics/pharmacon/service/prescription/su"
+	"github.com/nicolaics/pharmacon/service/prescription/usage"
 	"github.com/nicolaics/pharmacon/service/production"
 	"github.com/nicolaics/pharmacon/service/supplier"
 	"github.com/nicolaics/pharmacon/service/unit"
@@ -60,7 +60,7 @@ func (s *APIServer) Run() error {
 	detStore := det.NewStore(s.db)
 	doseStore := dose.NewStore(s.db)
 	mfStore := mf.NewStore(s.db)
-	prescSetUsageStore := su.NewStore(s.db)
+	prescUsageStore := usage.NewStore(s.db)
 
 	mainDoctorPrescMedItemStore := mdmi.NewStore(s.db)
 
@@ -106,7 +106,7 @@ func (s *APIServer) Run() error {
 	prescriptionHandler := prescription.NewHandler(prescriptionStore, userStore, customerStore,
 		medicineStore, unitStore, invoiceStore,
 		doctorStore, patientStore, consumeTimeStore,
-		detStore, doseStore, mfStore, prescSetUsageStore)
+		detStore, doseStore, mfStore, prescUsageStore)
 	prescriptionHandler.RegisterRoutes(subrouter)
 
 	productionHandler := production.NewHandler(productionStore, userStore, medicineStore, unitStore)
