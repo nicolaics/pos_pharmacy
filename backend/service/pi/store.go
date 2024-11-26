@@ -554,7 +554,7 @@ func (s *Store) UpdatePdfUrl(piId int, pdfUrl string) error {
 func (s *Store) IsPdfUrlExist(pdfUrl string) (bool, error) {
 	query := `SELECT COUNT(*) FROM purchase_invoice WHERE pdf_url = ?`
 	row := s.db.QueryRow(query, pdfUrl)
-	if row.Err() != nil {
+	if row.Err() != nil && row.Err() != sql.ErrNoRows {
 		return true, row.Err()
 	}
 

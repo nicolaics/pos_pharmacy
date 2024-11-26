@@ -549,7 +549,7 @@ func (s *Store) IsPdfUrlExist(fileName, columnName string) (bool, error) {
 	}
 
 	row := s.db.QueryRow(query, fileName)
-	if row.Err() != nil {
+	if row.Err() != nil && row.Err() != sql.ErrNoRows {
 		return true, row.Err()
 	}
 
