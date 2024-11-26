@@ -180,7 +180,7 @@ func (s *Store) DeleteCustomer(user *types.User, customer *types.Customer) error
 		return err
 	}
 
-	err = logger.WriteLog("delete", "customer", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "customer", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -194,7 +194,7 @@ func (s *Store) ModifyCustomer(id int, newName string, user *types.User) error {
 		return err
 	}
 
-	err = logger.WriteLog("modify", "customer", user.Name, data.ID, data)
+	err = logger.WriteServerLog("modify", "customer", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

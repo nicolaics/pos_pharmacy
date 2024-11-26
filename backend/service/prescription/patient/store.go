@@ -176,7 +176,7 @@ func (s *Store) DeletePatient(patient *types.Patient, user *types.User) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "patient", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "patient", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -194,7 +194,7 @@ func (s *Store) ModifyPatient(id int, patient types.RegisterPatientPayload, user
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "patient", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "patient", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

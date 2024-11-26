@@ -291,7 +291,7 @@ func (s *Store) DeleteSupplier(supplier *types.Supplier, user *types.User) error
 		return err
 	}
 
-	err = logger.WriteLog("delete", "supplier", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "supplier", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -309,7 +309,7 @@ func (s *Store) ModifySupplier(sid int, newSupplierData types.Supplier, user *ty
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

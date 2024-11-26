@@ -432,7 +432,7 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, us
 		return err
 	}
 
-	err = logger.WriteLog("delete", "purchase-invoice", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "purchase-invoice", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -451,7 +451,7 @@ func (s *Store) DeletePurchaseMedicineItem(purchaseInvoice *types.PurchaseInvoic
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteLog("delete", "purchase-invoice", user.Name, purchaseInvoice.ID, writeData)
+	err = logger.WriteServerLog("delete", "purchase-invoice", user.Name, purchaseInvoice.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -474,7 +474,7 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

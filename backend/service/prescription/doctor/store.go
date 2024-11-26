@@ -170,7 +170,7 @@ func (s *Store) DeleteDoctor(doctor *types.Doctor, user *types.User) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "doctor", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "doctor", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -190,7 +190,7 @@ func (s *Store) ModifyDoctor(id int, newName string, user *types.User) error {
 		return err
 	}
 
-	err = logger.WriteLog("modify", "doctor", user.Name, data.ID, map[string]interface{}{"previous_data": data})
+	err = logger.WriteServerLog("modify", "doctor", user.Name, data.ID, map[string]interface{}{"previous_data": data})
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

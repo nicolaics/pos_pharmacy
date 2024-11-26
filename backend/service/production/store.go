@@ -422,7 +422,7 @@ func (s *Store) DeleteProduction(production *types.Production, user *types.User)
 		return err
 	}
 
-	err = logger.WriteLog("delete", "production", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "production", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -441,7 +441,7 @@ func (s *Store) DeleteProductionMedicineItem(production *types.Production, user 
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteLog("delete", "prescription", user.Name, production.ID, writeData)
+	err = logger.WriteServerLog("delete", "prescription", user.Name, production.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -464,7 +464,7 @@ func (s *Store) ModifyProduction(id int, production types.Production, user *type
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "production", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "production", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -671,7 +671,7 @@ func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPay
 		PdfUrl:               temp.PdfUrl.String,
 		UserName:             temp.UserName,
 	}
-	
+
 	production.ProductionDate = production.ProductionDate.Local()
 
 	return production, nil

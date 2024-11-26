@@ -390,7 +390,7 @@ func (s *Store) DeletePurchaseOrder(purchaseOrder *types.PurchaseOrder, user *ty
 		return err
 	}
 
-	err = logger.WriteLog("delete", "purchase-order", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "purchase-order", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -409,7 +409,7 @@ func (s *Store) DeletePurchaseOrderItem(purchaseOrder *types.PurchaseOrder, user
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteLog("delete", "purchase-order", user.Name, purchaseOrder.ID, writeData)
+	err = logger.WriteServerLog("delete", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -432,7 +432,7 @@ func (s *Store) ModifyPurchaseOrder(poiid int, purchaseOrder types.PurchaseOrder
 		"previous_dataa": data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-order", user.Name, poiid, writeData)
+	err = logger.WriteServerLog("modify", "purchase-order", user.Name, poiid, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -469,7 +469,7 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 		"previous_data":  data,
 	}
 
-	err = logger.WriteLog("modify", "purchase-order", user.Name, purchaseOrder.ID, writeData)
+	err = logger.WriteServerLog("modify", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

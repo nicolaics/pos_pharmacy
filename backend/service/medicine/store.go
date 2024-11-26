@@ -515,7 +515,7 @@ func (s *Store) ModifyMedicine(mid int, med types.Medicine, user *types.User) er
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "medicine", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "medicine", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -557,7 +557,7 @@ func (s *Store) UpdateMedicineStock(mid int, newStock float64, user *types.User)
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "medicine", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "medicine", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -624,7 +624,7 @@ func (s *Store) DeleteMedicineHistory(mid, invoiceId, historyType int, qty float
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("delete", "medicine-history", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("delete", "medicine-history", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -818,15 +818,15 @@ func scanRowIntoMedicineHistory(rows *sql.Rows) (*types.MedicineHistoryReturn, e
 	medicine.LastModified = medicine.LastModified.Local()
 
 	medicineReturn := &types.MedicineHistoryReturn{
-		ID: medicine.ID,
-		MedicineID: medicine.MedicineID,
-		Qty: medicine.Qty,
-		UnitID: medicine.UnitID,
-		InvoiceID: int(medicine.InvoiceID.Int64),
+		ID:                medicine.ID,
+		MedicineID:        medicine.MedicineID,
+		Qty:               medicine.Qty,
+		UnitID:            medicine.UnitID,
+		InvoiceID:         int(medicine.InvoiceID.Int64),
 		PurchaseInvoiceID: int(medicine.PurchaseInvoiceID.Int64),
-		HistoryType: medicine.HistoryType,
-		InvoiceDate: medicine.InvoiceDate,
-		LastModified: medicine.LastModified,
+		HistoryType:       medicine.HistoryType,
+		InvoiceDate:       medicine.InvoiceDate,
+		LastModified:      medicine.LastModified,
 	}
 
 	return medicineReturn, nil

@@ -11,7 +11,7 @@ import (
 logType = ["delete", "modify"]
 logDataType = ["user", "invoice", "prescription", etc]
 */
-func WriteLog(logType string, logDataType string, userName string, dataId int, deletedData any) error {
+func WriteServerLog(logType string, logDataType string, userName string, dataId int, deletedData any) error {
 	logFolder := fmt.Sprintf("static/log/%s/%s", logType, logDataType)
 	if err := os.MkdirAll(logFolder, 0755); err != nil {
 		return err

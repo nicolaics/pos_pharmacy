@@ -526,7 +526,7 @@ func (s *Store) DeletePrescription(prescription *types.Prescription, user *types
 		return err
 	}
 
-	err = logger.WriteLog("delete", "prescription", user.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "prescription", user.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -545,7 +545,7 @@ func (s *Store) DeletePrescriptionMedicineItem(prescription *types.Prescription,
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteLog("delete", "prescription", user.Name, prescription.ID, writeData)
+	err = logger.WriteServerLog("delete", "prescription", user.Name, prescription.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -568,7 +568,7 @@ func (s *Store) ModifyPrescription(id int, prescription types.Prescription, user
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "prescription", user.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "prescription", user.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -1004,7 +1004,7 @@ func (s *Store) DeleteSetItem(prescription *types.Prescription, user *types.User
 		"deleted_medicine_set": data,
 	}
 
-	err = logger.WriteLog("delete", "prescription", user.Name, prescription.ID, writeData)
+	err = logger.WriteServerLog("delete", "prescription", user.Name, prescription.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

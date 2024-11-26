@@ -219,7 +219,7 @@ func (s *Store) DeleteUser(user *types.User, deletedByUser *types.User) error {
 		return err
 	}
 
-	err = logger.WriteLog("delete", "user", deletedByUser.Name, data.ID, data)
+	err = logger.WriteServerLog("delete", "user", deletedByUser.Name, data.ID, data)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
@@ -275,7 +275,7 @@ func (s *Store) ModifyUser(id int, user types.User, modifiedByUser *types.User) 
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("modify", "user", modifiedByUser.Name, data.ID, writeData)
+	err = logger.WriteServerLog("modify", "user", modifiedByUser.Name, data.ID, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}

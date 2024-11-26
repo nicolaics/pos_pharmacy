@@ -231,7 +231,7 @@ func (s *Store) DeleteMainDoctorMedItem(medId int, user *types.User) error {
 		"previous_data": data,
 	}
 
-	err = logger.WriteLog("delete", "main-doctor-prescription-medicines", user.Name, medId, writeData)
+	err = logger.WriteServerLog("delete", "main-doctor-prescription-medicines", user.Name, medId, writeData)
 	if err != nil {
 		return fmt.Errorf("error write log file")
 	}
