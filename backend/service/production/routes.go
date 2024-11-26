@@ -3,6 +3,7 @@ package production
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -39,10 +40,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/production/detail", h.handleGetProductionDetail).Methods(http.MethodPost)
 	router.HandleFunc("/production", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/production", h.handleModify).Methods(http.MethodPatch)
+	router.HandleFunc("/production/print", h.handlePrint).Methods(http.MethodPost)
 
 	router.HandleFunc("/production", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/production/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/production/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/production/print", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -863,4 +866,52 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production modified by %s", user.Name))
+}
+
+func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.ViewProductionMedicineItemPayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		return
+	}
+
+	// check if the production exists
+	production, err := h.productionStore.GetProductionByNumber(payload.Number)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("production number %d doesn't exists", payload.Number))
+		return
+	}
+
+	pdfFile := "static/pdf/production/" + production.PdfUrl
+
+	file, err := os.Open(pdfFile)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error open pdf file: %v", err))
+		return
+	}
+	defer file.Close()
+
+	attachment := fmt.Sprintf("attachment; filename=%s", pdfFile)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
+
+	http.ServeFile(w, r, pdfFile)
 }
