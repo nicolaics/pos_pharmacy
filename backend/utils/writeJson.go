@@ -34,11 +34,11 @@ func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func WriteError(w http.ResponseWriter, status int, err error) {
+func WriteError(w http.ResponseWriter, status int, err error, logFile string) {
 	response := map[string]interface{}{
 		"status":   "error",
 		"response": err.Error(),
-		"log":      "",
+		"log":      logFile,
 	}
 	WriteJSON(w, status, response)
 }
