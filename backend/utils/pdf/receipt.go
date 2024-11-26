@@ -2,7 +2,6 @@ package pdf
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -34,7 +33,7 @@ func CreateReceiptPdf(receipt types.ReceiptPdfPayload, invoiceStore types.Invoic
 
 	err = createReceiptHeader(pdf)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	err = createReceiptData(pdf, receipt)
