@@ -33,7 +33,7 @@ type Handler struct {
 	detStore          types.DetStore
 	doseStore         types.DoseStore
 	mfStore           types.MfStore
-	SetUsageStore     types.SetUsageStore
+	usageStore        types.UsageStore
 }
 
 func NewHandler(prescriptionStore types.PrescriptionStore,
@@ -48,7 +48,7 @@ func NewHandler(prescriptionStore types.PrescriptionStore,
 	detStore types.DetStore,
 	doseStore types.DoseStore,
 	mfStore types.MfStore,
-	SetUsageStore types.SetUsageStore) *Handler {
+	usageStore types.UsageStore) *Handler {
 	return &Handler{
 		prescriptionStore: prescriptionStore,
 		userStore:         userStore,
@@ -62,7 +62,7 @@ func NewHandler(prescriptionStore types.PrescriptionStore,
 		detStore:          detStore,
 		doseStore:         doseStore,
 		mfStore:           mfStore,
-		SetUsageStore:     SetUsageStore,
+		usageStore:        usageStore,
 	}
 }
 
@@ -302,11 +302,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get set usage
-		setUsage, err := h.SetUsageStore.GetSetUsageByName(setItem.Usage)
+		setUsage, err := h.usageStore.GetUsageByName(setItem.Usage)
 		if setUsage == nil {
-			err = h.SetUsageStore.CreateSetUsage(setItem.Usage)
+			err = h.usageStore.CreateUsage(setItem.Usage)
 			if err == nil {
-				setUsage, err = h.SetUsageStore.GetSetUsageByName(setItem.Usage)
+				setUsage, err = h.usageStore.GetUsageByName(setItem.Usage)
 			}
 		}
 		if err != nil {
@@ -426,7 +426,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			eticketPdf := types.EticketPdfPayload{
 				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
-				SetUsage:    setUsage.Name,
+				Usage:       setUsage.Name,
 				Dose:        dose.Name,
 				SetUnit:     setUnit.Name,
 				ConsumeTime: consumeTime.Name,
@@ -1271,11 +1271,11 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get set usage
-		setUsage, err := h.SetUsageStore.GetSetUsageByName(setItem.Usage)
+		setUsage, err := h.usageStore.GetUsageByName(setItem.Usage)
 		if setUsage == nil {
-			err = h.SetUsageStore.CreateSetUsage(setItem.Usage)
+			err = h.usageStore.CreateUsage(setItem.Usage)
 			if err == nil {
-				setUsage, err = h.SetUsageStore.GetSetUsageByName(setItem.Usage)
+				setUsage, err = h.usageStore.GetUsageByName(setItem.Usage)
 			}
 		}
 		if err != nil {
@@ -1363,7 +1363,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			eticketPdf := types.EticketPdfPayload{
 				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
-				SetUsage:    setUsage.Name,
+				Usage:       setUsage.Name,
 				Dose:        dose.Name,
 				SetUnit:     setUnit.Name,
 				ConsumeTime: consumeTime.Name,

@@ -285,7 +285,7 @@ type PrescriptionPdfPayload struct {
 type EticketPdfPayload struct {
 	Number      int     `json:"number"`
 	PatientName string  `json:"patientName"`
-	SetUsage    string  `json:"setUsage"`
+	Usage       string  `json:"setUsage"`
 	Dose        string  `json:"dose"`
 	SetUnit     string  `json:"setUnit"`
 	ConsumeTime string  `json:"consumeTime"`

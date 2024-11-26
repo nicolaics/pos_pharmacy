@@ -149,10 +149,10 @@ func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPdfPayload, setNumbe
 
 	// Usage
 	{
-		eticket.SetUsage = caser.String(eticket.SetUsage)
+		eticket.Usage = caser.String(eticket.Usage)
 
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X5_STD_FONT_SZ)
-		pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, eticket.SetUsage, "", 1, "CM", false, 0, "")
+		pdf.CellFormat(0, constants.ETIX_7X5_STD_CELL_HEIGHT, eticket.Usage, "", 1, "CM", false, 0, "")
 	}
 
 	pdf.Line(0, pdf.GetY(), constants.ETIX_7X5_WIDTH, pdf.GetY())

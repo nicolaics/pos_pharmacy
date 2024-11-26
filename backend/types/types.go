@@ -51,9 +51,9 @@ type MfStore interface {
 }
 type Mf PaymentMethod
 
-type SetUsageStore interface {
-	GetSetUsageByName(string) (*SetUsage, error)
-	GetSetUsageByID(int) (*SetUsage, error)
-	CreateSetUsage(string) error
+type UsageStore interface {
+	GetUsageByName(string) (*Usage, error)
+	GetUsageByID(int) (*Usage, error)
+	CreateUsage(string) error
 }
-type SetUsage PaymentMethod
+type Usage PaymentMethod

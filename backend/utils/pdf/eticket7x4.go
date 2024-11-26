@@ -148,16 +148,16 @@ func createEtix7x4Data(pdf *fpdf.Fpdf, eticket types.EticketPdfPayload, setNumbe
 
 	// Usage
 	{
-		eticket.SetUsage = caser.String(eticket.SetUsage)
+		eticket.Usage = caser.String(eticket.Usage)
 
-		usageSplit := strings.Split(eticket.SetUsage, " ")
+		usageSplit := strings.Split(eticket.Usage, " ")
 		pdf.SetFont("Arial", constants.REGULAR, constants.ETIX_7X4_STD_FONT_SZ)
 
 		if len(usageSplit) > 2 {
 			pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, (usageSplit[0] + " " + usageSplit[1]), "", 1, "CB", false, 0, "")
 			pdf.CellFormat(0, constants.ETIX_7X4_STD_CELL_HEIGHT, usageSplit[2], "", 1, "CT", false, 0, "")
 		} else {
-			pdf.CellFormat(0, (constants.ETIX_7X4_STD_CELL_HEIGHT * 2), eticket.SetUsage, "", 1, "CM", false, 0, "")
+			pdf.CellFormat(0, (constants.ETIX_7X4_STD_CELL_HEIGHT * 2), eticket.Usage, "", 1, "CM", false, 0, "")
 		}
 	}
 
