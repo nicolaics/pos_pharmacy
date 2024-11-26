@@ -528,7 +528,7 @@ func (s *Store) ModifyInvoice(invoiceId int, invoice types.Invoice, user *types.
 	return nil
 }
 
-func (s *Store) UpdatePDFUrl(invoiceId int, pdfUrl string) error {
+func (s *Store) UpdatePdfUrl(invoiceId int, pdfUrl string) error {
 	query := `UPDATE invoice SET pdf_url = ? WHERE id = ? AND deleted_at IS NULL`
 	_, err := s.db.Exec(query, pdfUrl, invoiceId)
 	if err != nil {
@@ -539,7 +539,7 @@ func (s *Store) UpdatePDFUrl(invoiceId int, pdfUrl string) error {
 }
 
 // false means doesn't exist
-func (s *Store) IsPDFUrlExist(fileName, columnName string) (bool, error) {
+func (s *Store) IsPdfUrlExist(fileName, columnName string) (bool, error) {
 	var query string
 
 	if columnName == "invoice" {
@@ -563,7 +563,7 @@ func (s *Store) IsPDFUrlExist(fileName, columnName string) (bool, error) {
 	return (count > 0), nil
 }
 
-func (s *Store) UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error {
+func (s *Store) UpdateReceiptPdfUrl(invoiceId int, receiptPdfUrl string) error {
 	query := `UPDATE invoice SET receipt_pdf_url = ? WHERE id = ?`
 	_, err := s.db.Exec(query, receiptPdfUrl, invoiceId)
 	if err != nil {
@@ -637,8 +637,8 @@ func scanRowIntoInvoice(rows *sql.Rows) (*types.Invoice, error) {
 		&invoice.CreatedAt,
 		&invoice.LastModified,
 		&invoice.LastModifiedByUserID,
-		&invoice.PDFUrl,
-		&invoice.ReceiptPDFUrl,
+		&invoice.PdfUrl,
+		&invoice.ReceiptPdfUrl,
 		&invoice.DeletedAt,
 		&invoice.DeletedByUserID,
 	)

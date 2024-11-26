@@ -44,8 +44,8 @@ type PrescriptionStore interface {
 	GetEticketsByPrescriptionID(int) ([]Eticket, error)
 
 	// tabla nemae = prescription, eticket
-	UpdatePDFUrl(tableName string, id int, fileName string) error
-	IsPDFUrlExist(tableName string, fileName string) (bool, error)
+	UpdatePdfUrl(tableName string, id int, fileName string) error
+	IsPdfUrlExist(tableName string, fileName string) (bool, error)
 
 	UpdateEticketID(eticketId int, prescSetItemId int) error
 
@@ -149,7 +149,7 @@ type PrescriptionDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastLastModifiedByUserName"`
-	PDFUrl                 string    `json:"prescPdfUrl"`
+	PdfUrl                 string    `json:"prescPdfUrl"`
 
 	Invoice struct {
 		Number       int       `json:"number"`
@@ -245,7 +245,7 @@ type Prescription struct {
 	UserID               int           `json:"userId"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
-	PDFUrl               string        `json:"pdfUrl"`
+	PdfUrl               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
@@ -270,11 +270,11 @@ type Eticket struct {
 	Number                int       `json:"number"`
 	MedicineQty           float64   `json:"medicineQty"`
 	Size                  string    `json:"size"`
-	PDFUrl                string    `json:"pdfUrl"`
+	PdfUrl                string    `json:"pdfUrl"`
 	CreatedAt             time.Time `json:"createdAt"`
 }
 
-type PrescriptionPDFReturn struct {
+type PrescriptionPdfPayload struct {
 	Number       int
 	Date         time.Time
 	Patient      Patient
@@ -282,7 +282,7 @@ type PrescriptionPDFReturn struct {
 	MedicineSets []PrescriptionSetItemReturn
 }
 
-type EticketPDFReturnPayload struct {
+type EticketPdfPayload struct {
 	Number      int     `json:"number"`
 	PatientName string  `json:"patientName"`
 	SetUsage    string  `json:"setUsage"`

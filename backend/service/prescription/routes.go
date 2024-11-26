@@ -198,7 +198,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:          payload.Description,
 		UserID:               user.ID,
 		LastModifiedByUserID: user.ID,
-		PDFUrl:               "",
+		PdfUrl:               "",
 	}
 
 	err = h.prescriptionStore.CreatePrescription(presc)
@@ -383,7 +383,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
 				Size:                  setItem.Eticket.Size,
-				PDFUrl:                "",
+				PdfUrl:                "",
 			}
 
 			err = h.prescriptionStore.CreateEticket(eticket)
@@ -423,7 +423,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketPDF := types.EticketPDFReturnPayload{
+			eticketPdf := types.EticketPdfPayload{
 				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
 				SetUsage:    setUsage.Name,
@@ -436,13 +436,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 			var eticketFileName string
 			if setItem.Eticket.Size == "7x4" {
-				eticketFileName, err = pdf.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
+				eticketFileName, err = pdf.CreateEticket7x4Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
 					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 					return
 				}
 			} else if setItem.Eticket.Size == "7x5" {
-				eticketFileName, err = pdf.CreateEticket7x5PDF(eticketPDF, setNumber, h.prescriptionStore)
+				eticketFileName, err = pdf.CreateEticket7x5Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
 					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 					return
@@ -455,7 +455,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			eticketFileNames = append(eticketFileNames, eticketFileName)
 			setNumber++
 
-			err = h.prescriptionStore.UpdatePDFUrl("eticket", eticketId, eticketFileName)
+			err = h.prescriptionStore.UpdatePdfUrl("eticket", eticketId, eticketFileName)
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
@@ -569,20 +569,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prescPDF := types.PrescriptionPDFReturn{
+	prescPdf := types.PrescriptionPdfPayload{
 		Number:       payload.Number,
 		Date:         *prescriptionDate,
 		Patient:      *patient,
 		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
-	prescFileName, err := pdf.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, "")
+	prescFileName, err := pdf.CreatePrescriptionPdf(prescPdf, h.prescriptionStore, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
 		return
 	}
 
-	err = h.prescriptionStore.UpdatePDFUrl("prescription", prescriptionId, prescFileName)
+	err = h.prescriptionStore.UpdatePdfUrl("prescription", prescriptionId, prescFileName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update presc pdf url: %v", err))
 		return
@@ -637,8 +637,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	returnPayload := map[string]interface{}{
 		"success":         fmt.Sprintf("prescription %d successfully created by %s", payload.Number, user.Name),
-		"prescriptionPDF": prescFileName,
-		"eticketPDF":      eticketFileNames,
+		"prescriptionPdf": prescFileName,
+		"eticketPdf":      eticketFileNames,
 	}
 	utils.WriteJSON(w, http.StatusCreated, returnPayload)
 }
@@ -923,7 +923,7 @@ func (h *Handler) handleGetPrescriptionDetail(w http.ResponseWriter, r *http.Req
 		CreatedAt:              prescription.CreatedAt,
 		LastModified:           prescription.LastModified,
 		LastModifiedByUserName: lastModifiedUser.Name,
-		PDFUrl:                 prescription.PDFUrl,
+		PdfUrl:                 prescription.PdfUrl,
 
 		Invoice: struct {
 			Number       int       "json:\"number\""
@@ -1334,7 +1334,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				Number:                setItem.Eticket.Number,
 				MedicineQty:           setItem.Eticket.MedicineQty,
 				Size:                  setItem.Eticket.Size,
-				PDFUrl:                "",
+				PdfUrl:                "",
 			}
 			err = h.prescriptionStore.CreateEticket(eticket)
 			if err != nil {
@@ -1360,7 +1360,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			eticketPDF := types.EticketPDFReturnPayload{
+			eticketPdf := types.EticketPdfPayload{
 				Number:      setItem.Eticket.Number,
 				PatientName: patient.Name,
 				SetUsage:    setUsage.Name,
@@ -1373,13 +1373,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 			var eticketFileName string
 			if setItem.Eticket.Size == "7x4" {
-				eticketFileName, err = pdf.CreateEticket7x4PDF(eticketPDF, setNumber, h.prescriptionStore)
+				eticketFileName, err = pdf.CreateEticket7x4Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
 					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 					return
 				}
 			} else if setItem.Eticket.Size == "7x5" {
-				eticketFileName, err = pdf.CreateEticket7x5PDF(eticketPDF, setNumber, h.prescriptionStore)
+				eticketFileName, err = pdf.CreateEticket7x5Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
 					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err))
 					return
@@ -1458,14 +1458,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prescPDF := types.PrescriptionPDFReturn{
+	prescPdf := types.PrescriptionPdfPayload{
 		Number:       payload.NewData.Number,
 		Date:         *prescriptionDate,
 		Patient:      *patient,
 		Doctor:       *doctor,
 		MedicineSets: medicineSets,
 	}
-	prescFileName, err := pdf.CreatePrescriptionPDF(prescPDF, h.prescriptionStore, prescription.PDFUrl)
+	prescFileName, err := pdf.CreatePrescriptionPdf(prescPdf, h.prescriptionStore, prescription.PdfUrl)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err))
 		return
@@ -1502,8 +1502,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	returnPayload := map[string]interface{}{
 		"success":         fmt.Sprintf("prescription modified by %s", user.Name),
-		"prescriptionPDF": prescFileName,
-		"eticketPDF":      eticketFileNames,
+		"prescriptionPdf": prescFileName,
+		"eticketPdf":      eticketFileNames,
 	}
 	utils.WriteJSON(w, http.StatusOK, returnPayload)
 }
@@ -1539,7 +1539,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pdfFiles := []string{("static/pdf/prescription/" + prescription.PDFUrl)}
+	pdfFiles := []string{("static/pdf/prescription/" + prescription.PdfUrl)}
 
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", "attachment; filename=pdfFiles.zip")
@@ -1556,7 +1556,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 
 	if len(etickets) > 0 {
 		for _, eticket := range etickets {
-			pdfFiles = append(pdfFiles, ("static/pdf/eticket/" + eticket.PDFUrl))
+			pdfFiles = append(pdfFiles, ("static/pdf/eticket/" + eticket.PdfUrl))
 		}
 	}
 

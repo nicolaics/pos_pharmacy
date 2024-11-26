@@ -18,7 +18,7 @@ import (
 	"github.com/go-pdf/fpdf"
 )
 
-func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
+func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/prescription/")
 	if err != nil {
 		return "", err
@@ -86,14 +86,14 @@ func CreatePrescriptionPDF(presc types.PrescriptionPDFReturn, prescStore types.P
 
 	if prevFileName == "" {
 		fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-		isExist, err := prescStore.IsPDFUrlExist("prescription", fileName)
+		isExist, err := prescStore.IsPdfUrlExist("prescription", fileName)
 		if err != nil {
 			return "", err
 		}
 
 		for isExist {
 			fileName = "p-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-			isExist, err = prescStore.IsPDFUrlExist("prescription", fileName)
+			isExist, err = prescStore.IsPdfUrlExist("prescription", fileName)
 			if err != nil {
 				return "", err
 			}
@@ -204,7 +204,7 @@ func createPrescriptionHeader(pdf *fpdf.Fpdf, doctor string) error {
 	return nil
 }
 
-func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPDFReturn) error {
+func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPdfPayload) error {
 	var caser = cases.Title(language.Indonesian)
 
 	pdf.SetTextColor(constants.GREEN_R, constants.GREEN_G, constants.GREEN_B)

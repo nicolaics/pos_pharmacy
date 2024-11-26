@@ -19,7 +19,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreatePurchaseOrderInvoicePDF(poiStore types.PurchaseOrderStore, poi types.PurchaseOrderPDFPayload, prevFileName string) (string, error) {
+func CreatePurchaseOrderInvoicePdf(poiStore types.PurchaseOrderStore, poi types.PurchaseOrderPdfPayload, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/purchase-order/")
 	if err != nil {
 		return "", err
@@ -124,14 +124,14 @@ func CreatePurchaseOrderInvoicePDF(poiStore types.PurchaseOrderStore, poi types.
 
 	if prevFileName == "" {
 		fileName := "poi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-		isExist, err := poiStore.IsPDFUrlExist(fileName)
+		isExist, err := poiStore.IsPdfUrlExist(fileName)
 		if err != nil {
 			return "", err
 		}
 
 		for isExist {
 			fileName = "poi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-			isExist, err = poiStore.IsPDFUrlExist(fileName)
+			isExist, err = poiStore.IsPdfUrlExist(fileName)
 			if err != nil {
 				return "", err
 			}
@@ -266,7 +266,7 @@ func createPurchaseOrderInvoiceHeader(pdf *fpdf.Fpdf, supplier types.SupplierInf
 	return nil
 }
 
-func createPurchaseOrderInvoiceInfo(pdf *fpdf.Fpdf, poi types.PurchaseOrderPDFPayload) error {
+func createPurchaseOrderInvoiceInfo(pdf *fpdf.Fpdf, poi types.PurchaseOrderPdfPayload) error {
 	var caser = cases.Title(language.Indonesian)
 
 	space := 0.5

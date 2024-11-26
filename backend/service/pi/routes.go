@@ -336,7 +336,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	purchaseInvoicePdf := types.PurchaseInvoicePDFPayload{
+	purchaseInvoicePdf := types.PurchaseInvoicePdfPayload{
 		Number:             payload.Number,
 		Subtotal:           payload.Subtotal,
 		DiscountPercentage: payload.DiscountPercentage,
@@ -374,13 +374,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create pdf
-	fileName, err := pdf.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
+	fileName, err := pdf.CreatePurchaseInvoicePdf(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
 		return
 	}
 
-	err = h.purchaseInvoiceStore.UpdatePDFUrl(purchaseInvoiceId, fileName)
+	err = h.purchaseInvoiceStore.UpdatePdfUrl(purchaseInvoiceId, fileName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err))
 		return
@@ -854,7 +854,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		purchaseInvoicePdf := types.PurchaseInvoicePDFPayload{
+		purchaseInvoicePdf := types.PurchaseInvoicePdfPayload{
 			Number:             payload.NewData.Number,
 			Subtotal:           payload.NewData.Subtotal,
 			DiscountPercentage: payload.NewData.DiscountPercentage,
@@ -892,13 +892,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// create pdf
-		fileName, err := pdf.CreatePurchaseInvoicePDF(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
+		fileName, err := pdf.CreatePurchaseInvoicePdf(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err))
 			return
 		}
 
-		err = h.purchaseInvoiceStore.UpdatePDFUrl(purchaseInvoice.ID, fileName)
+		err = h.purchaseInvoiceStore.UpdatePdfUrl(purchaseInvoice.ID, fileName)
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err))
 			return

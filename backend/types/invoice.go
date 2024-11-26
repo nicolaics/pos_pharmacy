@@ -26,10 +26,10 @@ type InvoiceStore interface {
 	DeleteInvoice(*Invoice, *User) error
 	ModifyInvoice(int, Invoice, *User) error
 
-	UpdatePDFUrl(invoiceId int, pdfUrl string) error
-	IsPDFUrlExist(pdfUrl, columnName string) (bool, error)
+	UpdatePdfUrl(invoiceId int, pdfUrl string) error
+	IsPdfUrlExist(pdfUrl, columnName string) (bool, error)
 
-	UpdateReceiptPDFUrl(invoiceId int, receiptPdfUrl string) error
+	UpdateReceiptPdfUrl(invoiceId int, receiptPdfUrl string) error
 
 	// delete entirely from the db if there's error
 	AbsoluteDeleteInvoice(invoice Invoice) error
@@ -123,7 +123,7 @@ type InvoiceDetailPayload struct {
 	CreatedAt              time.Time `json:"createdAt"`
 	LastModified           time.Time `json:"lastModified"`
 	LastModifiedByUserName string    `json:"lastModifiedByUserName"`
-	PDFUrl                 string    `json:"pdfUrl"`
+	PdfUrl                 string    `json:"pdfUrl"`
 
 	// the one who creates the invoice
 	User struct {
@@ -182,20 +182,20 @@ type Invoice struct {
 	CreatedAt            time.Time      `json:"createdAt"`
 	LastModified         time.Time      `json:"lastModified"`
 	LastModifiedByUserID int            `json:"lastModifiedByUserId"`
-	PDFUrl               string         `json:"pdfUrl"`
-	ReceiptPDFUrl        sql.NullString `json:"receiptPdfUrl"` // kwitansi
+	PdfUrl               string         `json:"pdfUrl"`
+	ReceiptPdfUrl        sql.NullString `json:"receiptPdfUrl"` // kwitansi
 	DeletedAt            sql.NullTime   `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64  `json:"deletedByUserId"`
 }
 
-type InvoicePDFPayload struct {
+type InvoicePdfPayload struct {
 	Number             int                           `json:"number"`
 	UserName           string                        `json:"userName"`
 	Subtotal           float64                       `json:"subtotal"`
 	DiscountPercentage float64                       `json:"discountPercentage"`
-	DiscountAmount           float64                       `json:"discountAmount"`
+	DiscountAmount     float64                       `json:"discountAmount"`
 	TaxPercentage      float64                       `json:"taxPercentage"`
-	TaxAmount                float64                       `json:"taxAmount"`
+	TaxAmount          float64                       `json:"taxAmount"`
 	TotalPrice         float64                       `json:"totalPrice"`
 	PaidAmount         float64                       `json:"paidAmount"`
 	ChangeAmount       float64                       `json:"changeAmount"`
@@ -205,7 +205,7 @@ type InvoicePDFPayload struct {
 }
 
 // TODO: CHECK
-type ReceiptPDFPayload struct {
+type ReceiptPdfPayload struct {
 	Number               int
 	Date                 time.Time
 	Patient              string

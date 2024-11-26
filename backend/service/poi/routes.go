@@ -209,20 +209,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	poiPdf := types.PurchaseOrderPDFPayload{
+	poiPdf := types.PurchaseOrderPdfPayload{
 		Number:        payload.Number,
 		InvoiceDate:   *invoiceDate,
 		UserName:      user.Name,
 		MedicineLists: payload.MedicineLists,
 		Supplier:      *supplier,
 	}
-	fileName, err := pdf.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, "")
+	fileName, err := pdf.CreatePurchaseOrderInvoicePdf(h.poInvoiceStore, poiPdf, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
 		return
 	}
 
-	err = h.poInvoiceStore.UpdatePDFUrl(purchaseOrderId, fileName)
+	err = h.poInvoiceStore.UpdatePdfUrl(purchaseOrderId, fileName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf in database: %v", err))
 		return
@@ -629,20 +629,20 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	poiPdf := types.PurchaseOrderPDFPayload{
+	poiPdf := types.PurchaseOrderPdfPayload{
 		Number:        payload.NewData.Number,
 		InvoiceDate:   *invoiceDate,
 		UserName:      user.Name,
 		MedicineLists: payload.NewData.MedicineLists,
 		Supplier:      *supplier,
 	}
-	fileName, err := pdf.CreatePurchaseOrderInvoicePDF(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
+	fileName, err := pdf.CreatePurchaseOrderInvoicePdf(h.poInvoiceStore, poiPdf, purchaseOrder.PdfURL)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("saved in database but failed to create pdf: %v", err))
 		return
 	}
 
-	err = h.poInvoiceStore.UpdatePDFUrl(purchaseOrder.ID, fileName)
+	err = h.poInvoiceStore.UpdatePdfUrl(purchaseOrder.ID, fileName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf in database: %v", err))
 		return

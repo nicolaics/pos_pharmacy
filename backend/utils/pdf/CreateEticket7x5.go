@@ -15,15 +15,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-type Eticket7X5 struct {
-	Print       bool
-	Qty         int
-	MedicineQty int
-	Number      int
-	Dose        string
-}
-
-func CreateEticket7x5PDF(eticket types.EticketPDFReturnPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
+func CreateEticket7x5Pdf(eticket types.EticketPdfPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
 	directory, err := filepath.Abs("static/pdf/eticket/")
 	if err != nil {
 		return "", err
@@ -44,14 +36,14 @@ func CreateEticket7x5PDF(eticket types.EticketPDFReturnPayload, setNumber int, p
 	}
 
 	fileName := "e-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-	isExist, err := prescStore.IsPDFUrlExist("eticket", fileName)
+	isExist, err := prescStore.IsPdfUrlExist("eticket", fileName)
 	if err != nil {
 		return "", err
 	}
 
 	for isExist {
 		fileName = "e-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-		isExist, err = prescStore.IsPDFUrlExist("eticket", fileName)
+		isExist, err = prescStore.IsPdfUrlExist("eticket", fileName)
 		if err != nil {
 			return "", err
 		}
@@ -94,7 +86,7 @@ func initEticket7x5Pdf() (*fpdf.Fpdf, error) {
 	return pdf, nil
 }
 
-func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPDFReturnPayload, setNumber int) error {
+func createEtix7x5Data(pdf *fpdf.Fpdf, eticket types.EticketPdfPayload, setNumber int) error {
 	caser := cases.Title(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)

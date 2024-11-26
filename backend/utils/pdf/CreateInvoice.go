@@ -19,7 +19,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreateInvoicePDF(invoice types.InvoicePDFPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
+func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/invoice/")
 	if err != nil {
 		return "", err
@@ -110,14 +110,14 @@ func CreateInvoicePDF(invoice types.InvoicePDFPayload, invoiceStore types.Invoic
 
 	if prevFileName == "" {
 		fileName := "i-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-		isExist, err := invoiceStore.IsPDFUrlExist(fileName)
+		isExist, err := invoiceStore.IsPdfUrlExist(fileName, "invoice")
 		if err != nil {
 			return "", err
 		}
 
 		for isExist {
 			fileName = "i-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-			isExist, err = invoiceStore.IsPDFUrlExist(fileName)
+			isExist, err = invoiceStore.IsPdfUrlExist(fileName, "invoice")
 			if err != nil {
 				return "", err
 			}
@@ -166,7 +166,7 @@ func initInvoicePdf() (*fpdf.Fpdf, error) {
 	return pdf, nil
 }
 
-func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error {
+func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePdfPayload) error {
 	pdf.SetXY((constants.INVOICE_MARGIN + 0.1), 0.3)
 
 	pdf.SetFont("Bree", constants.BOLD, 20)
@@ -205,7 +205,7 @@ func createInvoiceHeader(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error 
 	return nil
 }
 
-func createInvoiceInfo(pdf *fpdf.Fpdf, invoice types.InvoicePDFPayload) error {
+func createInvoiceInfo(pdf *fpdf.Fpdf, invoice types.InvoicePdfPayload) error {
 	var caser = cases.Title(language.Indonesian)
 
 	startX := 5.3
@@ -385,7 +385,7 @@ func createInvoiceData(pdf *fpdf.Fpdf, startX map[string]float64, medicineLists 
 	return nil
 }
 
-func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY float64, invoice types.InvoicePDFPayload) error {
+func createInvoiceFooter(pdf *fpdf.Fpdf, startX map[string]float64, startFooterY float64, invoice types.InvoicePdfPayload) error {
 	var printer = message.NewPrinter(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)

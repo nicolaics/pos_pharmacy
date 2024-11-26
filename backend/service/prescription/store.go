@@ -408,7 +408,7 @@ func (s *Store) CreatePrescription(prescription types.Prescription) error {
 		prescription.InvoiceID, prescription.Number, prescription.PrescriptionDate,
 		prescription.PatientID, prescription.DoctorID, prescription.Qty,
 		prescription.Price, prescription.TotalPrice, prescription.Description,
-		prescription.UserID, prescription.LastModifiedByUserID, prescription.PDFUrl)
+		prescription.UserID, prescription.LastModifiedByUserID, prescription.PdfUrl)
 	if err != nil {
 		return err
 	}
@@ -782,7 +782,7 @@ func (s *Store) CreateEticket(eticket types.Eticket) error {
 				(prescription_id, prescription_set_item_id, number, medicine_qty, size, pdf_url) 
 				VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := s.db.Exec(query, eticket.PrescriptionID, eticket.PrescriptionSetItemID,
-		eticket.Number, eticket.MedicineQty, eticket.Size, eticket.PDFUrl)
+		eticket.Number, eticket.MedicineQty, eticket.Size, eticket.PdfUrl)
 	if err != nil {
 		return err
 	}
@@ -858,7 +858,7 @@ func (s *Store) GetEticketsByPrescriptionID(prescId int) ([]types.Eticket, error
 	return etickets, nil
 }
 
-func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) error {
+func (s *Store) UpdatePdfUrl(tableName string, prescId int, fileName string) error {
 	var query string
 
 	if tableName == "eticket" {
@@ -878,7 +878,7 @@ func (s *Store) UpdatePDFUrl(tableName string, prescId int, fileName string) err
 }
 
 // false means doesn't exist
-func (s *Store) IsPDFUrlExist(tableName string, fileName string) (bool, error) {
+func (s *Store) IsPdfUrlExist(tableName string, fileName string) (bool, error) {
 	var query string
 
 	if tableName == "eticket" {
@@ -1080,7 +1080,7 @@ func scanRowIntoPrescription(rows *sql.Rows) (*types.Prescription, error) {
 		&prescription.UserID,
 		&prescription.LastModified,
 		&prescription.LastModifiedByUserID,
-		&prescription.PDFUrl,
+		&prescription.PdfUrl,
 		&prescription.DeletedAt,
 		&prescription.DeletedByUserID,
 	)
@@ -1157,7 +1157,7 @@ func scanRowIntoEticket(rows *sql.Rows) (*types.Eticket, error) {
 		&eticket.Number,
 		&eticket.MedicineQty,
 		&eticket.Size,
-		&eticket.PDFUrl,
+		&eticket.PdfUrl,
 		&eticket.CreatedAt,
 	)
 

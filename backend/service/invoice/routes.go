@@ -220,7 +220,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	invoicePDF := types.InvoicePDFPayload{
+	invoicePdf := types.InvoicePdfPayload{
 		Number:             payload.Number,
 		UserName:           user.Name,
 		Subtotal:           payload.Subtotal,
@@ -235,13 +235,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		InvoiceDate:        *invoiceDate,
 		MedicineLists:      payload.MedicineLists,
 	}
-	invoiceFileName, err := pdf.CreateInvoicePDF(invoicePDF, h.invoiceStore, "")
+	invoiceFileName, err := pdf.CreateInvoicePdf(invoicePdf, h.invoiceStore, "")
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create invoice pdf: %v", err))
 		return
 	}
 
-	err = h.invoiceStore.UpdatePDFUrl(invoiceId, invoiceFileName)
+	err = h.invoiceStore.UpdatePdfUrl(invoiceId, invoiceFileName)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update invoice pdf url: %v", err))
 		return
@@ -835,7 +835,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	invoicePDF := types.InvoicePDFPayload{
+	invoicePdf := types.InvoicePdfPayload{
 		Number:             invoice.Number,
 		UserName:           user.Name,
 		Subtotal:           payload.NewData.Subtotal,
@@ -850,7 +850,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		InvoiceDate:        *invoiceDate,
 		MedicineLists:      payload.NewData.MedicineLists,
 	}
-	_, err = pdf.CreateInvoicePDF(invoicePDF, h.invoiceStore, invoice.PDFUrl)
+	_, err = pdf.CreateInvoicePdf(invoicePdf, h.invoiceStore, invoice.PdfUrl)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update invoice pdf: %v", err))
 		return
@@ -926,7 +926,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pdfFile := "static/pdf/invoice/" + invoice.PDFUrl
+	pdfFile := "static/pdf/invoice/" + invoice.PdfUrl
 
 	file, err := os.Open(pdfFile)
 	if err != nil {
@@ -974,14 +974,14 @@ func (h *Handler) handlePrintReceipt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if invoice.ReceiptPDFUrl.Valid {
+	if invoice.ReceiptPdfUrl.Valid {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("receipt for this invoice has been issued"))
 		return
 	}
 
 	// TODO: create the pdf files here
 
-	pdfFile := "static/pdf/invoice/receipt/" + invoice.ReceiptPDFUrl.String
+	pdfFile := "static/pdf/invoice/receipt/" + invoice.ReceiptPdfUrl.String
 
 	// TODO: update the database with the pdf file
 

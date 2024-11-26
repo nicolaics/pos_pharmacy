@@ -528,7 +528,7 @@ func (s *Store) AbsoluteDeletePurchaseOrder(poi types.PurchaseOrder) error {
 	return nil
 }
 
-func (s *Store) UpdatePDFUrl(poId int, pdfUrl string) error {
+func (s *Store) UpdatePdfUrl(poId int, pdfUrl string) error {
 	query := `UPDATE purchase_order SET pdf_url = ? WHERE id = ?`
 	_, err := s.db.Exec(query, pdfUrl, poId)
 	if err != nil {
@@ -539,7 +539,7 @@ func (s *Store) UpdatePDFUrl(poId int, pdfUrl string) error {
 }
 
 // false means doesn't exist
-func (s *Store) IsPDFUrlExist(pdfUrl string) (bool, error) {
+func (s *Store) IsPdfUrlExist(pdfUrl string) (bool, error) {
 	query := `SELECT COUNT(*) FROM purchase_order WHERE pdf_url = ?`
 	row := s.db.QueryRow(query, pdfUrl)
 	if row.Err() != nil {

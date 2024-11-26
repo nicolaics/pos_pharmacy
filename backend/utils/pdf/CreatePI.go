@@ -19,7 +19,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreatePurchaseInvoicePDF(piStore types.PurchaseInvoiceStore, purchaseInvoice types.PurchaseInvoicePDFPayload, prevFileName string) (string, error) {
+func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoice types.PurchaseInvoicePdfPayload, prevFileName string) (string, error) {
 	directory, err := filepath.Abs("static/pdf/purchase-invoice/")
 	if err != nil {
 		return "", err
@@ -136,14 +136,14 @@ func CreatePurchaseInvoicePDF(piStore types.PurchaseInvoiceStore, purchaseInvoic
 
 	if prevFileName == "" {
 		fileName := "pi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-		isExist, err := piStore.IsPDFUrlExist(fileName)
+		isExist, err := piStore.IsPdfUrlExist(fileName)
 		if err != nil {
 			return "", err
 		}
 
 		for isExist {
 			fileName = "pi-" + utils.GenerateRandomCodeAlphanumeric(8) + "-" + utils.GenerateRandomCodeAlphanumeric(8) + ".pdf"
-			isExist, err = piStore.IsPDFUrlExist(fileName)
+			isExist, err = piStore.IsPdfUrlExist(fileName)
 			if err != nil {
 				return "", err
 			}
@@ -192,7 +192,7 @@ func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
 	return pdf, nil
 }
 
-func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf, purchaseInvoice types.PurchaseInvoicePDFPayload) error {
+func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf, purchaseInvoice types.PurchaseInvoicePdfPayload) error {
 	var caser = cases.Title(language.Indonesian)
 
 	pdf.Image(config.Envs.CompanyLogoURL, pdf.GetX(), pdf.GetY(), constants.PI_LOGO_WIDTH, constants.PI_LOGO_HEIGHT, false, "", 0, "")
@@ -275,7 +275,7 @@ func createPurchaseInvoiceHeader(pdf *fpdf.Fpdf, purchaseInvoice types.PurchaseI
 	return nil
 }
 
-func createPurchaseInvoiceInfo(pdf *fpdf.Fpdf, pi types.PurchaseInvoicePDFPayload) error {
+func createPurchaseInvoiceInfo(pdf *fpdf.Fpdf, pi types.PurchaseInvoicePdfPayload) error {
 	var caser = cases.Title(language.Indonesian)
 
 	var vendorIsTaxable string
@@ -476,7 +476,7 @@ func createPurchaseInvoiceData(pdf *fpdf.Fpdf, startTableX map[string]float64, m
 	return (number - 1), nil
 }
 
-func createPurchaseInvoiceFooter(pdf *fpdf.Fpdf, startTableX map[string]float64, startFooterY float64, pi types.PurchaseInvoicePDFPayload) error {
+func createPurchaseInvoiceFooter(pdf *fpdf.Fpdf, startTableX map[string]float64, startFooterY float64, pi types.PurchaseInvoicePdfPayload) error {
 	var printer = message.NewPrinter(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)

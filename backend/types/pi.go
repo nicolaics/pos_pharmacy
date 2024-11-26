@@ -28,8 +28,8 @@ type PurchaseInvoiceStore interface {
 	// delete entirely from the db if there's error
 	AbsoluteDeletePurchaseInvoice(pi PurchaseInvoice) error
 
-	UpdatePDFUrl(piId int, pdfUrl string) error
-	IsPDFUrlExist(pdfUrl string) (bool, error)
+	UpdatePdfUrl(piId int, pdfUrl string) error
+	IsPdfUrlExist(pdfUrl string) (bool, error)
 }
 
 type RegisterPurchaseInvoicePayload struct {
@@ -148,7 +148,7 @@ type DeletePurchaseInvoice struct {
 	ID int `json:"id" validate:"required"`
 }
 
-type PurchaseInvoicePDFPayload struct {
+type PurchaseInvoicePdfPayload struct {
 	Number             int       `json:"number"`
 	Subtotal           float64   `json:"subtotal"`
 	DiscountPercentage float64   `json:"discountPercentage"`
