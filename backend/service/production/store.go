@@ -75,7 +75,8 @@ func (s *Store) GetProductionsByDate(startDate time.Time, endDate time.Time) ([]
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -113,7 +114,8 @@ func (s *Store) GetProductionsByDateAndNumber(startDate time.Time, endDate time.
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -159,7 +161,8 @@ func (s *Store) GetProductionsByDateAndUserID(startDate time.Time, endDate time.
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -198,7 +201,8 @@ func (s *Store) GetProductionsByDateAndMedicineID(startDate time.Time, endDate t
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -237,7 +241,8 @@ func (s *Store) GetProductionsByDateAndUpdatedToStock(startDate time.Time, endDa
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -276,7 +281,8 @@ func (s *Store) GetProductionsByDateAndUpdatedToAccount(startDate time.Time, end
 					unit.name, 
 					prod.production_date, 
 					prod.description, prod.updated_to_stock, 
-					prod.updated_to_account, prod.total_cost,
+					prod.updated_to_account, prod.total_cost, 
+					prod.pdf_url, 
 					user.name 
 					FROM production AS prod 
 					JOIN medicine AS med ON prod.produced_medicine_id = med.id 
@@ -486,7 +492,7 @@ func (s *Store) UpdatePdfUrl(id int, pdfUrl string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -545,29 +551,68 @@ func (s *Store) AbsoluteDeleteProduction(prod types.Production) error {
 }
 
 func scanRowIntoProduction(rows *sql.Rows) (*types.Production, error) {
-	production := new(types.Production)
+	temp := new(struct {
+		ID                   int            `json:"id"`
+		Number               int            `json:"number"`
+		ProducedMedicineID   int            `json:"producedMedicineId"`
+		ProducedQty          int            `json:"producedQty"`
+		ProducedUnitID       int            `json:"producedUnitId"`
+		ProductionDate       time.Time      `json:"productionDate"`
+		Description          string         `json:"description"`
+		UpdatedToStock       bool           `json:"updatedToStock"`
+		UpdatedToAccount     bool           `json:"updatedToAccount"`
+		TotalCost            float64        `json:"totalCost"`
+		UserID               int            `json:"userId"`
+		CreatedAt            time.Time      `json:"createdAt"`
+		LastModified         time.Time      `json:"lastModified"`
+		LastModifiedByUserID int            `json:"lastLastModifiedByUserId"`
+		PdfUrl               sql.NullString `json:"pdfUrl"`
+		DeletedAt            sql.NullTime   `json:"deletedAt"`
+		DeletedByUserID      sql.NullInt64  `json:"deletedByUserId"`
+	})
 
 	err := rows.Scan(
-		&production.ID,
-		&production.Number,
-		&production.ProducedMedicineID,
-		&production.ProducedQty,
-		&production.ProducedUnitID,
-		&production.ProductionDate,
-		&production.Description,
-		&production.UpdatedToStock,
-		&production.UpdatedToAccount,
-		&production.TotalCost,
-		&production.UserID,
-		&production.CreatedAt,
-		&production.LastModified,
-		&production.LastModifiedByUserID,
-		&production.DeletedAt,
-		&production.DeletedByUserID,
+		&temp.ID,
+		&temp.Number,
+		&temp.ProducedMedicineID,
+		&temp.ProducedQty,
+		&temp.ProducedUnitID,
+		&temp.ProductionDate,
+		&temp.Description,
+		&temp.UpdatedToStock,
+		&temp.UpdatedToAccount,
+		&temp.TotalCost,
+		&temp.UserID,
+		&temp.CreatedAt,
+		&temp.LastModified,
+		&temp.LastModifiedByUserID,
+		&temp.PdfUrl,
+		&temp.DeletedAt,
+		&temp.DeletedByUserID,
 	)
 
 	if err != nil {
 		return nil, err
+	}
+
+	production := &types.Production{
+		ID:                   temp.ID,
+		Number:               temp.Number,
+		ProducedMedicineID:   temp.ProducedMedicineID,
+		ProducedQty:          temp.ProducedQty,
+		ProducedUnitID:       temp.ProducedUnitID,
+		ProductionDate:       temp.ProductionDate,
+		Description:          temp.Description,
+		UpdatedToStock:       temp.UpdatedToStock,
+		UpdatedToAccount:     temp.UpdatedToAccount,
+		TotalCost:            temp.TotalCost,
+		UserID:               temp.UserID,
+		CreatedAt:            temp.CreatedAt,
+		LastModified:         temp.LastModified,
+		LastModifiedByUserID: temp.LastModifiedByUserID,
+		PdfUrl:               temp.PdfUrl.String,
+		DeletedAt:            temp.DeletedAt,
+		DeletedByUserID:      temp.DeletedByUserID,
 	}
 
 	production.ProductionDate = production.ProductionDate.Local()
@@ -578,26 +623,55 @@ func scanRowIntoProduction(rows *sql.Rows) (*types.Production, error) {
 }
 
 func scanRowIntoProductionLists(rows *sql.Rows) (*types.ProductionListsReturnPayload, error) {
-	production := new(types.ProductionListsReturnPayload)
+	temp := new(struct {
+		ID                   int            `json:"id"`
+		Number               int            `json:"number"`
+		ProducedMedicineName string         `json:"producedMedicineName"`
+		ProducedQty          int            `json:"producedQty"`
+		ProducedUnit         string         `json:"producedUnit"`
+		ProductionDate       time.Time      `json:"productionDate"`
+		Description          string         `json:"description"`
+		UpdatedToStock       bool           `json:"updatedToStock"`
+		UpdatedToAccount     bool           `json:"updatedToAccount"`
+		TotalCost            float64        `json:"totalCost"`
+		PdfUrl               sql.NullString `json:"pdfUrl"`
+		UserName             string         `json:"userName"`
+	})
 
 	err := rows.Scan(
-		&production.ID,
-		&production.Number,
-		&production.ProducedMedicineName,
-		&production.ProducedQty,
-		&production.ProducedUnit,
-		&production.ProductionDate,
-		&production.Description,
-		&production.UpdatedToStock,
-		&production.UpdatedToAccount,
-		&production.TotalCost,
-		&production.UserName,
+		&temp.ID,
+		&temp.Number,
+		&temp.ProducedMedicineName,
+		&temp.ProducedQty,
+		&temp.ProducedUnit,
+		&temp.ProductionDate,
+		&temp.Description,
+		&temp.UpdatedToStock,
+		&temp.UpdatedToAccount,
+		&temp.TotalCost,
+		&temp.PdfUrl,
+		&temp.UserName,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
+	production := &types.ProductionListsReturnPayload{
+		ID:                   temp.ID,
+		Number:               temp.Number,
+		ProducedMedicineName: temp.ProducedMedicineName,
+		ProducedQty:          temp.ProducedQty,
+		ProducedUnit:         temp.ProducedUnit,
+		ProductionDate:       temp.ProductionDate,
+		Description:          temp.Description,
+		UpdatedToStock:       temp.UpdatedToStock,
+		UpdatedToAccount:     temp.UpdatedToAccount,
+		TotalCost:            temp.TotalCost,
+		PdfUrl:               temp.PdfUrl.String,
+		UserName:             temp.UserName,
+	}
+	
 	production.ProductionDate = production.ProductionDate.Local()
 
 	return production, nil

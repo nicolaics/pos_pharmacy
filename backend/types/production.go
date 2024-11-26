@@ -98,6 +98,7 @@ type ProductionDetailPayload struct {
 	UpdatedToStock   bool      `json:"updatedToStock"`
 	UpdatedToAccount bool      `json:"updatedToAccount"`
 	TotalCost        float64   `json:"totalCost"`
+	PdfUrl           string    `json:"pdfUrl"`
 
 	User struct {
 		ID   int    `json:"id"`
@@ -123,6 +124,7 @@ type ProductionListsReturnPayload struct {
 	UpdatedToStock       bool      `json:"updatedToStock"`
 	UpdatedToAccount     bool      `json:"updatedToAccount"`
 	TotalCost            float64   `json:"totalCost"`
+	PdfUrl               string    `json:"pdfUrl"`
 	UserName             string    `json:"userName"`
 }
 
@@ -154,6 +156,7 @@ type Production struct {
 	CreatedAt            time.Time     `json:"createdAt"`
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
+	PdfUrl               string        `json:"pdfUrl"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }
