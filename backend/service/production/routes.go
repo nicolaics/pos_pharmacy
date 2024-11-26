@@ -841,5 +841,26 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	productionPdf := types.ProductionPdfPayload{
+		Number:         production.Number,
+		ProductionDate: *prodDate,
+		UserName:       user.Name,
+		Description:    production.Description,
+		TotalCost:      production.TotalCost,
+		MedicineLists:  payload.NewData.MedicineLists,
+	}
+
+	fileName, err := pdf.CreateProductionPdf(productionPdf, production.PdfUrl, h.productionStore)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create pdf: %v", err))
+		return
+	}
+
+	err = h.productionStore.UpdatePdfUrl(production.ID, fileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err))
+		return
+	}
+
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("production modified by %s", user.Name))
 }
