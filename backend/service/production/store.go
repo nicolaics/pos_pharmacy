@@ -480,6 +480,32 @@ func (s *Store) ModifyProduction(id int, production types.Production, user *type
 	return nil
 }
 
+func (s *Store) UpdatePdfUrl(id int, pdfUrl string) error {
+	query := `UPDATE production SET pdf_url = ? WHERE id = ?`
+	_, err := s.db.Exec(query, pdfUrl, id)
+	if err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+func (s *Store) IsPdfUrlExist(pdfUrl string) (bool, error) {
+	query := `SELECT COUNT(*) FROM production WHERE pdf_url = ?`
+	row := s.db.QueryRow(query, pdfUrl)
+	if row.Err() != nil && row.Err() != sql.ErrNoRows {
+		return true, row.Err()
+	}
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return true, err
+	}
+
+	return (count > 0), nil
+}
+
 func (s *Store) AbsoluteDeleteProduction(prod types.Production) error {
 	query := `SELECT id FROM production 
 				WHERE number = ? AND produced_medicine_id = ? 

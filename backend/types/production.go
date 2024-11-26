@@ -20,10 +20,13 @@ type ProductionStore interface {
 	CreateProduction(Production) error
 	CreateProductionMedicineItem(ProductionMedicineItem) error
 
-	GetProductionMedicineItem(prescriptionId int) ([]ProductionMedicineItemRow, error)
+	GetProductionMedicineItem(productionId int) ([]ProductionMedicineItemRow, error)
 	DeleteProduction(*Production, *User) error
 	DeleteProductionMedicineItem(*Production, *User) error
 	ModifyProduction(int, Production, *User) error
+
+	UpdatePdfUrl(id int, pdfUrl string) error
+	IsPdfUrlExist(pdfUrl string) (bool, error)
 
 	// delete entirely from the db if there's error
 	AbsoluteDeleteProduction(prod Production) error
@@ -68,7 +71,7 @@ type ModifyProductionPayload struct {
 	NewData RegisterProductionPayload `json:"newData" validate:"required"`
 }
 
-// data of the medicine per row in the prescription
+// data of the medicine per row in the production
 type ProductionMedicineItemRow struct {
 	ID              int     `json:"id"`
 	MedicineBarcode string  `json:"medicineBarcode"`
@@ -78,7 +81,7 @@ type ProductionMedicineItemRow struct {
 	Cost            float64 `json:"cost"`
 }
 
-// data to be sent back to the client after clicking 1 prescription
+// data to be sent back to the client after clicking 1 production
 type ProductionDetailPayload struct {
 	ID     int `json:"id"`
 	Number int `json:"number"`
@@ -129,7 +132,7 @@ type DeleteProduction struct {
 
 type ProductionMedicineItem struct {
 	ID           int     `json:"id"`
-	ProductionID int     `json:"prescriptionId"`
+	ProductionID int     `json:"productionId"`
 	MedicineID   int     `json:"medicineId"`
 	Qty          float64 `json:"qty"`
 	UnitID       int     `json:"unitId"`
@@ -153,4 +156,13 @@ type Production struct {
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
+}
+
+type ProductionPdfPayload struct {
+	Number         int                             `json:"number"`
+	ProductionDate time.Time                       `json:"productionDate"`
+	UserName       string                          `json:"userName"`
+	Description    string                          `json:"description"`
+	TotalCost      float64                         `json:"totalCost"`
+	MedicineLists  []ProductionMedicineListPayload `json:"medicineLists"`
 }
