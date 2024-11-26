@@ -17,7 +17,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func CreateProductionPDF(prod types.ProductionPdfPayload, prevFileName string, productionStore types.ProductionStore) (string, error) {
+func CreateProductionPdf(prod types.ProductionPdfPayload, prevFileName string, productionStore types.ProductionStore) (string, error) {
 	directory, err := filepath.Abs("static/pdf/production/")
 	if err != nil {
 		return "", err
