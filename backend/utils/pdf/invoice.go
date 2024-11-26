@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -20,11 +19,7 @@ import (
 )
 
 func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
-	directory, err := filepath.Abs("static/pdf/invoice/")
-	if err != nil {
-		return "", err
-	}
-
+	directory := "static/pdf/invoice/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -124,7 +119,7 @@ func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.Invoic
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -133,8 +128,6 @@ func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.Invoic
 }
 
 func initInvoicePdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "P",
 		UnitStr:        "cm",
@@ -143,7 +136,7 @@ func initInvoicePdf() (*fpdf.Fpdf, error) {
 			Wd: constants.INVOICE_WIDTH,
 			Ht: constants.INVOICE_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(0.2, 0.3, 0.2)

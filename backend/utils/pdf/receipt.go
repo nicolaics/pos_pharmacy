@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/go-pdf/fpdf"
@@ -17,11 +16,7 @@ import (
 )
 
 func CreateReceiptPdf(receipt types.ReceiptPdfPayload, invoiceStore types.InvoiceStore) (string, error) {
-	directory, err := filepath.Abs("static/pdf/receipt/")
-	if err != nil {
-		return "", err
-	}
-
+	director := "static/pdf/receipt/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -55,7 +50,7 @@ func CreateReceiptPdf(receipt types.ReceiptPdfPayload, invoiceStore types.Invoic
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -64,8 +59,6 @@ func CreateReceiptPdf(receipt types.ReceiptPdfPayload, invoiceStore types.Invoic
 }
 
 func initReceiptPdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "L",
 		UnitStr:        "cm",
@@ -74,7 +67,7 @@ func initReceiptPdf() (*fpdf.Fpdf, error) {
 			Wd: constants.RECEIPT_WIDTH,
 			Ht: constants.RECEIPT_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(0.3, 0.3, 0.3)

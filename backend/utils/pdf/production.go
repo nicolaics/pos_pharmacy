@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -18,11 +17,7 @@ import (
 )
 
 func CreateProductionPdf(prod types.ProductionPdfPayload, prevFileName string, productionStore types.ProductionStore) (string, error) {
-	directory, err := filepath.Abs("static/pdf/production/")
-	if err != nil {
-		return "", err
-	}
-
+	directory := "static/pdf/production/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -140,7 +135,7 @@ func CreateProductionPdf(prod types.ProductionPdfPayload, prevFileName string, p
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -149,8 +144,6 @@ func CreateProductionPdf(prod types.ProductionPdfPayload, prevFileName string, p
 }
 
 func initProductionPdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "P",
 		UnitStr:        "cm",
@@ -159,7 +152,7 @@ func initProductionPdf() (*fpdf.Fpdf, error) {
 			Wd: constants.PRODUCTION_WIDTH,
 			Ht: constants.PRODUCTION_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(0.2, 0.3, 0.2)
@@ -186,9 +179,9 @@ func createProductionHeader(pdf *fpdf.Fpdf, description string) error {
 	pdf.Image(config.Envs.CompanyLogoURL, pdf.GetX(), pdf.GetY(), constants.PRODUCTION_LOGO_WIDTH, constants.PRODUCTION_LOGO_HEIGHT, false, "", 0, "")
 
 	startBesideLogoX := constants.PRODUCTION_MARGIN + constants.PRODUCTION_LOGO_WIDTH + 0.1
-	
+
 	pdf.SetX(startBesideLogoX)
-	
+
 	pdf.SetTextColor(constants.GREEN_R, constants.GREEN_G, constants.GREEN_B)
 	pdf.SetFont("Bree", constants.BOLD, 22)
 	cellWidth := pdf.GetStringWidth(config.Envs.CompanyName) + constants.PRODUCTION_MARGIN
@@ -378,7 +371,6 @@ func createProductionData(pdf *fpdf.Fpdf, startTableX map[string]float64, medici
 		pdf.SetFont("Arial", constants.REGULAR, constants.PRODUCTION_TABLE_DATA_FONT_SZ)
 		pdf.CellFormat(constants.PRODUCTION_NO_COL_WIDTH, constants.PRODUCTION_TABLE_HEIGHT, strconv.Itoa(number), "", 0, "C", false, 0, "")
 
-
 		pdf.SetFont("Arial", constants.REGULAR, constants.PRODUCTION_TABLE_DATA_FONT_SZ)
 		pdf.CellFormat(constants.PRODUCTION_BARCODE_COL_WIDTH, constants.PRODUCTION_TABLE_HEIGHT, medicine.MedicineBarcode, "", 0, "C", false, 0, "")
 
@@ -431,10 +423,10 @@ func createProductionFooter(pdf *fpdf.Fpdf, startTableX map[string]float64, star
 
 	pdf.SetLineWidth(0.02)
 	pdf.SetDrawColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
-	pdf.RoundedRect(startTableX["qty"], (startFooterY - 0.2), 
-					(constants.PRODUCTION_WIDTH - constants.PRODUCTION_MARGIN - startTableX["qty"]), 
-					constants.PRODUCTION_FOOTER_CELL_HEIGHT,
-					0, "1234", "D")
+	pdf.RoundedRect(startTableX["qty"], (startFooterY - 0.2),
+		(constants.PRODUCTION_WIDTH - constants.PRODUCTION_MARGIN - startTableX["qty"]),
+		constants.PRODUCTION_FOOTER_CELL_HEIGHT,
+		0, "1234", "D")
 
 	if pdf.Error() != nil {
 		return fmt.Errorf("error create production footer: %v", pdf.Error())

@@ -3,8 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-
 	"strconv"
 	"strings"
 
@@ -20,11 +18,7 @@ import (
 )
 
 func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoice types.PurchaseInvoicePdfPayload, prevFileName string) (string, error) {
-	directory, err := filepath.Abs("static/pdf/purchase-invoice/")
-	if err != nil {
-		return "", err
-	}
-
+	directory := "static/pdf/purchase-invoice/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -150,7 +144,7 @@ func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoic
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -159,8 +153,6 @@ func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoic
 }
 
 func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "P",
 		UnitStr:        "cm",
@@ -169,7 +161,7 @@ func initPurchaseInvoicePdf() (*fpdf.Fpdf, error) {
 			Wd: constants.PI_WIDTH,
 			Ht: constants.PI_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(0.2, 0.3, 0.2)

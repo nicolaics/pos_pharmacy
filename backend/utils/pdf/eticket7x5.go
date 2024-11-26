@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,11 +15,7 @@ import (
 )
 
 func CreateEticket7x5Pdf(eticket types.EticketPdfPayload, setNumber int, prescStore types.PrescriptionStore) (string, error) {
-	directory, err := filepath.Abs("static/pdf/eticket/")
-	if err != nil {
-		return "", err
-	}
-
+	directory := "static/pdf/eticket/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -49,7 +44,7 @@ func CreateEticket7x5Pdf(eticket types.EticketPdfPayload, setNumber int, prescSt
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -58,8 +53,6 @@ func CreateEticket7x5Pdf(eticket types.EticketPdfPayload, setNumber int, prescSt
 }
 
 func initEticket7x5Pdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "P",
 		UnitStr:        "cm",
@@ -68,7 +61,7 @@ func initEticket7x5Pdf() (*fpdf.Fpdf, error) {
 			Wd: constants.ETIX_7X5_WIDTH,
 			Ht: constants.ETIX_7X5_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(constants.ETIX_MARGIN, constants.ETIX_MARGIN, constants.ETIX_MARGIN)

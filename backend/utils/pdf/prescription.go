@@ -3,7 +3,6 @@ package pdf
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,11 +18,7 @@ import (
 )
 
 func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.PrescriptionStore, prevFileName string) (string, error) {
-	directory, err := filepath.Abs("static/pdf/prescription/")
-	if err != nil {
-		return "", err
-	}
-
+	directory := "static/pdf/prescription/"
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
@@ -100,7 +95,7 @@ func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + "\\" + fileName)
+	err = pdf.OutputFileAndClose(directory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -109,8 +104,6 @@ func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.
 }
 
 func initPrescriptionPdf() (*fpdf.Fpdf, error) {
-	s, _ := filepath.Abs("static/assets/font/")
-
 	pdf := fpdf.NewCustom(&fpdf.InitType{
 		OrientationStr: "P",
 		UnitStr:        "cm",
@@ -119,7 +112,7 @@ func initPrescriptionPdf() (*fpdf.Fpdf, error) {
 			Wd: constants.PRESC_WIDTH,
 			Ht: constants.PRESC_HEIGHT,
 		},
-		FontDirStr: s,
+		FontDirStr: "static/assets/font/",
 	})
 
 	pdf.SetMargins(0.3, 0.3, 0.3)
