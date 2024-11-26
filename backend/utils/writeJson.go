@@ -35,5 +35,28 @@ func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
 }
 
 func WriteError(w http.ResponseWriter, status int, err error) {
-	WriteJSON(w, status, map[string]string{"error": err.Error()})
+	response := map[string]interface{}{
+		"status":   "error",
+		"response": err.Error(),
+		"log":      "",
+	}
+	WriteJSON(w, status, response)
+}
+
+func WriteSuccess(w http.ResponseWriter, status int, data any, logFile string) {
+	response := map[string]interface{}{
+		"status":   "success",
+		"response": data,
+		"log":      logFile,
+	}
+	WriteJSON(w, status, response)
+}
+
+func WriteLog(w http.ResponseWriter, status int, data any, logFile string) {
+	response := map[string]interface{}{
+		"status":   "log",
+		"response": data,
+		"log":      logFile,
+	}
+	WriteJSON(w, status, response)
 }
