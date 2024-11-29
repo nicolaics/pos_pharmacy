@@ -5,6 +5,8 @@
 bin
 *.pdf
 *.bat
+*.txt
+*.http
 
 # dependencies
 frontend/node_modules
