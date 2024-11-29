@@ -43,8 +43,8 @@ func WriteServerLog(logType string, logDataType string, userName string, dataId 
 	return nil
 }
 
-func WriteServerErrorLog(logType string, logDataType string, errorMsg any) (string, error) {
-	logFolder := fmt.Sprintf("static/log/error/%s/%s", logType, logDataType)
+func WriteServerErrorLog(errorMsg any) (string, error) {
+	logFolder := "static/log/error"
 	if err := os.MkdirAll(logFolder, 0755); err != nil {
 		return "", err
 	}

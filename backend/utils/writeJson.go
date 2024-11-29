@@ -33,13 +33,14 @@ func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func WriteError(w http.ResponseWriter, status int, err error, logFile string) {
-	var logMsg interface{}
+func WriteError(w http.ResponseWriter, status int, err error, logFiles []string) {
+	logMsg := ""
 
-	if logFile != "" {
-		logMsg = fmt.Sprintf("please contact administrator! (log: %s)", logFile)
-	} else {
-		logMsg = nil
+	if logFiles != nil {
+		logMsg = "please contact administrator!\n"
+		for _, logFile := range(logFiles) {
+			logMsg += fmt.Sprintf("log: %s\n", logFile)
+		}
 	}
 
 	response := map[string]interface{}{
@@ -49,13 +50,14 @@ func WriteError(w http.ResponseWriter, status int, err error, logFile string) {
 	WriteJSON(w, status, response)
 }
 
-func WriteSuccess(w http.ResponseWriter, status int, data any, logFile string) {
-	var logMsg interface{}
+func WriteSuccess(w http.ResponseWriter, status int, data any, logFiles []string) {
+	logMsg := ""
 
-	if logFile != "" {
-		logMsg = fmt.Sprintf("please contact administrator! (log: %s)", logFile)
-	} else {
-		logMsg = nil
+	if logFiles != nil {
+		logMsg = "please contact administrator!\n"
+		for _, logFile := range(logFiles) {
+			logMsg += fmt.Sprintf("log: %s\n", logFile)
+		}
 	}
 
 	response := map[string]interface{}{

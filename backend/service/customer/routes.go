@@ -38,21 +38,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.custStore.GetCustomerByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s already exists", payload.Name), "")
+			fmt.Errorf("customer with name %s already exists", payload.Name), nil)
 		return
 	}
 
@@ -68,18 +68,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Name: payload.Name,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer %s successfully created by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer %s successfully created by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		customers, err = h.custStore.GetAllCustomers()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err, "")
+			utils.WriteError(w, http.StatusBadRequest, err, nil)
 			return
 		}
 	} else {
@@ -101,13 +101,13 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			customers, err = h.custStore.GetCustomersBySearchName(val)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val), nil)
 				return
 			}
 		} else {
 			customer, err := h.custStore.GetCustomerByID(id)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id), nil)
 				return
 			}
 
@@ -115,7 +115,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, customers, "")
+	utils.WriteSuccess(w, http.StatusOK, customers, nil)
 }
 
 func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
@@ -123,21 +123,21 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -145,11 +145,11 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
 	if customer == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer id %d doesn't exist", payload.ID), "")
+			fmt.Errorf("customer id %d doesn't exist", payload.ID), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, customer, "")
+	utils.WriteSuccess(w, http.StatusOK, customer, nil)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -157,21 +157,21 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -179,17 +179,17 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
 	if customer == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer %s doesn't exist", payload.Name), "")
+			fmt.Errorf("customer %s doesn't exist", payload.Name), nil)
 		return
 	}
 
 	err = h.custStore.DeleteCustomer(user, customer)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("customer %s deleted by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("customer %s deleted by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -197,21 +197,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -219,23 +219,23 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
 	if err != nil || customer == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with id %d doesn't exists", payload.ID), "")
+			fmt.Errorf("customer with id %d doesn't exists", payload.ID), nil)
 		return
 	}
 
 	_, err = h.custStore.GetCustomerByName(payload.NewData.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s already exist", payload.NewData.Name), "")
+			fmt.Errorf("customer with name %s already exist", payload.NewData.Name), nil)
 		return
 	}
 
 	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer modified into %s by %s",
-		payload.NewData.Name, user.Name), "")
+		payload.NewData.Name, user.Name), nil)
 }

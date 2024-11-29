@@ -40,21 +40,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.medStore.GetMedicineByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine with name %s already exists", payload.Name), "")
+			fmt.Errorf("medicine with name %s already exists", payload.Name), nil)
 		return
 	}
 
@@ -84,14 +84,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if firstUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(firstUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create first unit error: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create first unit error: %v", err), nil)
 			return
 		}
 
 		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("first unit error: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("first unit error: %v", err), nil)
 		return
 	}
 
@@ -99,14 +99,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if secondUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(secondUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create second unit error: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create second unit error: %v", err), nil)
 			return
 		}
 
 		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("second unit error: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("second unit error: %v", err), nil)
 		return
 	}
 
@@ -114,14 +114,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if thirdUnit == nil || err != nil {
 		err = h.unitStore.CreateUnit(thirdUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create third unit error: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create third unit error: %v", err), nil)
 			return
 		}
 
 		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("third unit error: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("third unit error: %v", err), nil)
 		return
 	}
 
@@ -149,18 +149,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:                payload.Description,
 	}, user.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine %s: %v", payload.Name, err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine %s: %v", payload.Name, err), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("medicine %s successfully created by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("medicine %s successfully created by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -173,25 +173,25 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		medicines, err = h.medStore.GetAllMedicines()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err, "")
+			utils.WriteError(w, http.StatusBadRequest, err, nil)
 			return
 		}
 	} else if params == "name" {
 		medicines, err = h.medStore.GetMedicinesBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not found", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not found", val), nil)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		medicine, err := h.medStore.GetMedicineByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d not found", id), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d not found", id), nil)
 			return
 		}
 
@@ -199,21 +199,21 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "barcode" {
 		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), nil)
 			return
 		}
 	} else if params == "description" {
 		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), nil)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicines, "")
+	utils.WriteSuccess(w, http.StatusOK, medicines, nil)
 }
 
 func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
@@ -221,21 +221,21 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -243,11 +243,11 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
 	if medicine == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine id %d doesn't exist", payload.ID), "")
+			fmt.Errorf("medicine id %d doesn't exist", payload.ID), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicine, "")
+	utils.WriteSuccess(w, http.StatusOK, medicine, nil)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -255,21 +255,21 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -277,7 +277,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
 	if medicine == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine %s doesn't exist", payload.Name), "")
+			fmt.Errorf("medicine %s doesn't exist", payload.Name), nil)
 		return
 	}
 
@@ -287,11 +287,11 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		Name:    medicine.Name,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("medicine %s deleted by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("medicine %s deleted by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -299,21 +299,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -321,7 +321,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
 	if err != nil || medicine == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine with id %d doesn't exists", payload.ID), "")
+			fmt.Errorf("medicine with id %d doesn't exists", payload.ID), nil)
 		return
 	}
 
@@ -329,7 +329,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		_, err = h.medStore.GetMedicineByName(payload.NewData.Name)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with name %s already exist", payload.NewData.Name), "")
+				fmt.Errorf("medicine with name %s already exist", payload.NewData.Name), nil)
 			return
 		}
 	}
@@ -338,7 +338,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		_, err = h.medStore.GetMedicineByBarcode(payload.NewData.Barcode)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with barcode %s already exist", payload.NewData.Barcode), "")
+				fmt.Errorf("medicine with barcode %s already exist", payload.NewData.Barcode), nil)
 			return
 		}
 	}
@@ -361,14 +361,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	if firstUnit == nil {
 		err = h.unitStore.CreateUnit(firstUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -376,14 +376,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	if secondUnit == nil {
 		err = h.unitStore.CreateUnit(secondUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -391,14 +391,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	if thirdUnit == nil {
 		err = h.unitStore.CreateUnit(thirdUnitStr)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -426,12 +426,12 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Description:                payload.NewData.Description,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("medicine modified into %s by %s",
-		payload.NewData.Name, user.Name), "")
+		payload.NewData.Name, user.Name), nil)
 }
 
 func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
@@ -439,42 +439,42 @@ func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetMedicineHistoryPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
 	startDate, err := utils.ParseStartDate(payload.StartDate.Format("2006-01-02 -0700MST"))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse start date: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse start date: %v", err), nil)
 		return
 	}
 
 	endDate, err := utils.ParseEndDate(payload.EndDate.Format("2006-01-02 -0700MST"))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse end date: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse end date: %v", err), nil)
 		return
 	}
 
 	medicineHistories, err := h.medStore.GetMedicineHistoryByDate(payload.ID, *startDate, *endDate)
 	if medicineHistories == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine id %d doesn't exist", payload.ID), "")
+			fmt.Errorf("medicine id %d doesn't exist", payload.ID), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicineHistories, "")
+	utils.WriteSuccess(w, http.StatusOK, medicineHistories, nil)
 }

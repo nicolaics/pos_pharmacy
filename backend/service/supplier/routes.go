@@ -37,21 +37,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), "")
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.supplierStore.GetSupplierByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s already exists", payload.Name), "")
+			fmt.Errorf("supplier with name %s already exists", payload.Name), nil)
 		return
 	}
 
@@ -75,18 +75,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s created by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s created by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate user token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), "")
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
 		return
 	}
 
@@ -99,25 +99,25 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		suppliers, err = h.supplierStore.GetAllSuppliers()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err, "")
+			utils.WriteError(w, http.StatusBadRequest, err, nil)
 			return
 		}
 	} else if params == "name" {
 		suppliers, err = h.supplierStore.GetSupplierBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not found", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not found", val), nil)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		supplier, err := h.supplierStore.GetSupplierByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", id), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", id), nil)
 			return
 		}
 
@@ -125,15 +125,15 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "cp-name" {
 		suppliers, err = h.supplierStore.GetSupplierBySearchContactPersonName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier contact person %s not found", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier contact person %s not found", val), nil)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, suppliers, "")
+	utils.WriteSuccess(w, http.StatusOK, suppliers, nil)
 }
 
 func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
@@ -141,21 +141,21 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate user token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), "")
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
 		return
 	}
 
@@ -163,11 +163,11 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier id %d doesn't exists", payload.ID), "")
+			fmt.Errorf("supplier id %d doesn't exists", payload.ID), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, supplier, "")
+	utils.WriteSuccess(w, http.StatusOK, supplier, nil)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -175,21 +175,21 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), "")
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s doesn't exists", payload.Name), "")
+			fmt.Errorf("supplier with name %s doesn't exists", payload.Name), nil)
 		return
 	}
 
@@ -206,11 +206,11 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		Name: supplier.Name,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s deleted by %s", payload.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s deleted by %s", payload.Name, user.Name), nil)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -218,21 +218,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifySupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), "")
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
 		return
 	}
 
@@ -240,7 +240,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
 	if err != nil || supplier == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with id %d doesn't exists", payload.ID), "")
+			fmt.Errorf("supplier with id %d doesn't exists", payload.ID), nil)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		_, err = h.supplierStore.GetSupplierByName(payload.NewData.Name)
 		if err == nil {
 			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("supplier with name %s already exists", payload.NewData.Name), "")
+				fmt.Errorf("supplier with name %s already exists", payload.NewData.Name), nil)
 			return
 		}
 	}
@@ -264,9 +264,9 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		LastModifiedByUserID: user.ID,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewData.Name, user.Name), "")
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewData.Name, user.Name), nil)
 }
