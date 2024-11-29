@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -14,8 +14,7 @@ func WriteJSON(w http.ResponseWriter, status int, v any) error {
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Length,Content-Range")
 	w.WriteHeader(status)
 
-	log.Println("JSON")
-	log.Println(w.Header())
+	// log.Println(w.Header())
 
 	return json.NewEncoder(w).Encode(v)
 }
@@ -28,26 +27,40 @@ func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(status)
 
-	log.Println("JSON Options")
-	log.Println(w)
+	// log.Println("JSON Options")
+	// log.Println(w)
 
 	return json.NewEncoder(w).Encode(v)
 }
 
 func WriteError(w http.ResponseWriter, status int, err error, logFile string) {
+	var logMsg interface{}
+
+	if logFile != "" {
+		logMsg = fmt.Sprintf("please contact administrator! (log: %s)", logFile)
+	} else {
+		logMsg = nil
+	}
+
 	response := map[string]interface{}{
-		"status":   "error",
 		"response": err.Error(),
-		"log":      logFile,
+		"log":      logMsg,
 	}
 	WriteJSON(w, status, response)
 }
 
 func WriteSuccess(w http.ResponseWriter, status int, data any, logFile string) {
+	var logMsg interface{}
+
+	if logFile != "" {
+		logMsg = fmt.Sprintf("please contact administrator! (log: %s)", logFile)
+	} else {
+		logMsg = nil
+	}
+
 	response := map[string]interface{}{
-		"status":   "success",
 		"response": data,
-		"log":      logFile,
+		"log":      logMsg,
 	}
 	WriteJSON(w, status, response)
 }

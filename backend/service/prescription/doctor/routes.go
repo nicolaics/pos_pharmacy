@@ -37,21 +37,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterDoctorPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.doctorStore.GetDoctorByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("doctor with name %s already exists", payload.Name))
+			fmt.Errorf("doctor with name %s already exists", payload.Name), "")
 		return
 	}
 
@@ -67,18 +67,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Name: payload.Name,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("doctor %s successfully created by %s", payload.Name, user.Name))
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("doctor %s successfully created by %s", payload.Name, user.Name), "")
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		doctors, err = h.doctorStore.GetAllDoctors()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err)
+			utils.WriteError(w, http.StatusBadRequest, err, "")
 			return
 		}
 	} else {
@@ -98,13 +98,13 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			doctors, err = h.doctorStore.GetDoctorsBySearchName(val)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", val))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not found", val), "")
 				return
 			}
 		} else {
 			doctor, err := h.doctorStore.GetDoctorByID(id)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", id))
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", id), "")
 				return
 			}
 
@@ -112,7 +112,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteJSON(w, http.StatusOK, doctors)
+	utils.WriteSuccess(w, http.StatusOK, doctors, "")
 }
 
 func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
@@ -120,21 +120,21 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneDoctorPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
 		return
 	}
 
@@ -142,11 +142,11 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	doctor, err := h.doctorStore.GetDoctorByID(payload.ID)
 	if doctor == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("doctor id %d doesn't exist", payload.ID))
+			fmt.Errorf("doctor id %d doesn't exist", payload.ID), "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, doctor)
+	utils.WriteSuccess(w, http.StatusOK, doctor, "")
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -154,21 +154,21 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteDoctorPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
 		return
 	}
 
@@ -176,17 +176,17 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	doctor, err := h.doctorStore.GetDoctorByID(payload.ID)
 	if doctor == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("doctor %s doesn't exist", payload.Name))
+			fmt.Errorf("doctor %s doesn't exist", payload.Name), "")
 		return
 	}
 
 	err = h.doctorStore.DeleteDoctor(doctor, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("doctor %s deleted by %s", payload.Name, user.Name))
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("doctor %s deleted by %s", payload.Name, user.Name), "")
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -194,21 +194,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyDoctorPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
 		return
 	}
 
@@ -216,23 +216,23 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	doctor, err := h.doctorStore.GetDoctorByID(payload.ID)
 	if err != nil || doctor == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("doctor with id %d doesn't exists", payload.ID))
+			fmt.Errorf("doctor with id %d doesn't exists", payload.ID), "")
 		return
 	}
 
 	_, err = h.doctorStore.GetDoctorByName(payload.NewData.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("doctor with name %s already exist", payload.NewData.Name))
+			fmt.Errorf("doctor with name %s already exist", payload.NewData.Name), "")
 		return
 	}
 
 	err = h.doctorStore.ModifyDoctor(doctor.ID, payload.NewData.Name, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("doctor modified into %s by %s",
-		payload.NewData.Name, user.Name))
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("doctor modified into %s by %s",
+		payload.NewData.Name, user.Name), "")
 }

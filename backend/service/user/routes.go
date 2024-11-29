@@ -56,44 +56,44 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var payload types.LoginUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	user, err := h.store.GetUserByName(payload.Name)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name: %v", err), "")
 		return
 	}
 
 	// check password match
 	if !(auth.ComparePassword(user.Password, []byte(payload.Password))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid password"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid password"), "")
 		return
 	}
 
 	tokenDetails, err := auth.CreateJWT(user.ID, user.Admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
 	err = h.store.SaveToken(user.ID, tokenDetails)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
 	err = h.store.UpdateLastLoggedIn(user.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		"token": tokenDetails.Token,
 	}
 
-	utils.WriteJSON(w, http.StatusOK, tokens)
+	utils.WriteSuccess(w, http.StatusOK, tokens, "")
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -109,27 +109,27 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("admin password wrong"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("admin password wrong"), "")
 		return
 	}
 
@@ -137,14 +137,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.store.GetUserByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("user with name %s already exists", payload.Name))
+			fmt.Errorf("user with name %s already exists", payload.Name), "")
 		return
 	}
 
 	// if it doesn't, we create new user
 	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
@@ -155,17 +155,17 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Admin:       payload.Admin,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name))
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name), "")
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	_, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
@@ -178,25 +178,25 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		users, err = h.store.GetAllUsers()
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(w, http.StatusInternalServerError, err, "")
 			return
 		}
 	} else if params == "name" {
 		users, err = h.store.GetUserBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val), "")
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(w, http.StatusInternalServerError, err, "")
 			return
 		}
 
 		user, err := h.store.GetUserByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %s not found", val))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %s not found", val), "")
 			return
 		}
 
@@ -204,26 +204,26 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "phone-number" {
 		users, err = h.store.GetUserBySearchPhoneNumber(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val), "")
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, users)
+	utils.WriteSuccess(w, http.StatusOK, users, "")
 }
 
 func (h *Handler) handleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	user, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteSuccess(w, http.StatusOK, user, "")
 }
 
 // get one user other than the current user
@@ -232,21 +232,21 @@ func (h *Handler) handleGetOneUser(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	_, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
@@ -254,105 +254,105 @@ func (h *Handler) handleGetOneUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.store.GetUserByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("user id %d doesn't exist", payload.ID))
+			fmt.Errorf("user id %d doesn't exist", payload.ID), "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteSuccess(w, http.StatusOK, user, "")
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.RemoveUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), "")
 		return
 	}
 
 	users, err := h.store.GetAllUsers()
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
 	if len(users) == 1 || payload.ID == 1 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cannot delete initial admin"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cannot delete initial admin"), "")
 		return
 	}
 
 	user, err := h.store.GetUserByID(payload.ID)
 	if user == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	err = h.store.DeleteUser(user, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", user.Name))
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", user.Name), "")
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.NewData.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), "")
 		return
 	}
 
 	user, err := h.store.GetUserByID(payload.ID)
 	if user == nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	if user.Name != payload.NewData.Name {
 		_, err = h.store.GetUserByName(payload.NewData.Name)
 		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewData.Name))
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewData.Name), "")
 		}
 	}
 
@@ -363,74 +363,74 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		PhoneNumber: payload.NewData.PhoneNumber,
 	}, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewData.Name))
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewData.Name), "")
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"), "")
 		return
 	}
 
 	// check user exists or not
 	_, err = h.store.GetUserByID(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", accessDetails.UserID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", accessDetails.UserID), "")
 		return
 	}
 
 	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
 	err = h.store.DeleteToken(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, "successfully logged out")
+	utils.WriteSuccess(w, http.StatusOK, "successfully logged out", "")
 }
 
 func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request) {
 	var payload types.ChangeAdminStatusPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), "")
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), "")
 		return
 	}
 
 	// check whether user exists or not
 	user, err := h.store.GetUserByID(payload.ID)
 	if user == nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusBadRequest, err, "")
 		return
 	}
 
@@ -441,9 +441,9 @@ func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request
 		PhoneNumber: user.PhoneNumber,
 	}, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusInternalServerError, err, "")
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %t", user.Name, payload.Admin))
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %t", user.Name, payload.Admin), "")
 }
