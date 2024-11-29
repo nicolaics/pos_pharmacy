@@ -53,6 +53,7 @@ type RegisterInvoicePayload struct {
 	PaymentMethodName  string  `json:"paymentMethodName" validate:"required"`
 	Description        string  `json:"description"`
 	InvoiceDate        string  `json:"invoiceDate" validate:"required"`
+	PrintReceipt       bool    `json:"printReceipt"`
 
 	MedicineLists []InvoiceMedicineListsPayload `json:"medicineLists" validate:"required"`
 }
@@ -144,11 +145,6 @@ type InvoiceDetailPayload struct {
 	MedicineLists []InvoiceMedicineItemReturnPayload `json:"medicineLists"`
 }
 
-// TODO: find out the required data
-type PrintReceiptPayload struct {
-	ID int `json:"id" validate:"required"`
-}
-
 type DeleteInvoicePayload ViewInvoiceDetailPayload
 
 type InvoiceMedicineItem struct {
@@ -204,7 +200,10 @@ type InvoicePdfPayload struct {
 	MedicineLists      []InvoiceMedicineListsPayload `json:"medicineLists"`
 }
 
-// TODO: CHECK
+type PrintReceiptPayload struct {
+	ID int `json:"id" validate:"required"`
+}
+
 type ReceiptPdfPayload struct {
 	Number               int
 	Date                 time.Time
