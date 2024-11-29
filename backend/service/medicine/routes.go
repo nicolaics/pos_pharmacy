@@ -469,7 +469,7 @@ func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	medicineHistories, err := h.medStore.GetMedicineHistoryByMIDAndDate(payload.ID, *startDate, *endDate)
+	medicineHistories, err := h.medStore.GetMedicineHistoryByDate(payload.ID, *startDate, *endDate)
 	if medicineHistories == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
 			fmt.Errorf("medicine id %d doesn't exist", payload.ID), "")

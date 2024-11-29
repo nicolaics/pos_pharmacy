@@ -615,7 +615,7 @@ func (s *Store) ModifyMedicineHistoryTable(mid, invoiceId, historyType int, qty 
 }
 
 func (s *Store) DeleteMedicineHistory(mid, invoiceId, historyType int, qty float64, user *types.User) error {
-	data, err := s.GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType, qty)
+	data, err := s.GetMedicineHistoryByInvoiceIdAndQty(mid, invoiceId, historyType, qty)
 	if err != nil {
 		return err
 	}
@@ -646,7 +646,7 @@ func (s *Store) DeleteMedicineHistory(mid, invoiceId, historyType int, qty float
 	return nil
 }
 
-func (s *Store) GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType int, qty float64) (*types.MedicineHistory, error) {
+func (s *Store) GetMedicineHistoryByInvoiceIdAndQty(mid, invoiceId, historyType int, qty float64) (*types.MedicineHistory, error) {
 	row := new(sql.Row)
 
 	if historyType == constants.MEDICINE_HISTORY_OUT {
@@ -688,7 +688,7 @@ func (s *Store) GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType 
 	return medicineHistory, nil
 }
 
-func (s *Store) GetMedicineHistoryByMIDAndDate(mid int, startDate time.Time, endDate time.Time) ([]types.MedicineHistoryReturn, error) {
+func (s *Store) GetMedicineHistoryByDate(mid int, startDate time.Time, endDate time.Time) ([]types.MedicineHistoryReturn, error) {
 	query := `SELECT * FROM medicine_history 
 				WHERE mid = ? 
 				AND invoice_date >= ? 

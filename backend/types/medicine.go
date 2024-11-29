@@ -28,8 +28,8 @@ type MedicineStore interface {
 	ModifyMedicineHistoryTable(mid, invoiceId, historyType int, qty float64, unitId int, invoiceDate time.Time) error
 	DeleteMedicineHistory(mid, invoiceId, historyType int, qty float64, user *User) error
 
-	GetMedicineHistoryByMIDAndIIDAndQty(mid, invoiceId, historyType int, qty float64) (*MedicineHistory, error)
-	GetMedicineHistoryByMIDAndDate(mid int, startDate time.Time, endDate time.Time) ([]MedicineHistoryReturn, error)
+	GetMedicineHistoryByInvoiceIdAndQty(mid, invoiceId, historyType int, qty float64) (*MedicineHistory, error)
+	GetMedicineHistoryByDate(mid int, startDate time.Time, endDate time.Time) ([]MedicineHistoryReturn, error)
 }
 
 type RegisterMedicinePayload struct {
