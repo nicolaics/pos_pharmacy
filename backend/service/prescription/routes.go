@@ -14,7 +14,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
-	// "github.com/nicolaics/pharmacon/config"
+	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
 	"github.com/nicolaics/pharmacon/utils/pdf"
@@ -88,41 +88,41 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterPrescriptionPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
 	// get customerID info from invoice
 	invoiceCustomer, err := h.customerStore.GetCustomerByName(payload.Invoice.CustomerName)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", payload.Invoice.CustomerName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", payload.Invoice.CustomerName), nil)
 		return
 	}
 
 	invoiceDate, err := utils.ParseDate(payload.Invoice.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
 	// get invoice data
 	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.Invoice.Number, invoiceCustomer.ID, *invoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.Invoice.Number), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.Invoice.Number), nil)
 		return
 	}
 
@@ -132,14 +132,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Name: payload.DoctorName,
 		})
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating doctor: %v", err), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating doctor: %v", err), nil)
 			return
 		}
 
 		doctor, err = h.doctorStore.GetDoctorByName(payload.DoctorName)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.DoctorName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.DoctorName), nil)
 		return
 	}
 
@@ -150,20 +150,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Age:  payload.PatientAge,
 		})
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating patient: %v", err), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating patient: %v", err), nil)
 			return
 		}
 
 		patient, err = h.patientStore.GetPatientByName(payload.PatientName, payload.PatientAge)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.PatientName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.PatientName), nil)
 		return
 	}
 
 	prescriptionDate, err := utils.ParseDate(payload.PrescriptionDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
@@ -171,18 +171,18 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	today := time.Now().Format("2006-01-02 -0700MST")
 	startDate, err := utils.ParseStartDate(today)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse start date: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse start date: %v", err), nil)
 		return
 	}
 	endDate, err := utils.ParseEndDate(today)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse end date: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to parse end date: %v", err), nil)
 		return
 	}
 
 	isValid, err := h.prescriptionStore.IsValidPrescriptionNumber(payload.Number, *startDate, *endDate)
 	if err != nil || !isValid {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d exists", payload.Number), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d exists", payload.Number), nil)
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	err = h.prescriptionStore.CreatePrescription(presc)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -213,11 +213,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 		if errDel != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 			return
 		}
 
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d doesn't exists", payload.Number), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription %d doesn't exists", payload.Number), nil)
 		return
 	}
 
@@ -236,11 +236,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume time: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume time: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -255,11 +255,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("det: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("det: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -274,11 +274,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("dose: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("dose: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -293,11 +293,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("mf: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("mf: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -312,11 +312,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("set usage: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("set usage: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -331,11 +331,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume unit: error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("consume unit: error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -354,11 +354,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err), nil)
 			return
 		}
 
@@ -367,11 +367,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 			if errDel != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine set id"), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine set id"), nil)
 			return
 		}
 
@@ -390,11 +390,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), nil)
 				return
 			}
 
@@ -402,11 +402,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), nil)
 				return
 			}
 
@@ -414,12 +414,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
 				_ = h.prescriptionStore.DeleteEticket(eticketId)
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), nil)
 				return
 			}
 
@@ -438,17 +438,17 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if setItem.Eticket.Size == "7x4" {
 				eticketFileName, err = pdf.CreateEticket7x4Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), nil)
 					return
 				}
 			} else if setItem.Eticket.Size == "7x5" {
 				eticketFileName, err = pdf.CreateEticket7x5Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), nil)
 					return
 				}
 			} else {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size), nil)
 				return
 			}
 
@@ -459,11 +459,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket pdf url: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket pdf url: %v", err), nil)
 				return
 			}
 		}
@@ -473,11 +473,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
 				return
 			}
 
@@ -491,11 +491,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, err, "")
+				utils.WriteError(w, http.StatusInternalServerError, err, nil)
 				return
 			}
 
@@ -506,11 +506,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 					if errDel != nil {
-						utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+						utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 						return
 					}
 
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error parse float: %v", err), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error parse float: %v", err), nil)
 					return
 				}
 			} else {
@@ -534,12 +534,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
 				utils.WriteError(w, http.StatusInternalServerError,
-					fmt.Errorf("prescription %d, med %s: %v", payload.Number, medicine.MedicineName, err), "")
+					fmt.Errorf("prescription %d, med %s: %v", payload.Number, medicine.MedicineName, err), nil)
 				return
 			}
 
@@ -547,11 +547,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough, need %.2f: %v", medicine.MedicineName, medicineQty, err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough, need %.2f: %v", medicine.MedicineName, medicineQty, err), nil)
 				return
 			}
 		}
@@ -561,11 +561,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 		if errDel != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 			return
 		}
 
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err), nil)
 		return
 	}
 
@@ -578,14 +578,30 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	prescFileName, err := pdf.CreatePrescriptionPdf(prescPdf, h.prescriptionStore, "")
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err), nil)
 		return
 	}
 
 	err = h.prescriptionStore.UpdatePdfUrl("prescription", prescriptionId, prescFileName)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update presc pdf url: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update presc pdf url: %v", err), nil)
 		return
+	}
+
+	logFileNames := make([]string, 0)
+
+	if payload.PrintExtra {
+		err = pdf.CreatePrescriptionExtraPdf(prescPdf, prescFileName)
+		if err != nil {
+			logFileName, _ := logger.WriteServerErrorLog(fmt.Errorf("error create extra pdf: %v", err))
+			logFileNames = append(logFileNames, logFileName)
+		} else {
+			err = h.prescriptionStore.UpdatePrintExtraPdf(prescriptionId)
+			if err != nil {
+				logFileName, _ := logger.WriteServerErrorLog(fmt.Errorf("error update print extra pdf: %v", err))
+				logFileNames = append(logFileNames, logFileName)
+			}
+		}
 	}
 
 	// subtract the stock
@@ -595,11 +611,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
 				return
 			}
 
@@ -613,11 +629,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, err, "")
+				utils.WriteError(w, http.StatusInternalServerError, err, nil)
 				return
 			}
 
@@ -625,11 +641,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errDel := h.prescriptionStore.AbsoluteDeletePrescription(presc)
 				if errDel != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete prescription: %v", errDel), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
 				return
 			}
 		}
@@ -640,7 +656,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		"prescriptionPdf": prescFileName,
 		"eticketPdf":      eticketFileNames,
 	}
-	utils.WriteSuccess(w, http.StatusCreated, returnPayload, "")
+	utils.WriteSuccess(w, http.StatusCreated, returnPayload, logFileNames)
 }
 
 // only view the prescription list
@@ -649,20 +665,20 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	var payload types.ViewPrescriptionsPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -672,13 +688,13 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 
 	startDate, err := utils.ParseStartDate(payload.StartDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
 	endDate, err := utils.ParseEndDate(payload.EndDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
@@ -687,49 +703,49 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	if val == "all" {
 		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDate(*startDate, *endDate)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		prescription, err := h.prescriptionStore.GetPrescriptionByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription id %d not exist", id), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription id %d not exist", id), nil)
 			return
 		}
 
 		invoice, err := h.invoiceStore.GetInvoiceByID(prescription.InvoiceID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("invoice id %d not found", prescription.InvoiceID), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("invoice id %d not found", prescription.InvoiceID), nil)
 			return
 		}
 
 		patient, err := h.patientStore.GetPatientByID(prescription.PatientID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("patient id %d not found", prescription.PatientID), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("patient id %d not found", prescription.PatientID), nil)
 			return
 		}
 
 		doctor, err := h.doctorStore.GetDoctorByID(prescription.DoctorID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("doctor id %d not found", prescription.DoctorID), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("doctor id %d not found", prescription.DoctorID), nil)
 			return
 		}
 
 		user, err := h.userStore.GetUserByID(prescription.UserID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", prescription.UserID), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", prescription.UserID), nil)
 			return
 		}
 
 		customer, err := h.customerStore.GetCustomerByID(invoice.CustomerID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("customer id %d not found", invoice.CustomerID), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("customer id %d not found", invoice.CustomerID), nil)
 			return
 		}
 
@@ -759,27 +775,27 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndNumber(*startDate, *endDate, number)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 	} else if params == "user" {
 		users, err := h.userStore.GetUserBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val), nil)
 			return
 		}
 
 		for _, user := range users {
 			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndUserID(*startDate, *endDate, user.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, 
-								fmt.Errorf("user %s doesn't create any prescription between %s and %s", val, payload.StartDate, payload.EndDate), "")
+				utils.WriteError(w, http.StatusBadRequest,
+					fmt.Errorf("user %s doesn't create any prescription between %s and %s", val, payload.StartDate, payload.EndDate), nil)
 				return
 			}
 
@@ -788,7 +804,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	} else if params == "patient" {
 		patients, err := h.patientStore.GetPatientsBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient %s not exists", val), nil)
 			return
 		}
 
@@ -796,7 +812,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndPatientID(*startDate, *endDate, patient.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest,
-							fmt.Errorf("patient %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate), "")
+					fmt.Errorf("patient %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate), nil)
 				return
 			}
 
@@ -805,7 +821,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	} else if params == "doctor" {
 		doctors, err := h.doctorStore.GetDoctorsBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not exists", val), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor %s not exists", val), nil)
 			return
 		}
 
@@ -813,7 +829,7 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 			temp, err := h.prescriptionStore.GetPrescriptionsByDateAndDoctorID(*startDate, *endDate, doctor.ID)
 			if err != nil {
 				utils.WriteError(w, http.StatusBadRequest,
-							fmt.Errorf("doctor %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate), "")
+					fmt.Errorf("doctor %s doesn't have any prescription between %s and %s", val, payload.StartDate, payload.EndDate), nil)
 				return
 			}
 
@@ -822,21 +838,21 @@ func (h *Handler) handleGetPrescriptions(w http.ResponseWriter, r *http.Request)
 	} else if params == "invoice-id" {
 		iid, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		prescriptions, err = h.prescriptionStore.GetPrescriptionsByDateAndInvoiceID(*startDate, *endDate, iid)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"), nil)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, prescriptions, "")
+	utils.WriteSuccess(w, http.StatusOK, prescriptions, nil)
 }
 
 // view one prescription
@@ -845,73 +861,73 @@ func (h *Handler) handleGetPrescriptionDetail(w http.ResponseWriter, r *http.Req
 	var payload types.ViewPrescriptionDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
 	// get prescription data
 	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.PrescriptionID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription id %d doesn't exists", payload.PrescriptionID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("prescription id %d doesn't exists", payload.PrescriptionID), nil)
 		return
 	}
 
 	// get the details of set items and medicine items of the prescription
 	items, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescription.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	// get user data, the one who inputs the prescription
 	inputter, err := h.userStore.GetUserByID(prescription.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", prescription.UserID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", prescription.UserID), nil)
 		return
 	}
 
 	// get last modified user data
 	lastModifiedUser, err := h.userStore.GetUserByID(prescription.LastModifiedByUserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", prescription.LastModifiedByUserID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", prescription.LastModifiedByUserID), nil)
 		return
 	}
 
 	doctor, err := h.doctorStore.GetDoctorByID(prescription.DoctorID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", prescription.DoctorID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("doctor id %d not found", prescription.DoctorID), nil)
 		return
 	}
 
 	patient, err := h.patientStore.GetPatientByID(prescription.PatientID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient id %d not found", prescription.PatientID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("patient id %d not found", prescription.PatientID), nil)
 		return
 	}
 
 	invoice, err := h.invoiceStore.GetInvoiceByID(prescription.InvoiceID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d not found", prescription.InvoiceID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice id %d not found", prescription.InvoiceID), nil)
 		return
 	}
 
 	customer, err := h.customerStore.GetCustomerByID(invoice.CustomerID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", invoice.CustomerID), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", invoice.CustomerID), nil)
 		return
 	}
 
@@ -969,7 +985,7 @@ func (h *Handler) handleGetPrescriptionDetail(w http.ResponseWriter, r *http.Req
 		MedicineSets: items,
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, returnPayload, "")
+	utils.WriteSuccess(w, http.StatusOK, returnPayload, nil)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -977,21 +993,21 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeletePrescription
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid or not admin: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid or not admin: %v", err), nil)
 		return
 	}
 
@@ -999,7 +1015,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.ID)
 	if prescription == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("prescription id %d doesn't exist", payload.ID), "")
+			fmt.Errorf("prescription id %d doesn't exist", payload.ID), nil)
 		return
 	}
 
@@ -1007,7 +1023,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	setItems, err := h.prescriptionStore.GetSetItemsByPrescriptionID(prescription.ID)
 	if setItems == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("set items of presc id %d doesn't exist", payload.ID), "")
+			fmt.Errorf("set items of presc id %d doesn't exist", payload.ID), nil)
 		return
 	}
 
@@ -1016,7 +1032,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	for _, setItem := range setItems {
 		medicineItem, err := h.prescriptionStore.GetPrescriptionMedicineItems(setItem.ID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding medicine item: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding medicine item: %v", err), nil)
 			return
 		}
 
@@ -1024,44 +1040,44 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 		err = h.prescriptionStore.DeletePrescriptionMedicineItem(prescription, setItem.ID, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 	}
 
 	err = h.prescriptionStore.DeleteSetItem(prescription, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	err = h.prescriptionStore.DeletePrescription(prescription, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	for _, medicineItem := range medicineItems {
 		medData, err := h.medStore.GetMedicineByBarcode(medicineItem.MedicineBarcode)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName), nil)
 			return
 		}
 
 		unit, err := h.unitStore.GetUnitByName(medicineItem.Unit)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		err = utils.AddStock(h.medStore, medData, unit, medicineItem.QtyFloat, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
 			return
 		}
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("prescription number %d deleted by %s", prescription.Number, user.Name), "")
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("prescription number %d deleted by %s", prescription.Number, user.Name), nil)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -1069,21 +1085,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyPrescriptionPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -1091,27 +1107,27 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("prescription with id %d doesn't exists", payload.ID), "")
+			fmt.Errorf("prescription with id %d doesn't exists", payload.ID), nil)
 		return
 	}
 
 	// get customerID info from invoice
 	invoiceCustomer, err := h.customerStore.GetCustomerByName(payload.NewData.Invoice.CustomerName)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", payload.NewData.Invoice.CustomerName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", payload.NewData.Invoice.CustomerName), nil)
 		return
 	}
 
 	invoiceDate, err := utils.ParseDate(payload.NewData.Invoice.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
 	// get invoice data
 	invoiceId, err := h.invoiceStore.GetInvoiceID(payload.NewData.Invoice.Number, invoiceCustomer.ID, *invoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.NewData.Invoice.Number), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invoice number %d not found", payload.NewData.Invoice.Number), nil)
 		return
 	}
 
@@ -1121,14 +1137,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Name: payload.NewData.DoctorName,
 		})
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating doctor: %v", err), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating doctor: %v", err), nil)
 			return
 		}
 
 		doctor, err = h.doctorStore.GetDoctorByName(payload.NewData.DoctorName)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.NewData.DoctorName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.NewData.DoctorName), nil)
 		return
 	}
 
@@ -1139,26 +1155,26 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Age:  payload.NewData.PatientAge,
 		})
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating patient: %v", err), "")
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error creating patient: %v", err), nil)
 			return
 		}
 
 		patient, err = h.patientStore.GetPatientByName(payload.NewData.PatientName, payload.NewData.PatientAge)
 	}
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.NewData.PatientName), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("%s not found", payload.NewData.PatientName), nil)
 		return
 	}
 
 	prescriptionDate, err := utils.ParseDate(payload.NewData.PrescriptionDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
 		return
 	}
 
 	oldPrescriptionSetItems, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescription.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding prescription items: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error finding prescription items: %v", err), nil)
 		return
 	}
 
@@ -1176,7 +1192,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.prescriptionStore.ModifyPrescription(payload.ID, newPresc, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, "")
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -1187,32 +1203,32 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	for _, setItem := range oldPrescriptionSetItems {
 		err = h.prescriptionStore.DeletePrescriptionMedicineItem(prescription, setItem.ID, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
 		err = h.prescriptionStore.DeleteSetItem(prescription, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting set item: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting set item: %v", err), nil)
 			return
 		}
 
 		for _, medicineItem := range setItem.MedicineItems {
 			medData, err := h.medStore.GetMedicineByBarcode(medicineItem.MedicineBarcode)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicineItem.MedicineName), nil)
 				return
 			}
 
 			unit, err := h.unitStore.GetUnitByName(medicineItem.Unit)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, "")
+				utils.WriteError(w, http.StatusInternalServerError, err, nil)
 				return
 			}
 
 			err = utils.AddStock(h.medStore, medData, unit, medicineItem.QtyFloat, user)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
 				return
 			}
 		}
@@ -1229,7 +1245,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1242,7 +1258,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1255,7 +1271,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1268,7 +1284,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1281,7 +1297,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1294,7 +1310,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, "")
+			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
 		}
 
@@ -1311,14 +1327,14 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 		err = h.prescriptionStore.CreateSetItem(setItemStore)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine set: %v", err), nil)
 			return
 		}
 
 		// get medicine set store data
 		setItemStoreId, err := h.prescriptionStore.GetSetItemID(setItemStore)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine set id"), "")
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine set id"), nil)
 			return
 		}
 
@@ -1326,7 +1342,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if setItem.PrintEticket {
 			err = h.prescriptionStore.DeleteEticketByPrescriptionID(payload.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting eticket: %v", err), nil)
 				return
 			}
 
@@ -1340,13 +1356,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			}
 			err = h.prescriptionStore.CreateEticket(eticket)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), nil)
 				return
 			}
 
 			eticketId, err := h.prescriptionStore.GetEticketID(eticket)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create eticket: %v", err), nil)
 				return
 			}
 
@@ -1354,11 +1370,11 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				delErr := h.prescriptionStore.DeleteEticket(eticketId)
 				if delErr != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error delete eticket: %v: %v", delErr, err), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error delete eticket: %v: %v", delErr, err), nil)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update eticket: %v", err), nil)
 				return
 			}
 
@@ -1377,17 +1393,17 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			if setItem.Eticket.Size == "7x4" {
 				eticketFileName, err = pdf.CreateEticket7x4Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), nil)
 					return
 				}
 			} else if setItem.Eticket.Size == "7x5" {
 				eticketFileName, err = pdf.CreateEticket7x5Pdf(eticketPdf, setNumber, h.prescriptionStore)
 				if err != nil {
-					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), "")
+					utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating eticket pdf for number %d: %v", setItem.Eticket.Number, err), nil)
 					return
 				}
 			} else {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown eticket size: %s", setItem.Eticket.Size), nil)
 				return
 			}
 
@@ -1398,7 +1414,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		for _, medicine := range setItem.MedicineLists {
 			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
 				return
 			}
 
@@ -1410,7 +1426,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, "")
+				utils.WriteError(w, http.StatusInternalServerError, err, nil)
 				return
 			}
 
@@ -1419,7 +1435,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			if fractionIdx == -1 {
 				medicineQty, err = strconv.ParseFloat(medicine.Qty, 64)
 				if err != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error parse float: %v", err), "")
+					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error parse float: %v", err), nil)
 					return
 				}
 			} else {
@@ -1442,13 +1458,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			err = h.prescriptionStore.CreatePrescriptionMedicineItem(medicineItem)
 			if err != nil {
 				utils.WriteError(w, http.StatusInternalServerError,
-					fmt.Errorf("prescription %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err), "")
+					fmt.Errorf("prescription %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err), nil)
 				return
 			}
 
 			err = utils.CheckStock(medData, unit, medicineQty)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("stock for %s is not enough", medicine.MedicineName), nil)
 				return
 			}
 		}
@@ -1456,7 +1472,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	medicineSets, err := h.prescriptionStore.GetPrescriptionSetAndMedicineItems(prescription.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error get medicine items: %v", err), nil)
 		return
 	}
 
@@ -1469,8 +1485,24 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 	prescFileName, err := pdf.CreatePrescriptionPdf(prescPdf, h.prescriptionStore, prescription.PdfUrl)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err), "")
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create presc pdf: %v", err), nil)
 		return
+	}
+
+	logFileNames := make([]string, 0)
+
+	if payload.NewData.PrintExtra {
+		err = pdf.CreatePrescriptionExtraPdf(prescPdf, prescFileName)
+		if err != nil {
+			logFileName, _ := logger.WriteServerErrorLog(fmt.Errorf("error create extra pdf: %v", err))
+			logFileNames = append(logFileNames, logFileName)
+		} else {
+			err = h.prescriptionStore.UpdatePrintExtraPdf(prescription.ID)
+			if err != nil {
+				logFileName, _ := logger.WriteServerErrorLog(fmt.Errorf("error update print extra pdf: %v", err))
+				logFileNames = append(logFileNames, logFileName)
+			}
+		}
 	}
 
 	// subtract the stock
@@ -1478,7 +1510,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		for _, medicine := range setItem.MedicineItems {
 			medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), "")
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
 				return
 			}
 
@@ -1490,13 +1522,13 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, "")
+				utils.WriteError(w, http.StatusInternalServerError, err, nil)
 				return
 			}
 
 			err = utils.SubtractStock(h.medStore, medData, unit, medicine.QtyFloat, user)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), "")
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
 				return
 			}
 		}
@@ -1507,7 +1539,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		"prescriptionPdf": prescFileName,
 		"eticketPdf":      eticketFileNames,
 	}
-	utils.WriteSuccess(w, http.StatusOK, returnPayload, "")
+	utils.WriteSuccess(w, http.StatusOK, returnPayload, logFileNames)
 }
 
 func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
@@ -1515,21 +1547,21 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	var payload types.ViewPrescriptionDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), "")
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
 		return
 	}
 
@@ -1537,7 +1569,7 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	prescription, err := h.prescriptionStore.GetPrescriptionByID(payload.PrescriptionID)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("prescription with id %d doesn't exists", payload.PrescriptionID), "")
+			fmt.Errorf("prescription with id %d doesn't exists", payload.PrescriptionID), nil)
 		return
 	}
 
@@ -1550,9 +1582,13 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	zipWriter := zip.NewWriter(w)
 	defer zipWriter.Close()
 
+	if prescription.PrintExtraPdf {
+		pdfFiles = append(pdfFiles, ("static/pdf/prescription/extra/e" + prescription.PdfUrl))
+	}
+
 	etickets, err := h.prescriptionStore.GetEticketsByPrescriptionID(prescription.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "")
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
 		return
 	}
 

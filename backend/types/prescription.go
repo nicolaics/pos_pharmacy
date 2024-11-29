@@ -50,6 +50,8 @@ type PrescriptionStore interface {
 	UpdateEticketID(eticketId int, prescSetItemId int) error
 
 	IsValidPrescriptionNumber(number int, startDate time.Time, endDate time.Time) (bool, error)
+
+	UpdatePrintExtraPdf(id int) (error)
 }
 
 type RegisterPrescriptionPayload struct {
@@ -69,6 +71,7 @@ type RegisterPrescriptionPayload struct {
 	TotalPrice       float64                      `json:"totalPrice" validate:"required"`
 	Description      string                       `json:"description"`
 	SetItems         []PrescriptionSetItemPayload `json:"setItems" validate:"required"`
+	PrintExtra       bool                         `json:"printExtra"`
 }
 
 type PrescriptionSetItemPayload struct {
@@ -246,6 +249,7 @@ type Prescription struct {
 	LastModified         time.Time     `json:"lastModified"`
 	LastModifiedByUserID int           `json:"lastLastModifiedByUserId"`
 	PdfUrl               string        `json:"pdfUrl"`
+	PrintExtraPdf        bool          `json:"printExtraPdf"`
 	DeletedAt            sql.NullTime  `json:"deletedAt"`
 	DeletedByUserID      sql.NullInt64 `json:"deletedByUserId"`
 }

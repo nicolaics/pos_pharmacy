@@ -1039,6 +1039,16 @@ func (s *Store) IsValidPrescriptionNumber(number int, startDate time.Time, endDa
 	return count < 1, nil
 }
 
+func (s *Store) UpdatePrintExtraPdf(id int) (error) {
+	query := `UPDATE prescription SET print_extra_pdf = ? WHERE id = ? AND deleted_at IS NULL`
+	_, err := s.db.Exec(query, true, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func scanRowIntoSetItem(rows *sql.Rows) (*types.PrescriptionSetItem, error) {
 	medicineSet := new(types.PrescriptionSetItem)
 
@@ -1081,6 +1091,7 @@ func scanRowIntoPrescription(rows *sql.Rows) (*types.Prescription, error) {
 		&prescription.LastModified,
 		&prescription.LastModifiedByUserID,
 		&prescription.PdfUrl,
+		&prescription.PrintExtraPdf,
 		&prescription.DeletedAt,
 		&prescription.DeletedByUserID,
 	)

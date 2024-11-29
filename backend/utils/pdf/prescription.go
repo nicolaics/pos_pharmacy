@@ -63,7 +63,7 @@ func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.
 		}
 	}
 
-	err = createPrescriptionData(pdf, presc.MedicineSets)
+	err = createPrescriptionData(pdf, presc.MedicineSets, false)
 	if err != nil {
 		return "", err
 	}
@@ -101,6 +101,35 @@ func CreatePrescriptionPdf(presc types.PrescriptionPdfPayload, prescStore types.
 	}
 
 	return fileName, nil
+}
+
+func CreatePrescriptionExtraPdf(presc types.PrescriptionPdfPayload, fileName string) error {
+	directory := "static/pdf/prescription/extra/"
+	if err := os.MkdirAll(directory, 0744); err != nil {
+		return err
+	}
+
+	pdf, err := initPrescriptionPdf()
+	if err != nil {
+		return err
+	}
+
+	err = createPrescriptionExtraInfo(pdf, presc.Patient.Name, presc.Doctor.Name)
+	if err != nil {
+		return err
+	}
+
+    err = createPrescriptionData(pdf, presc.MedicineSets, true)
+    if err != nil {
+		return err
+	}
+
+	err = pdf.OutputFileAndClose(directory + "e" + fileName)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func initPrescriptionPdf() (*fpdf.Fpdf, error) {
@@ -286,7 +315,7 @@ func createPrescriptionInfo(pdf *fpdf.Fpdf, presc types.PrescriptionPdfPayload) 
 	return nil
 }
 
-func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSetItemReturn) error {
+func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSetItemReturn, isExtra bool) error {
 	var caser = cases.Title(language.Indonesian)
 
 	pdf.SetLineWidth(0.02)
@@ -296,7 +325,11 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
 	firstSet := true
 	nameRegex := regexp.MustCompile(`[0-9]+`)
 
-	pdf.SetY(pdf.GetY())
+	if isExtra {
+		pdf.SetY(pdf.GetY() + 0.1)	
+	} else {
+		pdf.SetY(pdf.GetY())
+	}
 
 	startMedicineX := 1.0
 
@@ -468,7 +501,7 @@ func createPrescriptionData(pdf *fpdf.Fpdf, medicineSets []types.PrescriptionSet
 	}
 
 	if pdf.Error() != nil {
-		return fmt.Errorf("error create presc info: %v", pdf.Error())
+		return fmt.Errorf("error create presc data: %v", pdf.Error())
 	}
 
 	return nil
@@ -498,6 +531,45 @@ func createPrescriptionFooter(pdf *fpdf.Fpdf) error {
 	if pdf.Error() != nil {
 		return fmt.Errorf("error create presc footer: %v", pdf.Error())
 	}
+
+	return nil
+}
+
+func createPrescriptionExtraInfo(pdf *fpdf.Fpdf, patient, doctor string) error {
+	var caser = cases.Title(language.Indonesian)
+
+	pdf.SetTextColor(constants.BLACK_R, constants.BLACK_G, constants.BLACK_B)
+    
+    // Patient
+    {
+        pdf.SetY(pdf.GetY() - 0.05)
+        pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        cellWidth := pdf.GetStringWidth("Untuk") + 0.05
+        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, "Untuk", "", 0, "L", false, 0, "")
+
+        pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        pdf.CellFormat(0.2, constants.PRESC_STD_CELL_HEIGHT, ":", "", 0, "L", false, 0, "")
+
+        pdf.SetFont("Arial", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        pdf.CellFormat(3.8, 0.45, caser.String(patient), "", 0, "LM", false, 0, "")
+    }
+
+    // Doctor
+    {
+        cellWidth := pdf.GetStringWidth("Dari dr.")
+        pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        pdf.CellFormat(cellWidth, constants.PRESC_STD_CELL_HEIGHT, "Dari dr.", "", 0, "L", false, 0, "")
+
+        pdf.SetFont("Calibri", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        pdf.CellFormat(0.2, constants.PRESC_STD_CELL_HEIGHT, ":", "", 0, "L", false, 0, "")
+
+        pdf.SetFont("Arial", constants.REGULAR, constants.PRESC_DATA_FONT_SZ)
+        pdf.CellFormat(0, 0.45, caser.String(doctor), "", 1, "LM", false, 0, "")
+    }
+
+    if pdf.Error() != nil {
+        return fmt.Errorf("error create presc extra info: %v", pdf.Error())
+    }
 
 	return nil
 }
