@@ -9,7 +9,7 @@ import (
 	"github.com/nicolaics/pharmacon/config"
 	"github.com/nicolaics/pharmacon/db"
 	"github.com/nicolaics/pharmacon/service/auth"
-	"github.com/nicolaics/pharmacon/utils"
+	// "github.com/nicolaics/pharmacon/utils"
 )
 
 func main() {
@@ -47,7 +47,8 @@ func main() {
 		log.Fatal("initial admin already exist!")
 	}
 
-	password := utils.GenerateRandomCodeAlphanumeric(12)
+	// password := utils.GenerateRandomCodeAlphanumeric(12)
+	password := "12345"
 
 	// create new admin
 	hashedPassword, err := auth.HashPassword(password)
