@@ -8,6 +8,7 @@ bin
 *.txt
 *.http
 static/
+create_dummy_data.py
 
 # dependencies
 frontend/node_modules
