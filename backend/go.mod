@@ -1,6 +1,8 @@
 module github.com/nicolaics/pharmacon
 
-go 1.22.4
+go 1.23.2
+
+toolchain go1.23.3
 
 require (
 	github.com/av-elier/go-decimal-to-rational v0.0.0-20191127152832-89e6aad02ecf
