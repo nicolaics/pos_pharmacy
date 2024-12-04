@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql"
+	"encoding/xml"
 	"time"
 )
 
@@ -72,53 +73,79 @@ type ModifyMedicinePayload struct {
 
 type RequestExportMedicinePayload struct {
 	// Fields                     []string `json:"fields"`
-	ID                         bool     `json:"id" csv:"id"`
-	Barcode                    bool     `json:"barcode" csv:"barcode"`
-	Name                       bool     `json:"name" csv:"name"`
-	Qty                        bool     `json:"qty" csv:"qty"`
-	FirstUnitName              bool     `json:"firstUnitName" csv:"first_unit_name"`
-	FirstDiscountPercentage    bool     `json:"firstDiscountPercentage" csv:"first_discount_percentage"`
-	FirstDiscountAmount        bool     `json:"firstDiscountAmount" csv:"first_discount_amount"`
-	FirstPrice                 bool     `json:"firstPrice" csv:"first_price"`
-	SecondUnitName             bool     `json:"secondUnitName" csv:"second_unit_name"`
-	SecondUnitToFirstUnitRatio bool     `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio"`
-	SecondDiscountPercentage   bool     `json:"secondDiscountPercentage" csv:"second_discount_percentage"`
-	SecondDiscountAmount       bool     `json:"secondDiscountAmount" csv:"second_discount_amount"`
-	SecondPrice                bool     `json:"secondPrice" csv:"second_price"`
-	ThirdUnitName              bool     `json:"thirdUnitName" csv:"third_unit_name"`
-	ThirdUnitToFirstUnitRatio  bool     `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio"`
-	ThirdDiscountPercentage    bool     `json:"thirdDiscountPercentage" csv:"third_discount_percentage"`
-	ThirdDiscountAmount        bool     `json:"thirdDiscountAmount" csv:"third_discount_amount"`
-	ThirdPrice                 bool     `json:"thirdPrice" csv:"third_price"`
-	Description                bool     `json:"description" csv:"description"`
-	CreatedAt                  bool     `json:"createdAt" csv:"created_at"`
-	LastModified               bool     `json:"lastModified" csv:"last_modified"`
-	LastModifiedByUserName     bool     `json:"lastModifiedByUserName" csv:"last_modified_by_user_name"`
+	ID                         bool `json:"id" csv:"id" xml:"id,attr"`
+	Barcode                    bool `json:"barcode" csv:"barcode" xml:"barcode"`
+	Name                       bool `json:"name" csv:"name" xml:"name"`
+	Qty                        bool `json:"qty" csv:"qty" xml:"qty"`
+	FirstUnitName              bool `json:"firstUnitName" csv:"first_unit_name" xml:"first_unit>name"`
+	FirstDiscountPercentage    bool `json:"firstDiscountPercentage" csv:"first_discount_percentage" xml:"first_unit>discount>percentage"`
+	FirstDiscountAmount        bool `json:"firstDiscountAmount" csv:"first_discount_amount" xml:"first_unit>discount>amount"`
+	FirstPrice                 bool `json:"firstPrice" csv:"first_price" xml:"first_unit>price"`
+	SecondUnitName             bool `json:"secondUnitName" csv:"second_unit_name" xml:"second_unit>name,omitempty"`
+	SecondUnitToFirstUnitRatio bool `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio" xml:"second_unit>first_unit_ratio,omitempty"`
+	SecondDiscountPercentage   bool `json:"secondDiscountPercentage" csv:"second_discount_percentage" xml:"second_unit>discount>percentage,omitempty"`
+	SecondDiscountAmount       bool `json:"secondDiscountAmount" csv:"second_discount_amount" xml:"second_unit>discount>amount,omitempty"`
+	SecondPrice                bool `json:"secondPrice" csv:"second_price" xml:"second_unit>price,omitempty"`
+	ThirdUnitName              bool `json:"thirdUnitName" csv:"third_unit_name" xml:"third_unit>name,omitempty"`
+	ThirdUnitToFirstUnitRatio  bool `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio" xml:"third_unit>first_unit_ratio,omitempty"`
+	ThirdDiscountPercentage    bool `json:"thirdDiscountPercentage" csv:"third_discount_percentage" xml:"third_unit>discount>percentage,omitempty"`
+	ThirdDiscountAmount        bool `json:"thirdDiscountAmount" csv:"third_discount_amount" xml:"third_unit>discount>amount,omitempty"`
+	ThirdPrice                 bool `json:"thirdPrice" csv:"third_price" xml:"third_unit>price,omitempty"`
+	Description                bool `json:"description" csv:"description" xml:"description"`
+	CreatedAt                  bool `json:"createdAt" csv:"created_at" xml:"created_at"`
+	LastModified               bool `json:"lastModified" csv:"last_modified" xml:"last_modified>at"`
+	LastModifiedByUserName     bool `json:"lastModifiedByUserName" csv:"last_modified_by_user_name" xml:"last_modified>by_user_name"`
 }
 
 type MedicineListsReturnPayload struct {
-	ID                         int       `json:"id" csv:"id"`
-	Barcode                    string    `json:"barcode" csv:"barcode"`
-	Name                       string    `json:"name" csv:"name"`
-	Qty                        float64   `json:"qty" csv:"qty"`
-	FirstUnitName              string    `json:"firstUnitName" csv:"first_unit_name"`
-	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage" csv:"first_discount_percentage"`
-	FirstDiscountAmount        float64   `json:"firstDiscountAmount" csv:"first_discount_amount"`
-	FirstPrice                 float64   `json:"firstPrice" csv:"first_price"`
-	SecondUnitName             string    `json:"secondUnitName" csv:"second_unit_name"`
-	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio"`
-	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage" csv:"second_discount_percentage"`
-	SecondDiscountAmount       float64   `json:"secondDiscountAmount" csv:"second_discount_amount"`
-	SecondPrice                float64   `json:"secondPrice" csv:"second_price"`
-	ThirdUnitName              string    `json:"thirdUnitName" csv:"third_unit_name"`
-	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio"`
-	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage" csv:"third_discount_percentage"`
-	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount" csv:"third_discount_amount"`
-	ThirdPrice                 float64   `json:"thirdPrice" csv:"third_price"`
-	Description                string    `json:"description" csv:"description"`
-	CreatedAt                  time.Time `json:"createdAt" csv:"created_at"`
-	LastModified               time.Time `json:"lastModified" csv:"last_modified"`
-	LastModifiedByUserName     string    `json:"lastModifiedByUserName" csv:"last_modified_by_user_name"`
+	ID                         int       `json:"id" csv:"id" xml:"id,attr"`
+	Barcode                    string    `json:"barcode" csv:"barcode" xml:"barcode"`
+	Name                       string    `json:"name" csv:"name" xml:"name"`
+	Qty                        float64   `json:"qty" csv:"qty" xml:"qty"`
+	FirstUnitName              string    `json:"firstUnitName" csv:"first_unit_name" xml:"first_unit>name"`
+	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage" csv:"first_discount_percentage" xml:"first_unit>discount>percentage"`
+	FirstDiscountAmount        float64   `json:"firstDiscountAmount" csv:"first_discount_amount" xml:"first_unit>discount>amount"`
+	FirstPrice                 float64   `json:"firstPrice" csv:"first_price" xml:"first_unit>price"`
+	SecondUnitName             string    `json:"secondUnitName" csv:"second_unit_name" xml:"second_unit>name,omitempty"`
+	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio" xml:"second_unit>first_unit_ratio,omitempty"`
+	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage" csv:"second_discount_percentage" xml:"second_unit>discount>percentage,omitempty"`
+	SecondDiscountAmount       float64   `json:"secondDiscountAmount" csv:"second_discount_amount" xml:"second_unit>discount>amount,omitempty"`
+	SecondPrice                float64   `json:"secondPrice" csv:"second_price" xml:"second_unit>price,omitempty"`
+	ThirdUnitName              string    `json:"thirdUnitName" csv:"third_unit_name" xml:"third_unit>name,omitempty"`
+	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio" xml:"third_unit>first_unit_ratio,omitempty"`
+	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage" csv:"third_discount_percentage" xml:"third_unit>discount>percentage,omitempty"`
+	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount" csv:"third_discount_amount" xml:"third_unit>discount>amount,omitempty"`
+	ThirdPrice                 float64   `json:"thirdPrice" csv:"third_price" xml:"third_unit>price,omitempty"`
+	Description                string    `json:"description" csv:"description" xml:"description"`
+	CreatedAt                  time.Time `json:"createdAt" csv:"created_at" xml:"created_at"`
+	LastModified               time.Time `json:"lastModified" csv:"last_modified" xml:"last_modified>at"`
+	LastModifiedByUserName     string    `json:"lastModifiedByUserName" csv:"last_modified_by_user_name" xml:"last_modified>by_user_name"`
+}
+
+type MedicineXmlPayload struct {
+	XMLName                    xml.Name  `xml:"medicine"`
+	ID                         int       `json:"id" xml:"id,attr"`
+	Barcode                    string    `json:"barcode" xml:"barcode"`
+	Name                       string    `json:"name" xml:"name"`
+	Qty                        float64   `json:"qty" xml:"qty"`
+	FirstUnitName              string    `json:"firstUnitName" xml:"first_unit>name"`
+	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage" xml:"first_unit>discount>percentage"`
+	FirstDiscountAmount        float64   `json:"firstDiscountAmount" xml:"first_unit>discount>amount"`
+	FirstPrice                 float64   `json:"firstPrice" xml:"first_unit>price"`
+	SecondUnitName             string    `json:"secondUnitName" xml:"second_unit>name,omitempty"`
+	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio" xml:"second_unit>first_unit_ratio,omitempty"`
+	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage" xml:"second_unit>discount>percentage,omitempty"`
+	SecondDiscountAmount       float64   `json:"secondDiscountAmount" csv:"second_discount_amount" xml:"second_unit_>discount>amount,omitempty"`
+	SecondPrice                float64   `json:"secondPrice" xml:"second_unit>price,omitempty"`
+	ThirdUnitName              string    `json:"thirdUnitName" xml:"third_unit>name,omitempty"`
+	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio" xml:"third_unit>first_unit_ratio,omitempty"`
+	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage" xml:"third_unit>discount>percentage,omitempty"`
+	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount" xml:"third_unit>discount>amount,omitempty"`
+	ThirdPrice                 float64   `json:"thirdPrice" xml:"third_unit>price,omitempty"`
+	Description                string    `json:"description" xml:"description"`
+	CreatedAt                  time.Time `json:"createdAt" xml:"created_at"`
+	LastModified               time.Time `json:"lastModified" xml:"last_modified>at"`
+	LastModifiedByUserName     string    `json:"lastModifiedByUserName" xml:"last_modified>by_user_name"`
 }
 
 type Medicine struct {
