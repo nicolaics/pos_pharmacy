@@ -70,29 +70,55 @@ type ModifyMedicinePayload struct {
 	NewData RegisterMedicinePayload `json:"newData" validate:"required"`
 }
 
+type RequestExportMedicinePayload struct {
+	// Fields                     []string `json:"fields"`
+	ID                         bool     `json:"id" csv:"id"`
+	Barcode                    bool     `json:"barcode" csv:"barcode"`
+	Name                       bool     `json:"name" csv:"name"`
+	Qty                        bool     `json:"qty" csv:"qty"`
+	FirstUnitName              bool     `json:"firstUnitName" csv:"first_unit_name"`
+	FirstDiscountPercentage    bool     `json:"firstDiscountPercentage" csv:"first_discount_percentage"`
+	FirstDiscountAmount        bool     `json:"firstDiscountAmount" csv:"first_discount_amount"`
+	FirstPrice                 bool     `json:"firstPrice" csv:"first_price"`
+	SecondUnitName             bool     `json:"secondUnitName" csv:"second_unit_name"`
+	SecondUnitToFirstUnitRatio bool     `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio"`
+	SecondDiscountPercentage   bool     `json:"secondDiscountPercentage" csv:"second_discount_percentage"`
+	SecondDiscountAmount       bool     `json:"secondDiscountAmount" csv:"second_discount_amount"`
+	SecondPrice                bool     `json:"secondPrice" csv:"second_price"`
+	ThirdUnitName              bool     `json:"thirdUnitName" csv:"third_unit_name"`
+	ThirdUnitToFirstUnitRatio  bool     `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio"`
+	ThirdDiscountPercentage    bool     `json:"thirdDiscountPercentage" csv:"third_discount_percentage"`
+	ThirdDiscountAmount        bool     `json:"thirdDiscountAmount" csv:"third_discount_amount"`
+	ThirdPrice                 bool     `json:"thirdPrice" csv:"third_price"`
+	Description                bool     `json:"description" csv:"description"`
+	CreatedAt                  bool     `json:"createdAt" csv:"created_at"`
+	LastModified               bool     `json:"lastModified" csv:"last_modified"`
+	LastModifiedByUserName     bool     `json:"lastModifiedByUserName" csv:"last_modified_by_user_name"`
+}
+
 type MedicineListsReturnPayload struct {
-	ID                         int       `json:"id"`
-	Barcode                    string    `json:"barcode"`
-	Name                       string    `json:"name"`
-	Qty                        float64   `json:"qty"`
-	FirstUnitName              string    `json:"firstUnitName"`
-	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage"`
-	FirstDiscountAmount        float64   `json:"firstDiscountAmount"`
-	FirstPrice                 float64   `json:"firstPrice"`
-	SecondUnitName             string    `json:"secondUnitName"`
-	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio"`
-	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage"`
-	SecondDiscountAmount       float64   `json:"secondDiscountAmount"`
-	SecondPrice                float64   `json:"secondPrice"`
-	ThirdUnitName              string    `json:"thirdUnitName"`
-	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio"`
-	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage"`
-	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount"`
-	ThirdPrice                 float64   `json:"thirdPrice"`
-	Description                string    `json:"description"`
-	CreatedAt                  time.Time `json:"createdAt"`
-	LastModified               time.Time `json:"lastModified"`
-	LastModifiedByUserName     string    `json:"lastModifiedByUserName"`
+	ID                         int       `json:"id" csv:"id"`
+	Barcode                    string    `json:"barcode" csv:"barcode"`
+	Name                       string    `json:"name" csv:"name"`
+	Qty                        float64   `json:"qty" csv:"qty"`
+	FirstUnitName              string    `json:"firstUnitName" csv:"first_unit_name"`
+	FirstDiscountPercentage    float64   `json:"firstDiscountPercentage" csv:"first_discount_percentage"`
+	FirstDiscountAmount        float64   `json:"firstDiscountAmount" csv:"first_discount_amount"`
+	FirstPrice                 float64   `json:"firstPrice" csv:"first_price"`
+	SecondUnitName             string    `json:"secondUnitName" csv:"second_unit_name"`
+	SecondUnitToFirstUnitRatio float64   `json:"secondUnitToFirstUnitRatio" csv:"second_unit_to_first_unit_ratio"`
+	SecondDiscountPercentage   float64   `json:"secondDiscountPercentage" csv:"second_discount_percentage"`
+	SecondDiscountAmount       float64   `json:"secondDiscountAmount" csv:"second_discount_amount"`
+	SecondPrice                float64   `json:"secondPrice" csv:"second_price"`
+	ThirdUnitName              string    `json:"thirdUnitName" csv:"third_unit_name"`
+	ThirdUnitToFirstUnitRatio  float64   `json:"thirdUnitToFirstUnitRatio" csv:"third_unit_to_first_unit_ratio"`
+	ThirdDiscountPercentage    float64   `json:"thirdDiscountPercentage" csv:"third_discount_percentage"`
+	ThirdDiscountAmount        float64   `json:"thirdDiscountAmount" csv:"third_discount_amount"`
+	ThirdPrice                 float64   `json:"thirdPrice" csv:"third_price"`
+	Description                string    `json:"description" csv:"description"`
+	CreatedAt                  time.Time `json:"createdAt" csv:"created_at"`
+	LastModified               time.Time `json:"lastModified" csv:"last_modified"`
+	LastModifiedByUserName     string    `json:"lastModifiedByUserName" csv:"last_modified_by_user_name"`
 }
 
 type Medicine struct {

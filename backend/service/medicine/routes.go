@@ -1,14 +1,19 @@
 package medicine
 
 import (
+	// "encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
+	"github.com/nicolaics/pharmacon/utils/export"
 )
 
 type Handler struct {
@@ -28,11 +33,13 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/medicine", h.handleModify).Methods(http.MethodPatch)
 	router.HandleFunc("/medicine/history", h.handleGetHistory).Methods(http.MethodPost)
+	router.HandleFunc("/medicine/export/csv", h.handleGetExportCsv).Methods(http.MethodPost)
 
 	router.HandleFunc("/medicine", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/{params}/{val}", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 	router.HandleFunc("/medicine/history", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
+	router.HandleFunc("/medicine/export/csv", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -477,4 +484,93 @@ func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteSuccess(w, http.StatusOK, medicineHistories, nil)
+}
+
+func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.RequestExportMedicinePayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		return
+	}
+
+	// validate token
+	_, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		return
+	}
+
+	medicines, err := h.medStore.GetAllMedicines()
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		return
+	}
+
+	if medicines == nil {
+		utils.WriteSuccess(w, http.StatusOK, "no medicine to export", nil)
+		return
+	}
+
+	fields := reflect.TypeOf(payload)
+	numFields := fields.NumField()
+	payloadValues := reflect.ValueOf(payload)
+
+	headers := make([]string, 0)
+
+	for i := 0; i < numFields; i++ {
+		if payloadValues.Field(i).Bool() {
+			headers = append(headers, fields.Field(i).Tag.Get("csv"))	
+		}
+	}
+
+	fileName := fmt.Sprintf("medicines_%s.csv", time.Now().Local().Format("02-Jan-2006"))
+	filePath, writer, f, err := export.CreateCsvWriter(fileName)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating csv writer: %v", err), nil)
+		return
+	}
+	defer f.Close()
+
+	err = export.WriteCsvHeader(writer, headers)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error writing csv header: %v", err), nil)
+		return
+	}
+
+	logFiles := make([]string, 0)
+
+	for _, med := range(medicines) {
+		data := make([]string, 0)
+		dataValues := reflect.ValueOf(med)
+
+		for i := 0; i < numFields; i++ {
+			if payloadValues.Field(i).Bool() {
+				data = append(data, fmt.Sprint(dataValues.Field(i).Interface()))
+			}
+		}
+
+		err = export.WriteCsvData(writer, data)
+		if err != nil {
+			logFile, _ := logger.WriteServerErrorLog(fmt.Errorf("failed to write csv data of medicine %s:\n%v", med.Name, err))
+			logFiles = append(logFiles, logFile)
+		}
+	}
+
+	attachment := fmt.Sprintf("attachment; filename=%s", filePath)
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
+
+	http.ServeFile(w, r, filePath)
+
+	// utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("export success to %s", fileName), logFiles)
 }

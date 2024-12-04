@@ -399,7 +399,7 @@ func (s *Store) GetMedicinesByDescription(description string) ([]types.MedicineL
 
 func (s *Store) CreateMedicine(med types.Medicine, userId int) error {
 	values := "?"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 21; i++ {
 		values += ", ?"
 	}
 
