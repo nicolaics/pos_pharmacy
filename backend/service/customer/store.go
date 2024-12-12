@@ -37,7 +37,7 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 	}
 
 	if customer.ID == 0 {
-		return nil, fmt.Errorf("customer not found")
+		return nil, nil
 	}
 
 	return customer, nil
@@ -46,12 +46,11 @@ func (s *Store) GetCustomerByName(name string) (*types.Customer, error) {
 func (s *Store) GetCustomersBySearchName(name string) ([]types.Customer, error) {
 	query := "SELECT COUNT(*) FROM customer WHERE name = ? AND deleted_at IS NULL"
 	row := s.db.QueryRow(query, name)
-	if row.Err() != nil {
+	if row.Err() != nil && row.Err() != sql.ErrNoRows {
 		return nil, row.Err()
 	}
 
 	var count int
-
 	err := row.Scan(&count)
 	if err != nil {
 		return nil, err
@@ -129,7 +128,7 @@ func (s *Store) GetCustomerByID(id int) (*types.Customer, error) {
 	}
 
 	if customer.ID == 0 {
-		return nil, fmt.Errorf("customer not found")
+		return nil, nil
 	}
 
 	return customer, nil
@@ -180,10 +179,7 @@ func (s *Store) DeleteCustomer(user *types.User, customer *types.Customer) error
 		return err
 	}
 
-	err = logger.WriteServerLog("delete", "customer", user.Name, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "customer", user.Name, data.ID, data)
 
 	return nil
 }
@@ -194,10 +190,7 @@ func (s *Store) ModifyCustomer(id int, newName string, user *types.User) error {
 		return err
 	}
 
-	err = logger.WriteServerLog("modify", "customer", user.Name, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("modify", "customer", user.Name, data.ID, data)
 
 	_, err = s.db.Exec("UPDATE customer SET name = ? WHERE id = ? ", newName, id)
 

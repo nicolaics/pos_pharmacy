@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
 )
@@ -38,21 +39,25 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("register customer", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("register customer", 0, nil, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logData := map[string]string{"customer": payload.Name}
+		logger.WriteServerErrorLog("register customer", 0, logData, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -60,7 +65,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err = h.custStore.GetCustomerByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s already exists", payload.Name), nil)
+			fmt.Errorf("customer with name %s already exists", payload.Name))
 		return
 	}
 
@@ -68,18 +73,21 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Name: payload.Name,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		logData := map[string]string{"customer": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register customer", user.ID, logData, fmt.Errorf("error create customer: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer %s successfully created by %s", payload.Name, user.Name), nil)
+	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer %s successfully created by %s", payload.Name, user.Name))
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logger.WriteServerErrorLog("get all customers", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -93,7 +101,8 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		customers, err = h.custStore.GetAllCustomers()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err, nil)
+			logFile, _ := logger.WriteServerErrorLog("get all customers", user.ID, nil, fmt.Errorf("get all customers error: %v", err))
+			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 			return
 		}
 	} else {
@@ -101,13 +110,29 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			customers, err = h.custStore.GetCustomersBySearchName(val)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s not found", val), nil)
+				logData := map[string]string{"customer": val}
+				logFile, _ := logger.WriteServerErrorLog("get all customers", user.ID,
+					logData, fmt.Errorf("get customer by search name error: %v", err))
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
+				return
+			}
+
+			if customers == nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer %s doesn't exist", val))
 				return
 			}
 		} else {
 			customer, err := h.custStore.GetCustomerByID(id)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %d not found", id), nil)
+				logData := map[string]int{"customer id": id}
+				logFile, _ := logger.WriteServerErrorLog("get all customers", user.ID,
+					logData, fmt.Errorf("get customer by search id error: %v", err))
+				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
+				return
+			}
+
+			if customer == nil {
+				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("customer id %s doesn't exist", id))
 				return
 			}
 
@@ -115,7 +140,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, customers, nil)
+	utils.WriteSuccess(w, http.StatusOK, customers)
 }
 
 func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
@@ -123,33 +148,43 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetOneCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get one customer", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get one customer", 0, nil, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logData := map[string]int{"customer id": payload.ID}
+		logger.WriteServerErrorLog("get one customer", 0, logData, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
 	// get customer data
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
-	if customer == nil || err != nil {
+	if err != nil {
+		logData := map[string]int{"customer id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get one customer", user.ID, logData, fmt.Errorf("error get customer by id: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("internal server error\n(%s)", logFile))
+	}
+
+	if customer == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer id %d doesn't exist", payload.ID), nil)
+			fmt.Errorf("customer id %d doesn't exist", payload.ID))
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, customer, nil)
+	utils.WriteSuccess(w, http.StatusOK, customer)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -157,21 +192,25 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("delete customer", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("delete customer", 0, nil, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logData := map[string]int{"customer id": payload.ID}
+		logger.WriteServerErrorLog("delete customer", 0, logData, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -179,17 +218,19 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
 	if customer == nil || err != nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer %s doesn't exist", payload.Name), nil)
+			fmt.Errorf("customer %s doesn't exist", payload.Name))
 		return
 	}
 
 	err = h.custStore.DeleteCustomer(user, customer)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]string{"customer": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete customer", user.ID, data, fmt.Errorf("error delete customer: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("customer %s deleted by %s", payload.Name, user.Name), nil)
+	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("customer %s deleted by %s", payload.Name, user.Name))
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -197,45 +238,56 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyCustomerPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("modify customer", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("modify customer", 0, nil, fmt.Errorf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]int{"customer id": payload.ID}
+		logger.WriteServerErrorLog("modify customer", 0, data, fmt.Errorf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
 	// check if the customer exists
 	customer, err := h.custStore.GetCustomerByID(payload.ID)
-	if err != nil || customer == nil {
+	if err != nil {
+		data := map[string]int{"customer id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify customer", 0, data, fmt.Errorf("error get customer id: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
+	}
+	if customer == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with id %d doesn't exists", payload.ID), nil)
+			fmt.Errorf("customer with id %d doesn't exists", payload.ID))
 		return
 	}
 
 	_, err = h.custStore.GetCustomerByName(payload.NewData.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("customer with name %s already exist", payload.NewData.Name), nil)
+			fmt.Errorf("customer with name %s already exist", payload.NewData.Name))
 		return
 	}
 
 	err = h.custStore.ModifyCustomer(customer.ID, payload.NewData.Name, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"customer id": payload.ID, "customer": payload.NewData.Name}
+		logFile, _ := logger.WriteServerErrorLog("modify customer", 0, data, fmt.Errorf("error modify customer: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
 	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("customer modified into %s by %s",
-		payload.NewData.Name, user.Name), nil)
+		payload.NewData.Name, user.Name))
 }
