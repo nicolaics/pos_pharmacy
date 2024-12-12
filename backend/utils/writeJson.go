@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -33,45 +32,10 @@ func WriteJSONForOptions(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func WriteError(w http.ResponseWriter, status int, err error, logFiles []string) {
-	logMsg := ""
-
-	if logFiles != nil {
-		logMsg = "please contact administrator!\n"
-		for _, logFile := range(logFiles) {
-			logMsg += fmt.Sprintf("log: %s\n", logFile)
-		}
-	}
-
-	response := map[string]interface{}{
-		"response": err.Error(),
-		"log":      logMsg,
-	}
-	WriteJSON(w, status, response)
+func WriteError(w http.ResponseWriter, status int, err error) {
+	WriteJSON(w, status, map[string]string{"error": err.Error()})
 }
 
-func WriteSuccess(w http.ResponseWriter, status int, data any, logFiles []string) {
-	logMsg := ""
-
-	if logFiles != nil {
-		logMsg = "please contact administrator!\n"
-		for _, logFile := range(logFiles) {
-			logMsg += fmt.Sprintf("log: %s\n", logFile)
-		}
-	}
-
-	response := map[string]interface{}{
-		"response": data,
-		"log":      logMsg,
-	}
-	WriteJSON(w, status, response)
-}
-
-func WriteLog(w http.ResponseWriter, status int, data any, logFile string) {
-	response := map[string]interface{}{
-		"status":   "log",
-		"response": data,
-		"log":      logFile,
-	}
-	WriteJSON(w, status, response)
+func WriteSuccess(w http.ResponseWriter, status int, data any) {
+	WriteJSON(w, status, data)
 }
