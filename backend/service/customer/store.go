@@ -2,7 +2,6 @@ package customer
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
