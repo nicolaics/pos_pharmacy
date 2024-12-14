@@ -44,6 +44,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Parsing payload failed",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -57,6 +58,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Invalid payload",
 			Log: logFile,
+			Error: errors.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -71,6 +73,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusUnauthorized,
 			Message: "User token invalid!\nPlease login again!",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -97,6 +100,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -118,6 +122,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusUnauthorized,
 			Message: "User token invalid!\nPlease login again!",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -138,6 +143,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 				Code: http.StatusInternalServerError,
 				Message: "Internal server error",
 				Log: logFile,
+				Error: err.Error(),
 			}
 			resp.WriteError(w)
 			return
@@ -153,6 +159,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 					Code: http.StatusInternalServerError,
 					Message: "Internal server error",
 					Log: logFile,
+					Error: err.Error(),
 				}
 				resp.WriteError(w)
 				return
@@ -175,6 +182,7 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 					Code: http.StatusInternalServerError,
 					Message: "Internal server error",
 					Log: logFile,
+					Error: err.Error(),
 				}
 				resp.WriteError(w)
 				return
@@ -210,6 +218,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Failed parsing payload",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -223,6 +232,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Invalid payload",
 			Log: logFile,
+			Error: errors.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -237,6 +247,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusUnauthorized,
 			Message: "User token invalid!\nPlease login again!",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -251,6 +262,7 @@ func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 	}
@@ -281,6 +293,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Failed parsing payload",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -294,6 +307,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Invalid payload",
 			Log: logFile,
+			Error: errors.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -308,6 +322,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusUnauthorized,
 			Message: "User token invalid!\nPlease login again!",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -322,6 +337,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -344,6 +360,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -366,6 +383,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Failed parsing payload",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -379,6 +397,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusBadRequest,
 			Message: "Invalid payload",
 			Log: logFile,
+			Error: errors.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -393,6 +412,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusUnauthorized,
 			Message: "User token invalid!\nPlease login again!",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
@@ -407,6 +427,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 	}
@@ -419,8 +440,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.custStore.GetCustomerByName(payload.NewData.Name)
-	if err == nil {
+	temp, err := h.custStore.GetCustomerByName(payload.NewData.Name)
+	if err == nil || temp != nil {
 		resp := utils.Response{
 			Code: http.StatusBadRequest,
 			Message: fmt.Sprintf("Customer %s already exist", payload.NewData.Name),
@@ -437,6 +458,7 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			Code: http.StatusInternalServerError,
 			Message: "Internal server error",
 			Log: logFile,
+			Error: err.Error(),
 		}
 		resp.WriteError(w)
 		return
