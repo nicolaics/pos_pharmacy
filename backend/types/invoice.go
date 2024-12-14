@@ -11,10 +11,10 @@ type InvoiceStore interface {
 	GetInvoicesByNumber(int) ([]Invoice, error)
 
 	GetInvoicesByDate(startDate time.Time, endDate time.Time) ([]InvoiceListsReturnPayload, error)
-	GetInvoicesByDateAndNumber(startDate time.Time, endDate time.Time, number int) ([]InvoiceListsReturnPayload, error)
-	GetInvoicesByDateAndUserID(startDate time.Time, endDate time.Time, uid int) ([]InvoiceListsReturnPayload, error)
-	GetInvoicesByDateAndCustomerID(startDate time.Time, endDate time.Time, cid int) ([]InvoiceListsReturnPayload, error)
-	GetInvoicesByDateAndPaymentMethodID(startDate time.Time, endDate time.Time, pmid int) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndNumber(startDate, endDate time.Time, number int) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndUser(startDate, endDate time.Time, userName string) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndCustomer(startDate, endDate time.Time, customer string) ([]InvoiceListsReturnPayload, error)
+	GetInvoicesByDateAndPaymentMethod(startDate, endDate time.Time, paymentMethod string) ([]InvoiceListsReturnPayload, error)
 
 	GetInvoiceID(number int, customerId int, invoiceDate time.Time) (int, error)
 	GetNumberOfInvoices(startDate time.Time, endDate time.Time) (int, error)
@@ -33,6 +33,9 @@ type InvoiceStore interface {
 
 	// delete entirely from the db if there's error
 	AbsoluteDeleteInvoice(invoice Invoice) error
+
+	GetInvoiceReturnDataByID(id int) (*InvoiceListsReturnPayload, error)
+	GetInvoiceDetailByID(id int) (*InvoiceDetailPayload, error)
 }
 
 type ViewInvoiceDetailPayload struct {
