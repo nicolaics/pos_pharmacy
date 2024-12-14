@@ -16,48 +16,52 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.PaymentMethod, error) {
-	rows, err := s.db.Query("SELECT * FROM payment_method WHERE name = ? ", strings.ToUpper(paymentMethodName))
-	if err != nil {
-		return nil, err
+	query := `SELECT COUNT(*) FROM payment_method WHERE name = ?`
+	row := s.db.QueryRow(query, strings.ToUpper(paymentMethodName))
+	if row.Err() != nil {
+		return nil, row.Err()
 	}
-	defer rows.Close()
 
-	paymentMethod := new(types.PaymentMethod)
+	var count int
+	err := row.Scan(&count)
 
-	for rows.Next() {
-		paymentMethod, err = scanRowIntoPaymentMethod(rows)
-
+	if count == 0 {
+		err = s.CreatePaymentMethod(paymentMethodName)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if paymentMethod.ID == 0 {
-		return nil, nil
+	row = s.db.QueryRow("SELECT * FROM payment_method WHERE name = ? ", strings.ToUpper(paymentMethodName))
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, row.Err()
+	}
+
+	paymentMethod, err := scanRowIntoPaymentMethod(row)
+	if err != nil {
+		return nil, err
 	}
 
 	return paymentMethod, nil
 }
 
 func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
-	rows, err := s.db.Query("SELECT * FROM payment_method WHERE id = ? ", id)
+	row := s.db.QueryRow("SELECT * FROM payment_method WHERE id = ? ", id)
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, row.Err()
+	}
+
+	paymentMethod, err := scanRowIntoPaymentMethod(row)
 	if err != nil {
 		return nil, err
-	}
-	defer rows.Close()
-
-	paymentMethod := new(types.PaymentMethod)
-
-	for rows.Next() {
-		paymentMethod, err = scanRowIntoPaymentMethod(rows)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if paymentMethod.ID == 0 {
-		return nil, nil
 	}
 
 	return paymentMethod, nil
@@ -73,10 +77,10 @@ func (s *Store) CreatePaymentMethod(paymentMethodName string) error {
 	return nil
 }
 
-func scanRowIntoPaymentMethod(rows *sql.Rows) (*types.PaymentMethod, error) {
+func scanRowIntoPaymentMethod(row *sql.Row) (*types.PaymentMethod, error) {
 	paymentMethod := new(types.PaymentMethod)
 
-	err := rows.Scan(
+	err := row.Scan(
 		&paymentMethod.ID,
 		&paymentMethod.Name,
 		&paymentMethod.CreatedAt,
