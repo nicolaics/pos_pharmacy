@@ -30,6 +30,9 @@ type PurchaseInvoiceStore interface {
 
 	UpdatePdfUrl(piId int, pdfUrl string) error
 	IsPdfUrlExist(pdfUrl string) (bool, error)
+
+	GetPurchaseInvoiceListByID(id int) (*PurchaseInvoiceListsReturnPayload, error)
+	GetPurchaseInvoiceDetailByID(id int) (*PurchaseInvoiceDetailPayload, error)
 }
 
 type RegisterPurchaseInvoicePayload struct {
