@@ -33,6 +33,11 @@ func CreateXmlData(fileName string, data any) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	
+	err = encoder.Close()
+	if err != nil {
+		return "", err
+	}
 
 	return filePath, nil
 }

@@ -10,6 +10,8 @@ type Response struct {
 	Message string      `json:"message"`
 	Code    int         `json:"code"`
 	Log     string      `json:"log,omitempty"`
+	LogData string      `json:"logData,omitempty"`
+	Error   string      `json:"error,omitempty"`
 	Result  interface{} `json:"result,omitempty"`
 }
 
