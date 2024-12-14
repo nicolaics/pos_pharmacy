@@ -16,7 +16,7 @@ import (
 )
 
 func CreateReceiptPdf(receipt types.ReceiptPdfPayload, invoiceStore types.InvoiceStore) (string, error) {
-	directory := "static/pdf/receipt/"
+	directory := constants.INVOICE_RECEIPT_PDF_DIR_PATH
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
