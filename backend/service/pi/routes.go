@@ -9,6 +9,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
+	"github.com/nicolaics/pharmacon/constants"
+	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
 	"github.com/nicolaics/pharmacon/utils/pdf"
@@ -55,48 +57,125 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterPurchaseInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err, nil), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check supplierID
 	supplier, err := h.supplierStore.GetSupplierByID(payload.SupplierID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", payload.SupplierID), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "supplier_id": payload.SupplierID}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get supplier by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+	}
+	if supplier == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Supplier ID %d doesn't exist", payload.SupplierID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// get purchase order
 	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(payload.PurchaseOrderNumber)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("po number %d not found", payload.PurchaseOrderNumber), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "po_number": payload.PurchaseOrderNumber}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get po by number: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseOrder == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase order %d doesn't exist", payload.PurchaseOrderNumber),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	invoiceDate, err := utils.ParseDate(payload.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check duplicate
 	purchaseInvoiceId, err := h.purchaseInvoiceStore.GetPurchaseInvoiceID(payload.Number, payload.SupplierID, payload.Subtotal, payload.TotalPrice, *invoiceDate)
-	if err == nil || purchaseInvoiceId != 0 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice number %d exists", payload.Number), nil)
+	if err != nil {
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get pi id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseInvoiceId != 0 {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase invoice number %d already exists", payload.Number),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -116,7 +195,15 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		LastModifiedByUserID: user.ID,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error create pi: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -137,11 +224,27 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 			InvoiceDate:         *invoiceDate,
 		})
 		if delErr != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get pi id: %v\nerror absolute delete: %v", err, delErr))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   (err.Error() + "\n" + delErr.Error()),
+			}
+			resp.WriteError(w)
 			return
 		}
 
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice number %d doesn't exists", payload.Number), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get pi id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -162,42 +265,39 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				InvoiceDate:         *invoiceDate,
 			})
 			if delErr != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medicine.MedicineName}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get medicine: %v\nerror absolute delete: %v", err, delErr))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   (err.Error() + "\n" + delErr.Error()),
+				}
+				resp.WriteError(w)
 				return
 			}
 
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medicine.MedicineName}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get medicine: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if medData == nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Medicine %s doesn't exist", medicine.MedicineName),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		unit, err := h.unitStore.GetUnitByName(medicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(medicine.Unit)
-			if err != nil {
-				delErr := h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
-					Number:              payload.Number,
-					SupplierID:          payload.SupplierID,
-					PurchaseOrderNumber: payload.PurchaseOrderNumber,
-					Subtotal:            payload.Subtotal,
-					DiscountPercentage:  payload.DiscountPercentage,
-					DiscountAmount:      payload.DiscountAmount,
-					TaxPercentage:       payload.TaxPercentage,
-					TaxAmount:           payload.TaxAmount,
-					TotalPrice:          payload.TotalPrice,
-					Description:         payload.Description,
-					InvoiceDate:         *invoiceDate,
-				})
-				if delErr != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
-					return
-				}
-
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
-		}
 		if err != nil {
 			delErr := h.purchaseInvoiceStore.AbsoluteDeletePurchaseInvoice(types.PurchaseInvoice{
 				Number:              payload.Number,
@@ -213,11 +313,27 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				InvoiceDate:         *invoiceDate,
 			})
 			if delErr != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "unit": medicine.Unit}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get unit: %v\nerror absolute delete: %v", err, delErr))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   (err.Error() + "\n" + delErr.Error()),
+				}
+				resp.WriteError(w)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "unit": medicine.Unit}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error get unit: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -237,11 +353,27 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				InvoiceDate:         *invoiceDate,
 			})
 			if delErr != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "exp_date": medicine.ExpDate}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error parse exp date: %v\nerror absolute delete: %v", err, delErr))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   (err.Error() + "\n" + delErr.Error()),
+				}
+				resp.WriteError(w)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "exp_date": medicine.ExpDate}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error parse exp date: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -274,12 +406,28 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				InvoiceDate:         *invoiceDate,
 			})
 			if delErr != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data,
+					fmt.Errorf("error create medicine item: %v\nerror absolute delete: %v", err, delErr))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   (err.Error() + "\n" + delErr.Error()),
+				}
+				resp.WriteError(w)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("purchase invoice %d, med %s: %v", payload.Number, medicine.MedicineName, err), nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error create medicine item: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -300,11 +448,28 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 				InvoiceDate:         *invoiceDate,
 			})
 			if delErr != nil {
-				utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "qty": medicine.Qty}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data,
+					fmt.Errorf("error add stock: %v\nerror absolute delete: %v", err, delErr))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   (err.Error() + "\n" + delErr.Error()),
+				}
+				resp.WriteError(w)
 				return
 			}
 
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
+			data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "qty": medicine.Qty}
+			logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error add stock: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -326,11 +491,28 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 					InvoiceDate:         *invoiceDate,
 				})
 				if delErr != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete purchase invoice: %v", delErr), nil)
+					data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "qty": medicine.Qty}
+					logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data,
+						fmt.Errorf("error update received qty: %v\nerror absolute delete: %v", err, delErr))
+					resp := utils.Response{
+						Code:    http.StatusInternalServerError,
+						Message: "Internal server error",
+						Log:     logFile,
+						Error:   (err.Error() + "\n" + delErr.Error()),
+					}
+					resp.WriteError(w)
 					return
 				}
 
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err), nil)
+				data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate, "medicine": medData.Name, "qty": medicine.Qty}
+				logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error update received qty: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 		}
@@ -376,17 +558,37 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// create pdf
 	fileName, err := pdf.CreatePurchaseInvoicePdf(h.purchaseInvoiceStore, purchaseInvoicePdf, "")
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error create pi pdf: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.purchaseInvoiceStore.UpdatePdfUrl(purchaseInvoiceId, fileName)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err), nil)
+		data := map[string]interface{}{"number": payload.Number, "date": payload.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("register purchase invoice", user.ID, data, fmt.Errorf("error update pi pdf url: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("purchase invoice %d successfully created by %s", payload.Number, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusCreated,
+		Message: fmt.Sprintf("Purchase invoice %d successfully created by %s", payload.Number, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 // only view the purchase invoice list
@@ -395,21 +597,43 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 	var payload types.ViewPurchaseInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoices", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoices", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoices", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -419,13 +643,29 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 
 	startDate, err := utils.ParseStartDate(payload.StartDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	endDate, err := utils.ParseEndDate(payload.EndDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -434,67 +674,102 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 	if val == "all" {
 		purchaseInvoices, err = h.purchaseInvoiceStore.GetPurchaseInvoicesByDate(*startDate, *endDate)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get pi by date: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "id": val}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error parse pi id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
-		purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(id)
+		purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceListByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice id %d not exist", id), nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "id": id}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get pi by id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
-		supplier, err := h.supplierStore.GetSupplierByID(purchaseInvoice.SupplierID)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("supplier id %d not found", purchaseInvoice.SupplierID), nil)
-			return
-		}
-
-		user, err := h.userStore.GetUserByID(purchaseInvoice.UserID)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("user id %d not found", purchaseInvoice.UserID), nil)
-			return
-		}
-
-		purchaseInvoices = append(purchaseInvoices, types.PurchaseInvoiceListsReturnPayload{
-			ID:           purchaseInvoice.ID,
-			Number:       purchaseInvoice.Number,
-			SupplierName: supplier.Name,
-			TotalPrice:   purchaseInvoice.TotalPrice,
-			Description:  purchaseInvoice.Description,
-			UserName:     user.Name,
-			InvoiceDate:  purchaseInvoice.InvoiceDate,
-		})
+		purchaseInvoices = append(purchaseInvoices, *purchaseInvoice)
 	} else if params == "number" {
 		number, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "number": val}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error parse pi number: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		purchaseInvoices, err = h.purchaseInvoiceStore.GetPurchaseInvoicesByDateAndNumber(*startDate, *endDate, number)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "number": number}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get pi by date and number: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "user" {
 		users, err := h.userStore.GetUserBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not exists", val), nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "searched_user": val}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get user by search name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		for _, user := range users {
 			temp, err := h.purchaseInvoiceStore.GetPurchaseInvoicesByDateAndUserID(*startDate, *endDate, user.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest,
-					fmt.Errorf("user %s doesn't create any purchase invoice between %s and %s", val, payload.StartDate, payload.EndDate), nil)
+				data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "searched_user": val}
+				logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get user by search name: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 
@@ -503,15 +778,30 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 	} else if params == "supplier" {
 		suppliers, err := h.supplierStore.GetSupplierBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not exists", val), nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "supplier": val}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get supplier by search name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		for _, supplier := range suppliers {
 			temp, err := h.purchaseInvoiceStore.GetPurchaseInvoicesByDateAndSupplierID(*startDate, *endDate, supplier.ID)
 			if err != nil {
-				utils.WriteError(w, http.StatusBadRequest,
-					fmt.Errorf("supplier %s doesn't create any purchase invoice between %s and %s", val, payload.StartDate, payload.EndDate), nil)
+				data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "supplier": val}
+				logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get supplier by search name: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 
@@ -520,21 +810,45 @@ func (h *Handler) handleGetPurchaseInvoices(w http.ResponseWriter, r *http.Reque
 	} else if params == "purchase-order" {
 		poiNumber, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "purchase_order_number": val}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error parse po number: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		purchaseInvoices, err = h.purchaseInvoiceStore.GetPurchaseInvoicesByDateAndPONumber(*startDate, *endDate, poiNumber)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"start_date": payload.StartDate, "end_date": payload.EndDate, "purchase_order_number": poiNumber}
+			logFile, _ := logger.WriteServerErrorLog("get purchase invoices", user.ID, data, fmt.Errorf("error get pi by date and po number: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("params undefined"), nil)
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Parameter undefined",
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, purchaseInvoices, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: purchaseInvoices,
+	}
+	resp.WriteSuccess(w)
 }
 
 // only view the purchase invoice list
@@ -543,107 +857,91 @@ func (h *Handler) handleGetPurchaseInvoiceDetail(w http.ResponseWriter, r *http.
 	var payload types.ViewPurchaseInvoiceDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoice detail", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoice detail", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err, nil), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoice detail", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// get purchase invoice data
-	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
+	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceDetailByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase invoice id %d doesn't exists", payload.ID), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoice detail", user.ID, data, fmt.Errorf("get pi by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseInvoice == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase invoice ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// get medicine item of the purchase invoice
 	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get purchase invoice detail", user.ID, data, fmt.Errorf("get medicine item: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	// get supplier data
-	supplier, err := h.supplierStore.GetSupplierByID(purchaseInvoice.SupplierID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d doesn't exists", purchaseInvoice.SupplierID), nil)
-		return
+	purchaseInvoice.MedicineLists = purchaseMedicineItem
+
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: *purchaseInvoice,
 	}
-
-	// get user data, the one who inputs the purchase invoice
-	inputter, err := h.userStore.GetUserByID(purchaseInvoice.UserID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseInvoice.UserID), nil)
-		return
-	}
-
-	// get last modified user data
-	lastModifiedUser, err := h.userStore.GetUserByID(purchaseInvoice.LastModifiedByUserID)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", purchaseInvoice.LastModifiedByUserID), nil)
-		return
-	}
-
-	returnPayload := types.PurchaseInvoiceDetailPayload{
-		ID:                     purchaseInvoice.ID,
-		Number:                 purchaseInvoice.Number,
-		Subtotal:               purchaseInvoice.Subtotal,
-		DiscountPercentage:     purchaseInvoice.DiscountPercentage,
-		DiscountAmount:         purchaseInvoice.DiscountAmount,
-		TaxPercentage:          purchaseInvoice.TaxPercentage,
-		TaxAmount:              purchaseInvoice.TaxAmount,
-		TotalPrice:             purchaseInvoice.TotalPrice,
-		Description:            purchaseInvoice.Description,
-		InvoiceDate:            purchaseInvoice.InvoiceDate,
-		CreatedAt:              purchaseInvoice.CreatedAt,
-		LastModified:           purchaseInvoice.LastModified,
-		LastModifiedByUserName: lastModifiedUser.Name,
-		PdfURL:                 purchaseInvoice.PdfURL,
-
-		Supplier: struct {
-			ID                  int    "json:\"id\""
-			Name                string "json:\"name\""
-			Address             string "json:\"address\""
-			CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
-			ContactPersonName   string "json:\"contactPersonName\""
-			ContactPersonNumber string "json:\"contactPersonNumber\""
-			Terms               string "json:\"terms\""
-			VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
-		}{
-			ID:                  supplier.ID,
-			Name:                supplier.Name,
-			Address:             supplier.Address,
-			CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
-			ContactPersonName:   supplier.ContactPersonName,
-			ContactPersonNumber: supplier.ContactPersonNumber,
-			Terms:               supplier.Terms,
-			VendorIsTaxable:     supplier.VendorIsTaxable,
-		},
-
-		User: struct {
-			ID   int    "json:\"id\""
-			Name string "json:\"name\""
-		}{
-			ID:   inputter.ID,
-			Name: inputter.Name,
-		},
-
-		MedicineLists: purchaseMedicineItem,
-	}
-
-	utils.WriteSuccess(w, http.StatusOK, returnPayload, nil)
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -651,41 +949,94 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeletePurchaseInvoice
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid or not admin: %v", err, nil), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the purchase invoice exists
 	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
-	if purchaseInvoice == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase invoice id %d doesn't exist", payload.ID), nil)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error get pi by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseInvoice == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase invoice ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine item don't exist: %v", err, nil), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error get medicine item: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItem(purchaseInvoice, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error delete medicine item: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -693,28 +1044,43 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	for _, purchaseMedicine := range purchaseMedicineItem {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": purchaseMedicine.MedicineName}
+			logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error get medicine: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		unit, err := h.unitStore.GetUnitByName(purchaseMedicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(purchaseMedicine.Unit)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(purchaseMedicine.Unit)
-		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit}
+			logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error get unit: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		err = utils.SubtractStock(h.medStore, medData, unit, purchaseMedicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit, "qty": purchaseMedicine.Qty}
+			logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error subtract stock: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -722,7 +1088,15 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		if purchaseInvoice.PurchaseOrderNumber != 0 {
 			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderNumber, medData, purchaseMedicine.Qty, unit, user, 0)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err), nil)
+				data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit, "qty": purchaseMedicine.Qty}
+				logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error update received qty: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 		}
@@ -730,11 +1104,23 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.purchaseInvoiceStore.DeletePurchaseInvoice(purchaseInvoice, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete purchase invoice", user.ID, data, fmt.Errorf("error delete pi: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("purchase invoice number %d deleted by %s", purchaseInvoice.Number, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("Purchase invoice number %d deleted by %s", purchaseInvoice.Number, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -742,49 +1128,126 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyPurchaseInvoicePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the purchase invoice exists
 	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase invoice with id %d doesn't exists", payload.ID), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get pi by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseInvoice == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase invoice ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check supplier
 	supplier, err := h.supplierStore.GetSupplierByID(payload.NewData.SupplierID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", payload.NewData.SupplierID), nil)
+		data := map[string]interface{}{"id": payload.ID, "supplier": payload.NewData.SupplierID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get supplier by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if supplier == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Supplier ID %d doesn't exist", payload.NewData.SupplierID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check purchase order
 	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(payload.NewData.PurchaseOrderNumber)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("purchase order number %d not exist", payload.NewData.PurchaseOrderNumber), nil)
+		data := map[string]interface{}{"id": payload.ID, "po_number": purchaseInvoice.PurchaseOrderNumber}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get po by number: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseOrder == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase order number %d doesn't exist", payload.NewData.PurchaseOrderNumber),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	invoiceDate, err := utils.ParseDate(payload.NewData.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		data := map[string]interface{}{"id": payload.ID, "date": payload.NewData.InvoiceDate}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -802,19 +1265,43 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		LastModifiedByUserID: user.ID,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error modify pi: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	purchaseMedicineItem, err := h.purchaseInvoiceStore.GetPurchaseMedicineItem(purchaseInvoice.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("purchase medicine item don't exist: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get medicine item: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.purchaseInvoiceStore.DeletePurchaseMedicineItem(purchaseInvoice, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error delete medicine item: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -822,28 +1309,51 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	for _, purchaseMedicine := range purchaseMedicineItem {
 		medData, err := h.medStore.GetMedicineByBarcode(purchaseMedicine.MedicineBarcode)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", purchaseMedicine.MedicineName), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": purchaseMedicine.MedicineName}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get medicine: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if medData == nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Medicine %s doesn't exist", purchaseMedicine.MedicineName),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		unit, err := h.unitStore.GetUnitByName(purchaseMedicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(purchaseMedicine.Unit)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(purchaseMedicine.Unit)
-		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get unit: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		err = utils.SubtractStock(h.medStore, medData, unit, purchaseMedicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit, "qty": purchaseMedicine.Qty}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error subtract stock: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -851,87 +1361,134 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if purchaseInvoice.PurchaseOrderNumber != 0 {
 			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderNumber, medData, purchaseMedicine.Qty, unit, user, 0)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err), nil)
+				data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": purchaseMedicine.Unit, "qty": purchaseMedicine.Qty}
+				logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error update received qty: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 		}
+	}
 
-		purchaseInvoicePdf := types.PurchaseInvoicePdfPayload{
-			Number:             payload.NewData.Number,
-			Subtotal:           payload.NewData.Subtotal,
-			DiscountPercentage: payload.NewData.DiscountPercentage,
-			DiscountAmount:     payload.NewData.DiscountAmount,
-			TaxPercentage:      payload.NewData.TaxPercentage,
-			TaxAmount:          payload.NewData.TaxAmount,
-			TotalPrice:         payload.NewData.TotalPrice,
-			Description:        payload.NewData.Description,
-			InvoiceDate:        *invoiceDate,
+	purchaseInvoicePdf := types.PurchaseInvoicePdfPayload{
+		Number:             payload.NewData.Number,
+		Subtotal:           payload.NewData.Subtotal,
+		DiscountPercentage: payload.NewData.DiscountPercentage,
+		DiscountAmount:     payload.NewData.DiscountAmount,
+		TaxPercentage:      payload.NewData.TaxPercentage,
+		TaxAmount:          payload.NewData.TaxAmount,
+		TotalPrice:         payload.NewData.TotalPrice,
+		Description:        payload.NewData.Description,
+		InvoiceDate:        *invoiceDate,
 
-			Supplier: struct {
-				Name                string "json:\"name\""
-				Address             string "json:\"address\""
-				CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
-				ContactPersonName   string "json:\"contactPersonName\""
-				ContactPersonNumber string "json:\"contactPersonNumber\""
-				Terms               string "json:\"terms\""
-				VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
-			}{
-				Name:                supplier.Name,
-				Address:             supplier.Address,
-				CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
-				ContactPersonName:   supplier.ContactPersonName,
-				ContactPersonNumber: supplier.ContactPersonNumber,
-				Terms:               supplier.Terms,
-				VendorIsTaxable:     supplier.VendorIsTaxable,
-			},
+		Supplier: struct {
+			Name                string "json:\"name\""
+			Address             string "json:\"address\""
+			CompanyPhoneNumber  string "json:\"companyPhoneNumber\""
+			ContactPersonName   string "json:\"contactPersonName\""
+			ContactPersonNumber string "json:\"contactPersonNumber\""
+			Terms               string "json:\"terms\""
+			VendorIsTaxable     bool   "json:\"vendorIsTaxable\""
+		}{
+			Name:                supplier.Name,
+			Address:             supplier.Address,
+			CompanyPhoneNumber:  supplier.CompanyPhoneNumber,
+			ContactPersonName:   supplier.ContactPersonName,
+			ContactPersonNumber: supplier.ContactPersonNumber,
+			Terms:               supplier.Terms,
+			VendorIsTaxable:     supplier.VendorIsTaxable,
+		},
 
-			UserName: user.Name,
+		UserName: user.Name,
 
-			PurchaseOrderNumber: purchaseOrder.Number,
-			PurchaseOrderDate:   purchaseOrder.InvoiceDate,
+		PurchaseOrderNumber: purchaseOrder.Number,
+		PurchaseOrderDate:   purchaseOrder.InvoiceDate,
 
-			MedicineLists: payload.NewData.MedicineLists,
+		MedicineLists: payload.NewData.MedicineLists,
+	}
+
+	// create pdf
+	fileName, err := pdf.CreatePurchaseInvoicePdf(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error create pdf: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
 		}
+		resp.WriteError(w)
+		return
+	}
 
-		// create pdf
-		fileName, err := pdf.CreatePurchaseInvoicePdf(h.purchaseInvoiceStore, purchaseInvoicePdf, purchaseInvoice.PdfURL)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating pdf: %v", err), nil)
-			return
+	err = h.purchaseInvoiceStore.UpdatePdfUrl(purchaseInvoice.ID, fileName)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error update pdf url: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
 		}
-
-		err = h.purchaseInvoiceStore.UpdatePdfUrl(purchaseInvoice.ID, fileName)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update pdf url: %v", err), nil)
-			return
-		}
+		resp.WriteError(w)
+		return
 	}
 
 	for _, medicine := range payload.NewData.MedicineLists {
 		medData, err := h.medStore.GetMedicineByBarcode(medicine.MedicineBarcode)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s doesn't exists", medicine.MedicineName), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medicine.MedicineName}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get medicine: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if medData == nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Medicine %s doesn't exist", medicine.MedicineName),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		unit, err := h.unitStore.GetUnitByName(medicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(medicine.Unit)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
-		}
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": medicine.Unit}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error get unit: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		expDate, err := utils.ParseDate(medicine.ExpDate)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "exp_date": medicine.ExpDate}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error parse exp date: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -950,15 +1507,30 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 			ExpDate:            *expDate,
 		})
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError,
-				fmt.Errorf("purchase invoice %d, med %s: %v", payload.NewData.Number, medicine.MedicineName, err), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error create medicine item: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		// add the stock with the new value
 		err = utils.AddStock(h.medStore, medData, unit, medicine.Qty, user)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error updating stock: %v", err), nil)
+			data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": medicine.Unit, "qty": medicine.Qty}
+			logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error add stock: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -966,13 +1538,25 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		if purchaseInvoice.PurchaseOrderNumber != 0 {
 			err = updateReceivedQty(h, purchaseInvoice.PurchaseOrderNumber, medData, medicine.Qty, unit, user, 1)
 			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error update received qty: %v", err), nil)
+				data := map[string]interface{}{"id": payload.ID, "medicine": medData.Name, "unit": medicine.Unit, "qty": medicine.Qty}
+				logFile, _ := logger.WriteServerErrorLog("modify purchase invoice", user.ID, data, fmt.Errorf("error update received qty: %v", err))
+				resp := utils.Response{
+					Code:    http.StatusInternalServerError,
+					Message: "Internal server error",
+					Log:     logFile,
+					Error:   err.Error(),
+				}
+				resp.WriteError(w)
 				return
 			}
 		}
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("purchase invoice modified by %s", user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("Purchase invoice ID %d modified by %s", purchaseInvoice.ID, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
@@ -980,37 +1564,82 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	var payload types.ViewPurchaseInvoiceDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("print purchase invoice", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("print purchase invoice", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("print purchase invoice", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the purchase invoice exists
 	purchaseInvoice, err := h.purchaseInvoiceStore.GetPurchaseInvoiceByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("purchase invoice with id %d doesn't exists", payload.ID), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("print purchase invoice", user.ID, data, fmt.Errorf("error get pi by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if purchaseInvoice == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Purchase invoice ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	pdfFile := "static/pdf/purchase-invoice/" + purchaseInvoice.PdfURL
+	pdfFile := constants.PI_PDF_DIR_PATH + purchaseInvoice.PdfURL
 
 	file, err := os.Open(pdfFile)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error open pdf file: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("print purchase invoice", user.ID, data, fmt.Errorf("error open pdf file: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 	defer file.Close()
@@ -1023,8 +1652,10 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, pdfFile)
 }
 
-// req_type == 0, means subtract
-// req_typ == 1, means add
+/*
+ * req_type = 0: subtract
+ * req_type = 1: add
+ */
 func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty float64, receivedPurchasedUnit *types.Unit, user *types.User, req_type int) error {
 	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(poinn)
 	if err != nil {

@@ -2,7 +2,6 @@ package pi
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -60,7 +59,7 @@ func (s *Store) GetPurchaseInvoiceByID(id int) (*types.PurchaseInvoice, error) {
 	}
 
 	if purchaseInvoice.ID == 0 {
-		return nil, fmt.Errorf("purchase invoice not found")
+		return nil, nil
 	}
 
 	return purchaseInvoice, nil
@@ -89,7 +88,7 @@ func (s *Store) GetPurchaseInvoiceID(number int, supplierId int, subtotal float6
 	}
 
 	if purchaseInvoiceId == 0 {
-		return 0, fmt.Errorf("purchase invoice not found")
+		return 0, nil
 	}
 
 	return purchaseInvoiceId, nil
@@ -432,10 +431,7 @@ func (s *Store) DeletePurchaseInvoice(purchaseInvoice *types.PurchaseInvoice, us
 		return err
 	}
 
-	err = logger.WriteServerLog("delete", "purchase-invoice", user.Name, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "purchase-invoice", user.Name, data.ID, data)
 
 	return nil
 }
@@ -451,10 +447,7 @@ func (s *Store) DeletePurchaseMedicineItem(purchaseInvoice *types.PurchaseInvoic
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteServerLog("delete", "purchase-invoice", user.Name, purchaseInvoice.ID, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "purchase-invoice", user.Name, purchaseInvoice.ID, writeData)
 
 	_, err = s.db.Exec("DELETE FROM purchase_medicine_item WHERE purchase_invoice_id = ? ", purchaseInvoice.ID)
 	if err != nil {
@@ -474,10 +467,7 @@ func (s *Store) ModifyPurchaseInvoice(piid int, purchaseInvoice types.PurchaseIn
 		"previous_data": data,
 	}
 
-	err = logger.WriteServerLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("modify", "purchase-invoice", user.Name, data.ID, writeData)
 
 	query := `UPDATE purchase_invoice SET 
 				number = ?, supplier_id = ?, purchase_order_number = ?, 
@@ -568,6 +558,77 @@ func (s *Store) IsPdfUrlExist(pdfUrl string) (bool, error) {
 	return (count > 0), nil
 }
 
+func (s *Store) GetPurchaseInvoiceListByID(id int) (*types.PurchaseInvoiceListsReturnPayload, error) {
+	query := `SELECT pi.id, pi.number, 
+					supplier.name, 
+					pi.purchase_order_number, pi.total_price, 
+					pi.description, 
+					user.name, 
+					pi.invoice_date, pi.pdf_url 
+				FROM purchase_invoice AS pi 
+					JOIN supplier ON supplier.id = pi.supplier_id 
+					JOIN user ON user.id = pi.user_id 
+				WHERE pi.id = ? 
+					AND pi.deleted_at IS NULL`
+	rows, err := s.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	pi := new(types.PurchaseInvoiceListsReturnPayload)
+
+	for rows.Next() {
+		pi, err = scanRowIntoPurchaseInvoiceLists(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if pi.ID == 0 {
+		return nil, nil
+	}
+
+	return pi, nil
+}
+
+func (s *Store) GetPurchaseInvoiceDetailByID(id int) (*types.PurchaseInvoiceDetailPayload, error) {
+	query := `SELECT pi.id, pi.number, pi.subtotal, 
+					pi.discount_percentage, pi.discount_amount, 
+					pi.tax_percentage, pi.tax_amount, 
+					pi.total_price, pi.description, 
+					pi.invoice_date, pi.created_at, 
+					pi.last_modified, 
+					lmb.name, 
+					pi.pdf_url, 
+					s.id, s.name, s.address, s.company_phone_number, 
+					s.contact_person_name, s.contact_person_number, 
+					s.terms, s.vendor_is_taxable, 
+					user.id, user.name, 
+					pi.purchase_order_number 
+				FROM purchase_invoice AS pi 
+					JOIN supplier AS s ON s.id = pi.supplier_id 
+					JOIN user ON user.id = pi.user_id 
+					JOIN user AS lmb ON lmb.id = pi.last_modified_by_user_id 
+				WHERE pi.id = ? 
+					AND pi.deleted_at IS NULL`
+	row := s.db.QueryRow(query, id)
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, row.Err()
+	}
+
+	pi, err := scanRowIntoPurchaseInvoiceDetail(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return pi, nil
+}
+
 func scanRowIntoPurchaseInvoice(rows *sql.Rows) (*types.PurchaseInvoice, error) {
 	purchaseInvoice := new(types.PurchaseInvoice)
 
@@ -654,4 +715,46 @@ func scanRowIntoPurchaseMedicineItem(rows *sql.Rows) (*types.PurchaseMedicineIte
 	purchaseMedicineItem.ExpDate = purchaseMedicineItem.ExpDate.Local()
 
 	return purchaseMedicineItem, nil
+}
+
+func scanRowIntoPurchaseInvoiceDetail(row *sql.Row) (*types.PurchaseInvoiceDetailPayload, error) {
+	purchaseInvoice := new(types.PurchaseInvoiceDetailPayload)
+
+	err := row.Scan(
+		&purchaseInvoice.ID,
+		&purchaseInvoice.Number,
+		&purchaseInvoice.Subtotal,
+		&purchaseInvoice.DiscountPercentage,
+		&purchaseInvoice.DiscountAmount,
+		&purchaseInvoice.TaxPercentage,
+		&purchaseInvoice.TaxAmount,
+		&purchaseInvoice.TotalPrice,
+		&purchaseInvoice.Description,
+		&purchaseInvoice.InvoiceDate,
+		&purchaseInvoice.CreatedAt,
+		&purchaseInvoice.LastModified,
+		&purchaseInvoice.LastModifiedByUserName,
+		&purchaseInvoice.PdfURL,
+		&purchaseInvoice.Supplier.ID,
+		&purchaseInvoice.Supplier.Name,
+		&purchaseInvoice.Supplier.Address,
+		&purchaseInvoice.Supplier.CompanyPhoneNumber,
+		&purchaseInvoice.Supplier.ContactPersonName,
+		&purchaseInvoice.Supplier.ContactPersonNumber,
+		&purchaseInvoice.Supplier.Terms,
+		&purchaseInvoice.Supplier.VendorIsTaxable,
+		&purchaseInvoice.User.ID,
+		&purchaseInvoice.User.Name,
+		&purchaseInvoice.PurchaseOrderNumber,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	purchaseInvoice.InvoiceDate = purchaseInvoice.InvoiceDate.Local()
+	purchaseInvoice.CreatedAt = purchaseInvoice.CreatedAt.Local()
+	purchaseInvoice.LastModified = purchaseInvoice.LastModified.Local()
+
+	return purchaseInvoice, nil
 }
