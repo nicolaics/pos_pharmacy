@@ -1659,12 +1659,12 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty float64, receivedPurchasedUnit *types.Unit, user *types.User, req_type int) error {
 	purchaseOrder, err := h.poInvoiceStore.GetPurchaseOrderByNumber(poinn)
 	if err != nil {
-		return fmt.Errorf("purchase order invoice %d not found: %v", poinn, err, nil)
+		return fmt.Errorf("purchase order invoice %d not found: %v", poinn, err)
 	}
 
 	purchaseOrderMeds, err := h.poInvoiceStore.GetPurchaseOrderItem(purchaseOrder.ID)
 	if err != nil {
-		return fmt.Errorf("purchase order item not found: %v", err, nil)
+		return fmt.Errorf("purchase order item not found: %v", err)
 	}
 
 	for _, purchaseOrderMed := range purchaseOrderMeds {
@@ -1676,7 +1676,7 @@ func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty fl
 		if medPurchaseData.ID == medData.ID {
 			poUnit, err := h.unitStore.GetUnitByName(purchaseOrderMed.Unit)
 			if err != nil {
-				return fmt.Errorf("po unit error: %v", err, nil)
+				return fmt.Errorf("po unit error: %v", err)
 			}
 
 			if req_type == 0 {
@@ -1735,7 +1735,7 @@ func addReceivedQty(h *Handler, medData *types.Medicine, purchaseOrderMed *types
 
 	err := h.poInvoiceStore.UpdtaeReceivedQty(poiid, updatedQty, user, medData.ID)
 	if err != nil {
-		return fmt.Errorf("update error: %v", err, nil)
+		return fmt.Errorf("update error: %v", err)
 	}
 
 	return nil
