@@ -2,7 +2,6 @@ package payment
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/nicolaics/pharmacon/types"
@@ -34,7 +33,7 @@ func (s *Store) GetPaymentMethodByName(paymentMethodName string) (*types.Payment
 	}
 
 	if paymentMethod.ID == 0 {
-		return nil, fmt.Errorf("payment method %s not found", paymentMethodName)
+		return nil, nil
 	}
 
 	return paymentMethod, nil
@@ -58,7 +57,7 @@ func (s *Store) GetPaymentMethodByID(id int) (*types.PaymentMethod, error) {
 	}
 
 	if paymentMethod.ID == 0 {
-		return nil, fmt.Errorf("payment method %d not found", id)
+		return nil, nil
 	}
 
 	return paymentMethod, nil
