@@ -267,7 +267,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 			data := map[string]interface{}{"invoice_number": payload.Number, "date": payload.InvoiceDate,
 				"medicine": medicine.MedicineName, "unit": medicine.Unit}
-			logFile, _ := logger.WriteServerErrorLog("register invoice", user.ID, data, fmt.Errorf("error get unit: %v", err, errDel))
+			logFile, _ := logger.WriteServerErrorLog("register invoice", user.ID, data, fmt.Errorf("error get unit: %v", err))
 			resp := utils.Response{
 				Code:    http.StatusInternalServerError,
 				Message: "Internal server error",
