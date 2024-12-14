@@ -18,8 +18,7 @@ import (
 )
 
 func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoice types.PurchaseInvoicePdfPayload, prevFileName string) (string, error) {
-	directory := "static/pdf/purchase-invoice/"
-	if err := os.MkdirAll(directory, 0744); err != nil {
+	if err := os.MkdirAll(constants.PI_PDF_DIR_PATH, 0744); err != nil {
 		return "", err
 	}
 
@@ -144,7 +143,7 @@ func CreatePurchaseInvoicePdf(piStore types.PurchaseInvoiceStore, purchaseInvoic
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + fileName)
+	err = pdf.OutputFileAndClose(constants.PI_PDF_DIR_PATH + fileName)
 	if err != nil {
 		return "", err
 	}

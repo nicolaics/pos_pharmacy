@@ -19,8 +19,7 @@ import (
 )
 
 func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
-	directory := constants.INVOICE_PDF_DIR_PATH
-	if err := os.MkdirAll(directory, 0744); err != nil {
+	if err := os.MkdirAll(constants.INVOICE_PDF_DIR_PATH, 0744); err != nil {
 		return "", err
 	}
 
@@ -119,7 +118,7 @@ func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.Invoic
 		}
 	}
 
-	err = pdf.OutputFileAndClose(directory + fileName)
+	err = pdf.OutputFileAndClose(constants.INVOICE_PDF_DIR_PATH + fileName)
 	if err != nil {
 		return "", err
 	}
