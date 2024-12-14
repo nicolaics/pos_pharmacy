@@ -1690,7 +1690,7 @@ func updateReceivedQty(h *Handler, poinn int, medData *types.Medicine, addQty fl
 				err = addReceivedQty(h, medData, &purchaseOrderMed, addQty, poUnit, receivedPurchasedUnit, purchaseOrder.ID, user)
 			}
 			if err != nil {
-				return fmt.Errorf("update received qty error: %v", err, nil)
+				return fmt.Errorf("update received qty error: %v", err)
 			}
 
 			return nil
