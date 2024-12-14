@@ -2,7 +2,6 @@ package poi
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -37,7 +36,7 @@ func (s *Store) GetPurchaseOrderByNumber(number int) (*types.PurchaseOrder, erro
 	}
 
 	if purchaseOrder.ID == 0 {
-		return nil, fmt.Errorf("purchase order invoice not found")
+		return nil, nil
 	}
 
 	return purchaseOrder, nil
@@ -62,7 +61,7 @@ func (s *Store) GetPurchaseOrderByID(id int) (*types.PurchaseOrder, error) {
 	}
 
 	if purchaseOrder.ID == 0 {
-		return nil, fmt.Errorf("purchase order invoice not found")
+		return nil, nil
 	}
 
 	return purchaseOrder, nil
@@ -91,7 +90,7 @@ func (s *Store) GetPurchaseOrderID(number int, supplierId int, totalItem int, in
 	}
 
 	if purchaseOrderId == 0 {
-		return 0, fmt.Errorf("purchase order invoice not found")
+		return 0, nil
 	}
 
 	return purchaseOrderId, nil
@@ -390,10 +389,7 @@ func (s *Store) DeletePurchaseOrder(purchaseOrder *types.PurchaseOrder, user *ty
 		return err
 	}
 
-	err = logger.WriteServerLog("delete", "purchase-order", user.Name, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "purchase-order", user.Name, data.ID, data)
 
 	return nil
 }
@@ -409,10 +405,7 @@ func (s *Store) DeletePurchaseOrderItem(purchaseOrder *types.PurchaseOrder, user
 		"deleted_medicine_item": data,
 	}
 
-	err = logger.WriteServerLog("delete", "purchase-order", user.Name, purchaseOrder.ID, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 
 	_, err = s.db.Exec("DELETE FROM purchase_order_item WHERE purchase_order_id = ? ", purchaseOrder.ID)
 	if err != nil {
@@ -432,10 +425,7 @@ func (s *Store) ModifyPurchaseOrder(poiid int, purchaseOrder types.PurchaseOrder
 		"previous_dataa": data,
 	}
 
-	err = logger.WriteServerLog("modify", "purchase-order", user.Name, poiid, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("modify", "purchase-order", user.Name, poiid, writeData)
 
 	query := `UPDATE purchase_order 
 				SET number = ?, supplier_id = ?, total_item = ?, 
@@ -469,10 +459,7 @@ func (s *Store) UpdtaeReceivedQty(poinid int, newQty float64, user *types.User, 
 		"previous_data":  data,
 	}
 
-	err = logger.WriteServerLog("modify", "purchase-order", user.Name, purchaseOrder.ID, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("modify", "purchase-order", user.Name, purchaseOrder.ID, writeData)
 
 	query := `UPDATE purchase_order_item 
 				SET received_qty = ? WHERE purchase_order_id = ? AND medicine_id = ?`
