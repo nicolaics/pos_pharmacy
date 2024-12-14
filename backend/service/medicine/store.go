@@ -37,7 +37,7 @@ func (s *Store) GetMedicineByName(name string) (*types.Medicine, error) {
 	}
 
 	if medicine.ID == 0 {
-		return nil, fmt.Errorf("medicine not found")
+		return nil, nil
 	}
 
 	return medicine, nil
@@ -86,7 +86,7 @@ func (s *Store) GetMedicineByID(id int) (*types.MedicineListsReturnPayload, erro
 	}
 
 	if medicine.ID == 0 {
-		return nil, fmt.Errorf("medicine not found")
+		return nil, nil
 	}
 
 	return medicine, nil
@@ -111,7 +111,7 @@ func (s *Store) GetMedicineByBarcode(barcode string) (*types.Medicine, error) {
 	}
 
 	if medicine.ID == 0 {
-		return nil, fmt.Errorf("medicine not found")
+		return nil, nil
 	}
 
 	return medicine, nil
@@ -693,6 +693,7 @@ func (s *Store) GetMedicineHistoryByDate(mid int, startDate time.Time, endDate t
 				WHERE mid = ? 
 				AND invoice_date >= ? 
 				AND invoice_date < ? 
+				AND deleted_at IS NULL 
 				ORDER BY invoice_date DESC`
 	rows, err := s.db.Query(query, mid, startDate, endDate)
 	if err != nil {

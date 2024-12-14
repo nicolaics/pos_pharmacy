@@ -62,7 +62,7 @@ type DeleteMedicinePayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
-type GetOneMedicinePayload struct {
+type GetDetailMedicinePayload struct {
 	ID int `json:"id" validate:"required"`
 }
 

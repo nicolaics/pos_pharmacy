@@ -1,7 +1,6 @@
 package medicine
 
 import (
-	// "encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -29,7 +28,7 @@ func NewHandler(medStore types.MedicineStore, userStore types.UserStore, unitSto
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/medicine", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/medicine/{params}/{val}", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/medicine/detail", h.handleGetOne).Methods(http.MethodPost)
+	router.HandleFunc("/medicine/detail", h.handleGetDetail).Methods(http.MethodPost)
 	router.HandleFunc("/medicine", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/medicine", h.handleModify).Methods(http.MethodPatch)
 	router.HandleFunc("/medicine/history", h.handleGetHistory).Methods(http.MethodPost)
@@ -47,29 +46,66 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("register medicine", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("register medicine", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the medicine exists
-	_, err = h.medStore.GetMedicineByName(payload.Name)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine with name %s already exists", payload.Name), nil)
+	temp, err := h.medStore.GetMedicineByName(payload.Name)
+	if err != nil {
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", user.ID, data, fmt.Errorf("error get medicine name: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if temp != nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Medicine %s already exists", payload.Name),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -88,47 +124,44 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	firstUnit, err := h.unitStore.GetUnitByName(firstUnitStr)
-	if firstUnit == nil || err != nil {
-		err = h.unitStore.CreateUnit(firstUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create first unit error: %v", err), nil)
-			return
-		}
-
-		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("first unit error: %v", err), nil)
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode, "first_unit": firstUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", user.ID, data, fmt.Errorf("get first unit error: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	secondUnit, err := h.unitStore.GetUnitByName(secondUnitStr)
-	if secondUnit == nil || err != nil {
-		err = h.unitStore.CreateUnit(secondUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create second unit error: %v", err), nil)
-			return
-		}
-
-		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("second unit error: %v", err), nil)
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode, "second_unit": secondUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", user.ID, data, fmt.Errorf("get first unit error: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	thirdUnit, err := h.unitStore.GetUnitByName(thirdUnitStr)
-	if thirdUnit == nil || err != nil {
-		err = h.unitStore.CreateUnit(thirdUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("create third unit error: %v", err), nil)
-			return
-		}
-
-		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("third unit error: %v", err), nil)
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode, "third_unit": thirdUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", user.ID, data, fmt.Errorf("get third unit error: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -156,18 +189,37 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Description:                payload.Description,
 	}, user.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error create medicine %s: %v", payload.Name, err), nil)
+		data := map[string]interface{}{"medicine": payload.Name, "barcode": payload.Barcode}
+		logFile, _ := logger.WriteServerErrorLog("register medicine", user.ID, data, fmt.Errorf("error create medicine: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("medicine %s successfully created by %s", payload.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusCreated,
+		Message: fmt.Sprintf("Medicine %s successfully created by %s", payload.Name, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get all medicines", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -180,25 +232,56 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		medicines, err = h.medStore.GetAllMedicines()
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, err, nil)
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, nil, fmt.Errorf("error get all medicines: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "name" {
 		medicines, err = h.medStore.GetMedicinesBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine %s not found", val), nil)
+			data := map[string]interface{}{"searched_medicine": val}
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, data, fmt.Errorf("error get medicine by search name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"medicine_id": val}
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, data, fmt.Errorf("error parse medicine id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		medicine, err := h.medStore.GetMedicineByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine id %d not found", id), nil)
+			data := map[string]interface{}{"medicine_id": id}
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, data, fmt.Errorf("error get medicine by id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -206,55 +289,119 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "barcode" {
 		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), nil)
+			data := map[string]interface{}{"medicine_barcode": val}
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, data, fmt.Errorf("error get medicine by search barcode: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "description" {
-		medicines, err = h.medStore.GetMedicinesBySearchBarcode(val)
+		medicines, err = h.medStore.GetMedicinesByDescription(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("medicine barcode %s not found", val), nil)
+			data := map[string]interface{}{"description": val}
+			logFile, _ := logger.WriteServerErrorLog("get all medicines", user.ID, data, fmt.Errorf("error get medicines by description: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), nil)
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Unknown query",
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicines, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: medicines,
+	}
+	resp.WriteSuccess(w)
 }
 
-func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.GetOneMedicinePayload
+	var payload types.GetDetailMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get medicine detail", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get medicine detail", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get medicine detail", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// get medicine data
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
-	if medicine == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine id %d doesn't exist", payload.ID), nil)
+	if err != nil {
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get medicine detail", user.ID, data, fmt.Errorf("error get medicine by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+	}
+	if medicine == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Medicine ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicine, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: medicine,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -262,29 +409,66 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("delete medicine", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("delete medicine", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "medicine_name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete medicine", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the medicine exists
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
-	if medicine == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine %s doesn't exist", payload.Name), nil)
+	if err != nil {
+		data := map[string]interface{}{"medicine_id": payload.ID, "medicine_name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete medicine", user.ID, data, fmt.Errorf("error get medicine by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if medicine == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Medicine %s doesn't exist", payload.Name),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -294,11 +478,23 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		Name:    medicine.Name,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "medicine_name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete medicine", user.ID, data, fmt.Errorf("error delete medicine: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("medicine %s deleted by %s", payload.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("Medicine %s deleted by %s", payload.Name, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -306,46 +502,112 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the medicine exists
 	medicine, err := h.medStore.GetMedicineByID(payload.ID)
-	if err != nil || medicine == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine with id %d doesn't exists", payload.ID), nil)
+	if err != nil {
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get medicine by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if medicine == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Medicine ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	if medicine.Name != payload.NewData.Name {
-		_, err = h.medStore.GetMedicineByName(payload.NewData.Name)
-		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with name %s already exist", payload.NewData.Name), nil)
+		temp, err := h.medStore.GetMedicineByName(payload.NewData.Name)
+		if err != nil {
+			data := map[string]interface{}{"medicine_id": payload.ID, "medicine_name": payload.NewData.Name}
+			logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get medicine by name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+		}
+		if temp != nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Medicine %s already exists", payload.NewData.Name),
+			}
+			resp.WriteError(w)
 			return
 		}
 	}
 
 	if medicine.Barcode != payload.NewData.Barcode {
-		_, err = h.medStore.GetMedicineByBarcode(payload.NewData.Barcode)
-		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("medicine with barcode %s already exist", payload.NewData.Barcode), nil)
+		temp, err := h.medStore.GetMedicineByBarcode(payload.NewData.Barcode)
+		if err != nil {
+			data := map[string]interface{}{"medicine_id": payload.ID, "medicine_barcode": payload.NewData.Barcode}
+			logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get medicine by barcode: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if temp != nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Medicine barcode %s already exists", payload.NewData.Barcode),
+			}
+			resp.WriteError(w)
 			return
 		}
 	}
@@ -365,47 +627,44 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	firstUnit, err := h.unitStore.GetUnitByName(firstUnitStr)
-	if firstUnit == nil {
-		err = h.unitStore.CreateUnit(firstUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
-			return
-		}
-
-		firstUnit, err = h.unitStore.GetUnitByName(firstUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "first_unit": firstUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get first unit: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	secondUnit, err := h.unitStore.GetUnitByName(secondUnitStr)
-	if secondUnit == nil {
-		err = h.unitStore.CreateUnit(secondUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
-			return
-		}
-
-		secondUnit, err = h.unitStore.GetUnitByName(secondUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "second_unit": secondUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get second unit: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	thirdUnit, err := h.unitStore.GetUnitByName(thirdUnitStr)
-	if thirdUnit == nil {
-		err = h.unitStore.CreateUnit(thirdUnitStr)
-		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
-			return
-		}
-
-		thirdUnit, err = h.unitStore.GetUnitByName(thirdUnitStr)
-	}
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "third_unit": thirdUnitStr}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error get third unit: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -433,12 +692,23 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		Description:                payload.NewData.Description,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify medicine", user.ID, data, fmt.Errorf("error modify medicine: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("medicine modified into %s by %s",
-		payload.NewData.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("Medicine ID %d modified by %s", payload.ID, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
@@ -446,44 +716,92 @@ func (h *Handler) handleGetHistory(w http.ResponseWriter, r *http.Request) {
 	var payload types.GetMedicineHistoryPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid Payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	startDate, err := utils.ParseStartDate(payload.StartDate.Format("2006-01-02 -0700MST"))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse start date: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "start_date": payload.StartDate}
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	endDate, err := utils.ParseEndDate(payload.EndDate.Format("2006-01-02 -0700MST"))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parse end date: %v", err), nil)
+		data := map[string]interface{}{"medicine_id": payload.ID, "start_date": payload.StartDate, "end_date": payload.EndDate}
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	medicineHistories, err := h.medStore.GetMedicineHistoryByDate(payload.ID, *startDate, *endDate)
-	if medicineHistories == nil || err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("medicine id %d doesn't exist", payload.ID), nil)
-		return
+	if err != nil {
+		data := map[string]interface{}{"medicine_id": payload.ID, "start_date": payload.StartDate}
+		logFile, _ := logger.WriteServerErrorLog("get medicine history", user.ID, data, fmt.Errorf("error parse date: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, medicineHistories, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: medicineHistories,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
@@ -491,32 +809,64 @@ func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
 	var payload types.RequestExportMedicinePayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	medicines, err := h.medStore.GetAllMedicines()
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", user.ID, nil, fmt.Errorf("error get all medicines: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	if medicines == nil {
-		utils.WriteSuccess(w, http.StatusOK, "no medicine to export", nil)
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "No medicines to export",
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -528,27 +878,39 @@ func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
 
 	for i := 0; i < numFields; i++ {
 		if payloadValues.Field(i).Bool() {
-			headers = append(headers, fields.Field(i).Tag.Get("csv"))	
+			headers = append(headers, fields.Field(i).Tag.Get("csv"))
 		}
 	}
 
 	fileName := fmt.Sprintf("medicines_%s.csv", time.Now().Local().Format("02-Jan-2006"))
 	filePath, writer, f, err := export.CreateCsvWriter(fileName)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error creating csv writer: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", user.ID, nil, fmt.Errorf("error creating csv writer: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 	defer f.Close()
 
 	err = export.WriteCsvHeader(writer, headers)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error writing csv header: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine csv", user.ID, nil, fmt.Errorf("error writing csv header: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	logFiles := make([]string, 0)
-
-	for _, med := range(medicines) {
+	for _, med := range medicines {
 		data := make([]string, 0)
 		dataValues := reflect.ValueOf(med)
 
@@ -560,8 +922,16 @@ func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
 
 		err = export.WriteCsvData(writer, data)
 		if err != nil {
-			logFile, _ := logger.WriteServerErrorLog(fmt.Errorf("failed to write csv data of medicine %s:\n%v", med.Name, err))
-			logFiles = append(logFiles, logFile)
+			logFile, _ := logger.WriteServerErrorLog("get export medicine csv", user.ID, nil,
+				fmt.Errorf("failed to write csv data of medicine %s:\n%v", med.Name, err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
 		}
 	}
 
@@ -571,6 +941,92 @@ func (h *Handler) handleGetExportCsv(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	http.ServeFile(w, r, filePath)
+}
 
-	// utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("export success to %s", fileName), logFiles)
+func (h *Handler) handleGetExportXml(w http.ResponseWriter, r *http.Request) {
+	// get JSON Payload
+	var payload types.RequestExportMedicinePayload
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		logFile, _ := logger.WriteServerErrorLog("get export medicine xml", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		logFile, _ := logger.WriteServerErrorLog("get export medicine xml", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	// validate token
+	user, err := h.userStore.ValidateUserToken(w, r, false)
+	if err != nil {
+		logFile, _ := logger.WriteServerErrorLog("get export medicine xml", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	medicines, err := h.medStore.GetAllMedicines()
+	if err != nil {
+		logFile, _ := logger.WriteServerErrorLog("get export medicine xml", user.ID, nil, fmt.Errorf("error get medicines: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	if medicines == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "No medicines to export",
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	fileName := fmt.Sprintf("medicines_%s.xml", time.Now().Local().Format("02-Jan-2006"))
+	filePath, err := export.CreateXmlData(fileName, medicines)
+	if err != nil {
+		logFile, _ := logger.WriteServerErrorLog("get export medicine xml", 0, nil, fmt.Errorf("error create xml file: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+
+	attachment := fmt.Sprintf("attachment; filename=%s", filePath)
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", attachment)
+	w.WriteHeader(http.StatusOK)
+
+	http.ServeFile(w, r, filePath)
 }
