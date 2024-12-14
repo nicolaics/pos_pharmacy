@@ -19,7 +19,7 @@ import (
 )
 
 func CreateInvoicePdf(invoice types.InvoicePdfPayload, invoiceStore types.InvoiceStore, prevFileName string) (string, error) {
-	directory := "static/pdf/invoice/"
+	directory := constants.INVOICE_PDF_DIR_PATH
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		return "", err
 	}
