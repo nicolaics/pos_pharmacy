@@ -15,7 +15,7 @@ type UserStore interface {
 
 	CreateUser(User) error
 
-	DeleteUser(*User, *User) error
+	DeleteUser(int, *User) error
 
 	UpdateLastLoggedIn(int) error
 	ModifyUser(int, User, *User) error
@@ -54,7 +54,7 @@ type ChangeAdminStatusPayload struct {
 }
 
 // get one user data
-type GetOneUserPayload struct {
+type GetUserDetailPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 

@@ -38,7 +38,7 @@ func (s *Store) GetUserByName(name string) (*types.User, error) {
 	}
 
 	if user.ID == 0 {
-		return nil, fmt.Errorf("user not found")
+		return nil, nil
 	}
 
 	return user, nil
@@ -196,7 +196,7 @@ func (s *Store) GetUserByID(id int) (*types.User, error) {
 	}
 
 	if user.ID == 0 {
-		return nil, fmt.Errorf("user not found")
+		return nil, nil
 	}
 
 	return user, nil
@@ -213,18 +213,15 @@ func (s *Store) CreateUser(user types.User) error {
 	return nil
 }
 
-func (s *Store) DeleteUser(user *types.User, deletedByUser *types.User) error {
-	data, err := s.GetUserByID(user.ID)
+func (s *Store) DeleteUser(id int, deletedByUser *types.User) error {
+	data, err := s.GetUserByID(id)
 	if err != nil {
 		return err
 	}
 
-	err = logger.WriteServerLog("delete", "user", deletedByUser.Name, data.ID, data)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("delete", "user", deletedByUser.Name, data.ID, data)
 
-	_, err = s.db.Exec("DELETE FROM user WHERE id = ?", user.ID)
+	_, err = s.db.Exec("DELETE FROM user WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
@@ -275,10 +272,7 @@ func (s *Store) ModifyUser(id int, user types.User, modifiedByUser *types.User) 
 		"previous_data": data,
 	}
 
-	err = logger.WriteServerLog("modify", "user", modifiedByUser.Name, data.ID, writeData)
-	if err != nil {
-		return fmt.Errorf("error write log file")
-	}
+	_ = logger.WriteServerLog("modify", "user", modifiedByUser.Name, data.ID, writeData)
 
 	query := `UPDATE user SET name = ?, password = ?, admin = ?, phone_number = ? 
 				WHERE id = ?`

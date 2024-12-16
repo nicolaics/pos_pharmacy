@@ -31,7 +31,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/user/current", h.handleGetCurrentUser).Methods(http.MethodGet)
 	router.HandleFunc("/user/current", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
-	router.HandleFunc("/user/detail", h.handleGetOneUser).Methods(http.MethodPost)
+	router.HandleFunc("/user/detail", h.handleGetUserDetail).Methods(http.MethodPost)
 	router.HandleFunc("/user/detail", func(w http.ResponseWriter, r *http.Request) { utils.WriteJSONForOptions(w, http.StatusOK, nil) }).Methods(http.MethodOptions)
 
 	router.HandleFunc("/user", h.handleDelete).Methods(http.MethodDelete)
@@ -57,46 +57,102 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var payload types.LoginUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("login", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("login", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	user, err := h.store.GetUserByName(payload.Name)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid name: %v", err), nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("login", 0, data, fmt.Errorf("error get user by name: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if user == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User %s not found", payload.Name),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check password match
 	if !(auth.ComparePassword(user.Password, []byte(payload.Password))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid password"), nil)
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid password",
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	tokenDetails, err := auth.CreateJWT(user.ID, user.Admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("login", user.ID, data, fmt.Errorf("error create jwt: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.store.SaveToken(user.ID, tokenDetails)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("login", user.ID, data, fmt.Errorf("error save token: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.store.UpdateLastLoggedIn(user.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("login", user.ID, data, fmt.Errorf("error update last logged in: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -104,7 +160,11 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		"token": tokenDetails.Token,
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, tokens, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: tokens,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -112,44 +172,91 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("register user", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("register user", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register user", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid or not admin!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("admin password wrong"), nil)
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid admin password",
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the newly created user exists
-	_, err = h.store.GetUserByName(payload.Name)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("user with name %s already exists", payload.Name), nil)
+	temp, err := h.store.GetUserByName(payload.Name)
+	if err != nil {
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register user", admin.ID, data, fmt.Errorf("error get user by name: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if temp != nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User %s already exists", payload.Name),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// if it doesn't, we create new user
 	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register user", admin.ID, data, fmt.Errorf("error hash password: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -160,17 +267,36 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Admin:       payload.Admin,
 	})
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register user", admin.ID, data, fmt.Errorf("error create user: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("user %s successfully created", payload.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusCreated,
+		Message: fmt.Sprintf("User %s successfully created", payload.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate token
-	_, err := h.store.ValidateUserToken(w, r, true)
+	user, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get all users", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -183,25 +309,64 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		users, err = h.store.GetAllUsers()
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			logFile, _ := logger.WriteServerErrorLog("get all users", user.ID, nil, fmt.Errorf("error get all users: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "name" {
+		data := map[string]interface{}{"searched_name": val}
 		users, err = h.store.GetUserBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val), nil)
+			logFile, _ := logger.WriteServerErrorLog("get all users", user.ID, data, fmt.Errorf("error get user by search name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"searched_id": val}
+			logFile, _ := logger.WriteServerErrorLog("get all users", user.ID, data, fmt.Errorf("error parse id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		user, err := h.store.GetUserByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %s not found", val), nil)
+			data := map[string]interface{}{"searched_id": id}
+			logFile, _ := logger.WriteServerErrorLog("get all users", user.ID, data, fmt.Errorf("error get user by id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if user == nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("User ID %d doesn't exist", id),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -209,163 +374,322 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "phone-number" {
 		users, err = h.store.GetUserBySearchPhoneNumber(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user %s not found", val), nil)
+			data := map[string]interface{}{"searched_phone_number": val}
+			logFile, _ := logger.WriteServerErrorLog("get all users", user.ID, data, fmt.Errorf("error get user by search phone number: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), nil)
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Unknown query",
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, users, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: users,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// validate token
 	user, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get current user", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, user, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: user,
+	}
+	resp.WriteSuccess(w)
 }
 
 // get one user other than the current user
-func (h *Handler) handleGetOneUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetUserDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.GetOneUserPayload
+	var payload types.GetUserDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("get user detail", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("get user detail", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
-	_, err := h.store.ValidateUserToken(w, r, true)
+	user, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get user detail", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the newly created user exists
-	user, err := h.store.GetUserByID(payload.ID)
+	requested, err := h.store.GetUserByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("user id %d doesn't exist", payload.ID), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get user detail", user.ID, data, fmt.Errorf("error get user by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if requested == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, user, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: requested,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.RemoveUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("delete user", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("delete user", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete user", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid or not admin",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), nil)
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid admin password",
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	users, err := h.store.GetAllUsers()
+	// users, err := h.store.GetAllUsers()
+	// if err != nil {
+	// 	logFile, _ := logger.WriteServerErrorLog("get delete user", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+	// 	resp := utils.Response{
+	// 		Code:    http.StatusBadRequest,
+	// 		Message: "Failed parsing payload",
+	// 		Log:     logFile,
+	// 		Error:   err.Error(),
+	// 	}
+	// 	resp.WriteError(w)
+	// 	utils.WriteError(w, http.StatusInternalServerError, err, nil)
+	// 	return
+	// }
+
+	// if len(users) == 1 || payload.ID == 1 {
+	// 	utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cannot delete initial admin"), nil)
+	// 	return
+	// }
+
+	err = h.store.DeleteUser(payload.ID, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("delete user", admin.ID, data, fmt.Errorf("error delete: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	if len(users) == 1 || payload.ID == 1 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cannot delete initial admin"), nil)
-		return
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("User ID %d successfully deleted", payload.ID),
 	}
-
-	user, err := h.store.GetUserByID(payload.ID)
-	if user == nil || err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
-		return
-	}
-
-	err = h.store.DeleteUser(user, admin)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
-		return
-	}
-
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s successfully deleted", user.Name), nil)
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyUserPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("modify user", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("modify user", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify user", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid or not admin",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.NewData.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), nil)
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid admin password",
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	user, err := h.store.GetUserByID(payload.ID)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify user", admin.ID, data, fmt.Errorf("error get user by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
 	if user == nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	if user.Name != payload.NewData.Name {
-		_, err = h.store.GetUserByName(payload.NewData.Name)
-		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with name %s already exists", payload.NewData.Name), nil)
+		temp, err := h.store.GetUserByName(payload.NewData.Name)
+		if err != nil {
+			data := map[string]interface{}{"id": payload.ID}
+			logFile, _ := logger.WriteServerErrorLog("modify user", admin.ID, data, fmt.Errorf("error get user by name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if temp != nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("User %s already exists", payload.NewData.Name),
+			}
+			resp.WriteError(w)
+			return
 		}
 	}
 
@@ -376,77 +700,168 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		PhoneNumber: payload.NewData.PhoneNumber,
 	}, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("modify user", admin.ID, data, fmt.Errorf("error modify: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s updated into", payload.NewData.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("User ID %d updated", payload.ID),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	accessDetails, err := auth.ExtractTokenFromClient(r)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"), nil)
+		logFile, _ := logger.WriteServerErrorLog("logout", 0, nil, fmt.Errorf("error extract token: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid token",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check user exists or not
-	_, err = h.store.GetUserByID(accessDetails.UserID)
+	user, err := h.store.GetUserByID(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user id %d doesn't exists", accessDetails.UserID), nil)
+		logFile, _ := logger.WriteServerErrorLog("logout", 0, nil, fmt.Errorf("error get user by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if user == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User ID %d doesn't exist", accessDetails.UserID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.store.UpdateLastLoggedIn(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("logout", user.ID, nil, fmt.Errorf("error update last logged in: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.store.DeleteToken(accessDetails.UserID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		logFile, _ := logger.WriteServerErrorLog("logout", user.ID, nil, fmt.Errorf("error delete token: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, "successfully logged out", nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: "Successfully logged out",
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request) {
 	var payload types.ChangeAdminStatusPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("change admin status", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("change admin status", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate token
 	admin, err := h.store.ValidateUserToken(w, r, true)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid admin token or not admin: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID, "new_admin_value": payload.Admin}
+		logFile, _ := logger.WriteServerErrorLog("change admin status", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid or not admin",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate admin password
 	if !(auth.ComparePassword(admin.Password, []byte(payload.AdminPassword))) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("admin password wrong"), nil)
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "Invalid admin password",
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check whether user exists or not
 	user, err := h.store.GetUserByID(payload.ID)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID, "new_admin_value": payload.Admin}
+		logFile, _ := logger.WriteServerErrorLog("change admin status", admin.ID, data, fmt.Errorf("error get user by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
 	if user == nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("User ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -457,9 +872,21 @@ func (h *Handler) handleChangeAdminStatus(w http.ResponseWriter, r *http.Request
 		PhoneNumber: user.PhoneNumber,
 	}, admin)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID, "new_admin_value": payload.Admin}
+		logFile, _ := logger.WriteServerErrorLog("change admin status", admin.ID, data, fmt.Errorf("error modify user: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, fmt.Sprintf("%s updated into admin: %t", user.Name, payload.Admin), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("User ID %d's admin status is now %t", payload.ID, payload.Admin),
+	}
+	resp.WriteSuccess(w)
 }
