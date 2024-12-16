@@ -41,7 +41,7 @@ type DeleteSupplierPayload struct {
 	Name string `json:"name" validate:"required"`
 }
 
-type GetOneSupplierPayload struct {
+type GetDetailSupplierPayload struct {
 	ID int `json:"id" validate:"required"`
 }
 

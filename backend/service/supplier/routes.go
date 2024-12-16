@@ -24,7 +24,7 @@ func NewHandler(supplierStore types.SupplierStore, userStore types.UserStore) *H
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/supplier", h.handleRegister).Methods(http.MethodPost)
 	router.HandleFunc("/supplier/{params}/{val}", h.handleGetAll).Methods(http.MethodGet)
-	router.HandleFunc("/supplier/detail", h.handleGetOne).Methods(http.MethodPost)
+	router.HandleFunc("/supplier/detail", h.handleGetDetail).Methods(http.MethodPost)
 	router.HandleFunc("/supplier", h.handleDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/supplier", h.handleModify).Methods(http.MethodPatch)
 
@@ -38,31 +38,66 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("register supplier", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("register supplier", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register supplier", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the supplier exists
-	_, err = h.supplierStore.GetSupplierByName(payload.Name)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s already exists", payload.Name), nil)
+	temp, err := h.supplierStore.GetSupplierByName(payload.Name)
+	if err != nil {
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register supplier", user.ID, data, fmt.Errorf("error get supplier by name: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if temp != nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Supplier %s already exists", payload.Name),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -78,18 +113,37 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("register supplier", user.ID, data, fmt.Errorf("error create supplier: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s created by %s", payload.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusCreated,
+		Message: fmt.Sprintf("Supplier %s created by %s", payload.Name, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// validate user token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog("get all suppliers", 0, nil, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
@@ -102,26 +156,64 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if val == "all" {
 		suppliers, err = h.supplierStore.GetAllSuppliers()
 		if err != nil {
-			logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+			logFile, _ := logger.WriteServerErrorLog("get all suppliers", user.ID, nil, fmt.Errorf("error get all suppliers: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "name" {
 		suppliers, err = h.supplierStore.GetSupplierBySearchName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier %s not found", val), nil)
+			data := map[string]interface{}{"searched_supplier": val}
+			logFile, _ := logger.WriteServerErrorLog("get all suppliers", user.ID, data, fmt.Errorf("error get supplier by search name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else if params == "id" {
 		id, err := strconv.Atoi(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err, nil)
+			data := map[string]interface{}{"searched_id": val}
+			logFile, _ := logger.WriteServerErrorLog("get all suppliers", user.ID, data, fmt.Errorf("error parse id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 
 		supplier, err := h.supplierStore.GetSupplierByID(id)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier id %d not found", id), nil)
+			data := map[string]interface{}{"searched_id": id}
+			logFile, _ := logger.WriteServerErrorLog("get all suppliers", user.ID, data, fmt.Errorf("error get supplier by id: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if supplier == nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Supplier ID %d doesn't exist", id),
+			}
+			resp.WriteError(w)
 			return
 		}
 
@@ -129,51 +221,106 @@ func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	} else if params == "cp-name" {
 		suppliers, err = h.supplierStore.GetSupplierBySearchContactPersonName(val)
 		if err != nil {
-			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("supplier contact person %s not found", val), nil)
+			data := map[string]interface{}{"searched_contact_person": val}
+			logFile, _ := logger.WriteServerErrorLog("get all suppliers", user.ID, data, fmt.Errorf("error get supplier by search cp name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
 			return
 		}
 	} else {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("unknown query"), nil)
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Unknown query",
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, suppliers, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: suppliers,
+	}
+	resp.WriteSuccess(w)
 }
 
-func (h *Handler) handleGetOne(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetDetail(w http.ResponseWriter, r *http.Request) {
 	// get JSON Payload
-	var payload types.GetOneSupplierPayload
+	var payload types.GetDetailSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("get detail supplier", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("get detail supplier", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate user token
-	_, err := h.userStore.ValidateUserToken(w, r, false)
+	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get detail supplier", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// get supplier data
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
-	if err != nil || supplier == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier id %d doesn't exists", payload.ID), nil)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID}
+		logFile, _ := logger.WriteServerErrorLog("get detail supplier", user.ID, data, fmt.Errorf("error get by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if supplier == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Supplier ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusOK, supplier, nil)
+	resp := utils.Response{
+		Code:   http.StatusOK,
+		Result: supplier,
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -181,44 +328,68 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeleteSupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("delete supplier", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("delete supplier", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
-		return
-	}
-
-	// check if the supplier exists
-	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
-	if err != nil || supplier == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with name %s doesn't exists", payload.Name), nil)
+		data := map[string]interface{}{"id": payload.ID, "name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete supplier", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	err = h.supplierStore.DeleteSupplier(&types.Supplier{
-		ID:   supplier.ID,
-		Name: supplier.Name,
+		ID:   payload.ID,
+		Name: payload.Name,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID, "name": payload.Name}
+		logFile, _ := logger.WriteServerErrorLog("delete supplier", 0, data, fmt.Errorf("error delete: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s deleted by %s", payload.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("Supplier %s deleted by %s", payload.Name, user.Name),
+	}
+	resp.WriteSuccess(w)
 }
 
 func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
@@ -226,39 +397,89 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifySupplierPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("modify supplier", 0, nil, fmt.Errorf("parsing payload failed: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Failed parsing payload",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
+		logFile, _ := logger.WriteServerErrorLog("modify supplier", 0, nil, fmt.Errorf("invalid payload: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid payload",
+			Log:     logFile,
+			Error:   errors.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// validate user token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err), nil)
+		data := map[string]interface{}{"id": payload.ID, "new_name": payload.NewData.Name}
+		logFile, _ := logger.WriteServerErrorLog("modify supplier", 0, data, fmt.Errorf("user token invalid: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusUnauthorized,
+			Message: "User token invalid!\nPlease login again!",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	// check if the supplier exists
 	supplier, err := h.supplierStore.GetSupplierByID(payload.ID)
-	if err != nil || supplier == nil {
-		utils.WriteError(w, http.StatusBadRequest,
-			fmt.Errorf("supplier with id %d doesn't exists", payload.ID), nil)
+	if err != nil {
+		data := map[string]interface{}{"id": payload.ID, "new_name": payload.NewData.Name}
+		logFile, _ := logger.WriteServerErrorLog("modify supplier", user.ID, data, fmt.Errorf("error get by id: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
+		return
+	}
+	if supplier == nil {
+		resp := utils.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("Supplier ID %d doesn't exist", payload.ID),
+		}
+		resp.WriteError(w)
 		return
 	}
 
 	if supplier.Name != payload.NewData.Name {
-		_, err = h.supplierStore.GetSupplierByName(payload.NewData.Name)
-		if err == nil {
-			utils.WriteError(w, http.StatusBadRequest,
-				fmt.Errorf("supplier with name %s already exists", payload.NewData.Name), nil)
+		temp, err := h.supplierStore.GetSupplierByName(payload.NewData.Name)
+		if err != nil {
+			data := map[string]interface{}{"id": payload.ID, "new_name": payload.NewData.Name}
+			logFile, _ := logger.WriteServerErrorLog("modify supplier", user.ID, data, fmt.Errorf("error get by name: %v", err))
+			resp := utils.Response{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal server error",
+				Log:     logFile,
+				Error:   err.Error(),
+			}
+			resp.WriteError(w)
+			return
+		}
+		if temp != nil {
+			resp := utils.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Supplier %s already exists", payload.NewData.Name),
+			}
+			resp.WriteError(w)
 			return
 		}
 	}
@@ -274,9 +495,21 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		LastModifiedByUserID: user.ID,
 	}, user)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err, nil)
+		data := map[string]interface{}{"id": payload.ID, "new_name": payload.NewData.Name}
+		logFile, _ := logger.WriteServerErrorLog("modify supplier", user.ID, data, fmt.Errorf("error modify: %v", err))
+		resp := utils.Response{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal server error",
+			Log:     logFile,
+			Error:   err.Error(),
+		}
+		resp.WriteError(w)
 		return
 	}
 
-	utils.WriteSuccess(w, http.StatusCreated, fmt.Sprintf("supplier %s modified by %s", payload.NewData.Name, user.Name), nil)
+	resp := utils.Response{
+		Code:    http.StatusInternalServerError,
+		Message: fmt.Sprintf("Supplier ID %d modified by %s", payload.ID, user.Name),
+	}
+	resp.WriteSuccess(w)
 }

@@ -36,7 +36,7 @@ func (s *Store) GetSupplierByName(name string) (*types.Supplier, error) {
 	}
 
 	if supplier.ID == 0 {
-		return nil, fmt.Errorf("supplier not found")
+		return nil, nil
 	}
 
 	return supplier, nil
@@ -221,7 +221,7 @@ func (s *Store) GetSupplierByID(id int) (*types.SupplierInformationReturnPayload
 	}
 
 	if supplier.ID == 0 {
-		return nil, fmt.Errorf("supplier not found")
+		return nil, nil
 	}
 
 	return supplier, nil
