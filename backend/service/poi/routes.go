@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
+	"github.com/nicolaics/pharmacon/logger"
 	"github.com/nicolaics/pharmacon/types"
 	"github.com/nicolaics/pharmacon/utils"
 	"github.com/nicolaics/pharmacon/utils/pdf"
@@ -54,21 +55,24 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterPurchaseOrderPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -81,7 +85,8 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	invoiceDate, err := utils.ParseDate(payload.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("error parse date: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
@@ -144,27 +149,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 
 		unit, err := h.unitStore.GetUnitByName(medicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(medicine.Unit)
-			if err != nil {
-				delErr := h.poInvoiceStore.AbsoluteDeletePurchaseOrder(types.PurchaseOrder{
-					Number:      payload.Number,
-					SupplierID:  payload.SupplierID,
-					UserID:      user.ID,
-					TotalItem:   payload.TotalItem,
-					InvoiceDate: *invoiceDate,
-				})
-				if delErr != nil {
-					utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error absolute delete po invoice: %v", delErr), nil)
-					return
-				}
-
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
-		}
 		if err != nil {
 			delErr := h.poInvoiceStore.AbsoluteDeletePurchaseOrder(types.PurchaseOrder{
 				Number:      payload.Number,
@@ -236,7 +220,8 @@ func (h *Handler) handleGetPOnvoiceNumberForToday(w http.ResponseWriter, r *http
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -255,21 +240,24 @@ func (h *Handler) handleGetPurchaseOrders(w http.ResponseWriter, r *http.Request
 	var payload types.ViewPurchaseOrderPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -279,13 +267,15 @@ func (h *Handler) handleGetPurchaseOrders(w http.ResponseWriter, r *http.Request
 
 	startDate, err := utils.ParseStartDate(payload.StartDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("error parse date: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
 	endDate, err := utils.ParseEndDate(payload.EndDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("error parse date: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
@@ -390,21 +380,24 @@ func (h *Handler) handleGetPurchaseOrderDetail(w http.ResponseWriter, r *http.Re
 	var payload types.ViewPurchaseOrderDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -491,14 +484,16 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var payload types.DeletePurchaseOrder
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
@@ -537,21 +532,24 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 	var payload types.ModifyPurchaseOrderPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	user, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 
@@ -572,7 +570,8 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 
 	invoiceDate, err := utils.ParseDate(payload.NewData.InvoiceDate)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error parsing date"), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("error parse date: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("internal server error\n(%s)", logFile))
 		return
 	}
 
@@ -602,15 +601,6 @@ func (h *Handler) handleModify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		unit, err := h.unitStore.GetUnitByName(medicine.Unit)
-		if unit == nil {
-			err = h.unitStore.CreateUnit(medicine.Unit)
-			if err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err, nil)
-				return
-			}
-
-			unit, err = h.unitStore.GetUnitByName(medicine.Unit)
-		}
 		if err != nil {
 			utils.WriteError(w, http.StatusInternalServerError, err, nil)
 			return
@@ -658,21 +648,24 @@ func (h *Handler) handlePrint(w http.ResponseWriter, r *http.Request) {
 	var payload types.ViewPurchaseOrderDetailPayload
 
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("parsing payload failed: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("parsing payload failed\n(%s)", logFile))
 		return
 	}
 
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("invalid payload: %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload\n(%s)", logFile))
 		return
 	}
 
 	// validate token
 	_, err := h.userStore.ValidateUserToken(w, r, false)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid: %v", err), nil)
+		logFile, _ := logger.WriteServerErrorLog(fmt.Sprintf("user token invalid: %v", err))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user token invalid\nPlease log in again"))
 		return
 	}
 

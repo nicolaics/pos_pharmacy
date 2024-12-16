@@ -2,7 +2,6 @@ package unit
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/nicolaics/pharmacon/types"
@@ -17,44 +16,51 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) GetUnitByName(unitName string) (*types.Unit, error) {
-	rows, err := s.db.Query("SELECT * FROM unit WHERE name = ? ", strings.ToUpper(unitName))
-	if err != nil {
-		return nil, err
+	query := `SELECT COUNT(*) FROM unit WHERE name = ?`
+	row := s.db.QueryRow(query, strings.ToUpper(unitName))
+	if row.Err() != nil {
+		return nil, row.Err()
 	}
-	defer rows.Close()
 
-	unit := new(types.Unit)
+	var count int
+	err := row.Scan(&count)
 
-	for rows.Next() {
-		unit, err = scanRowIntoUnit(rows)
-
+	if count == 0 {
+		err = s.CreateUnit(unitName)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if unit.ID == 0 {
-		return nil, fmt.Errorf("unit not found")
+	row = s.db.QueryRow("SELECT * FROM unit WHERE name = ?", strings.ToUpper(unitName))
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, row.Err()
+	}
+
+	unit, err := scanRowIntoUnit(row)
+	if err != nil {
+		return nil, err
 	}
 
 	return unit, nil
 }
 
 func (s *Store) GetUnitByID(id int) (*types.Unit, error) {
-	rows, err := s.db.Query("SELECT * FROM unit WHERE id = ? ", id)
+	row := s.db.QueryRow("SELECT * FROM unit WHERE id = ? ", id)
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, row.Err()
+	}
+
+	unit, err := scanRowIntoUnit(row)
 	if err != nil {
 		return nil, err
-	}
-	defer rows.Close()
-
-	unit := new(types.Unit)
-
-	for rows.Next() {
-		unit, err = scanRowIntoUnit(rows)
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return unit, nil
@@ -70,10 +76,10 @@ func (s *Store) CreateUnit(unitName string) error {
 	return nil
 }
 
-func scanRowIntoUnit(rows *sql.Rows) (*types.Unit, error) {
+func scanRowIntoUnit(row *sql.Row) (*types.Unit, error) {
 	unit := new(types.Unit)
 
-	err := rows.Scan(
+	err := row.Scan(
 		&unit.ID,
 		&unit.Name,
 		&unit.CreatedAt,
